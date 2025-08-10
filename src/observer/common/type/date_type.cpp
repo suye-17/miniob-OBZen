@@ -7,8 +7,6 @@
 
 int DateType::compare(const Value &left, const Value &right) const
 {
-  ASSERT(left.attr_type() == AttrType::DATES, "left type is not date");
-  ASSERT(right.attr_type() == AttrType::DATES, "right type is not date");
   return common::compare_int((void *)&left.value_.int_value_, (void *)&right.value_.int_value_);
 }
 
