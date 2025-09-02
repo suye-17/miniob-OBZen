@@ -18,6 +18,11 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse_defs.h"
 
 class Db;
+class CreateTableStmt;
+class DropTableStmt;
+class CreateIndexStmt;
+class SelectStmt;
+class InsertStmt;
 
 /**
  * @brief Statement SQL语句解析后通过Resolver转换成Stmt
