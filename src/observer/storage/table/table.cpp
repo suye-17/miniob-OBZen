@@ -128,6 +128,51 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   return rc;
 }
 
+RC Table::drop()
+{
+  RC rc = RC::SUCCESS;
+  
+  // 1. 删除所有索引文件
+  for (int i = 0; i < table_meta_.index_num(); i++) {
+    const IndexMeta *index_meta = table_meta_.index(i);
+    if (index_meta != nullptr) {
+      string index_file_path = table_index_file(db_->path().c_str(), table_meta_.name(), index_meta->name());
+      int ret = ::unlink(index_file_path.c_str());
+      if (ret != 0 && errno != ENOENT) {
+        LOG_WARN("Failed to remove index file: %s, error: %s", index_file_path.c_str(), strerror(errno));
+      } else {
+        LOG_INFO("Successfully removed index file: %s", index_file_path.c_str());
+      }
+    }
+  }
+
+  // 2. 重置表引擎相关资源
+  if (engine_ != nullptr) {
+    engine_.reset();
+  }
+
+  // 3. 删除表数据文件
+  string table_data_path = table_data_file(db_->path().c_str(), table_meta_.name());
+  int ret = ::unlink(table_data_path.c_str());
+  if (ret != 0 && errno != ENOENT) {
+    LOG_WARN("Failed to remove table data file: %s, error: %s", table_data_path.c_str(), strerror(errno));
+  } else {
+    LOG_INFO("Successfully removed table data file: %s", table_data_path.c_str());
+  }
+
+  // 4. 删除表元数据文件
+  string table_meta_path = table_meta_file(db_->path().c_str(), table_meta_.name());
+  ret = ::unlink(table_meta_path.c_str());
+  if (ret != 0 && errno != ENOENT) {
+    LOG_WARN("Failed to remove table meta file: %s, error: %s", table_meta_path.c_str(), strerror(errno));
+    rc = RC::IOERR_ACCESS;
+  } else {
+    LOG_INFO("Successfully removed table meta file: %s", table_meta_path.c_str());
+  }
+
+  return rc;
+}
+
 RC Table::open(Db *db, const char *meta_file, const char *base_dir)
 {
   // 加载元数据文件
