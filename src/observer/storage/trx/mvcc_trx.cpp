@@ -172,6 +172,69 @@ RC MvccTrx::delete_record(Table *table, Record &record)
   return RC::SUCCESS;
 }
 
+/**
+ * @brief 在MVCC事务中更新记录
+ * @details 
+ * 这个方法实现了MVCC（多版本并发控制）环境下的记录更新操作。
+ * 
+ * MVCC更新的核心思想：
+ * 1. UPDATE被视为"逻辑删除旧版本 + 插入新版本"的组合操作
+ * 2. 新版本记录的begin_xid设置为当前事务ID的负值（表示插入）
+ * 3. end_xid设置为最大事务ID，表示版本当前有效
+ * 4. 通过版本链管理多个版本，支持读已提交和可重复读隔离级别
+ * 
+ * @param table 目标表对象
+ * @param old_record 要更新的旧记录
+ * @param new_record 更新后的新记录
+ * @return RC 操作结果码
+ */
+RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
+{
+  // 获取表的MVCC控制字段：begin_xid和end_xid
+  // 这两个字段用于版本控制和事务可见性判断
+  Field begin_field;
+  Field end_field;
+  trx_fields(table, begin_field, end_field);
+
+  RC update_result = RC::SUCCESS;
+
+  // 首先检查旧记录的可见性和访问权限
+  RC rc = table->visit_record(old_record.rid(), [this, table, &update_result, &begin_field, &end_field, &new_record](Record &inplace_record) -> bool {
+    // 检查记录是否对当前事务可见且可写
+    RC rc = this->visit_record(table, inplace_record, ReadWriteMode::READ_WRITE);
+    if (OB_FAIL(rc)) {
+      update_result = rc;
+      return false;
+    }
+
+    // 设置新记录的MVCC字段
+    begin_field.set_int(new_record, -trx_id_);
+    end_field.set_int(new_record, trx_kit_.max_trx_id());
+
+    // 执行实际的记录更新
+    memcpy(inplace_record.data(), new_record.data(), new_record.len());
+    
+    return true;
+  });
+
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to visit record. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  if (OB_FAIL(update_result)) {
+    LOG_TRACE("record is not visible or locked. rid=%s, rc=%s", old_record.rid().to_string().c_str(), strrc(update_result));
+    return update_result;
+  }
+
+  // TODO: 记录UPDATE操作的日志 - 需要在log_handler中添加update_record方法
+  // rc = log_handler_.update_record(trx_id_, table, old_record.rid());
+  
+  operations_.push_back(Operation(Operation::Type::UPDATE, table, old_record.rid()));
+
+  return RC::SUCCESS;
+}
+
 RC MvccTrx::visit_record(Table *table, Record &record, ReadWriteMode mode)
 {
   Field begin_field;
