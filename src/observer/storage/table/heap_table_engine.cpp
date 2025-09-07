@@ -90,6 +90,85 @@ RC HeapTableEngine::delete_record(const Record &record)
   return rc;
 }
 
+/**
+ * @brief 更新记录
+ * @details 更新指定的记录，包含事务支持和索引维护
+ * 
+ * 步骤：
+ * 1. 删除旧记录在所有索引中的条目
+ * 2. 更新记录的实际数据
+ * 3. 在所有索引中插入新记录的条目
+ * 
+ * @param old_record 旧记录
+ * @param new_record 新记录（包含更新后的数据）
+ * @param trx 事务对象
+ * @return RC 操作结果码
+ */
+RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
+{
+  RC rc = RC::SUCCESS;
+  
+  // 先读取当前记录的实际数据，确保索引操作使用正确的数据
+  Record actual_old_record;
+  rc = get_record(old_record.rid(), actual_old_record);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("failed to get actual record data before update. table name=%s, rid=%s, rc=%s",
+              table_meta_->name(), old_record.rid().to_string().c_str(), strrc(rc));
+    return rc;
+  }
+  
+  // 第一步：删除旧记录在所有索引中的条目（使用实际记录数据）
+  for (Index *index : indexes_) {
+    rc = index->delete_entry(actual_old_record.data(), &actual_old_record.rid());
+    if (rc != RC::SUCCESS) {
+      // 如果索引条目不存在，可能是之前就有不一致的情况，记录警告但继续
+      if (rc == RC::RECORD_NOT_EXIST) {
+        LOG_WARN("index entry not found when deleting, may be inconsistent. table=%s, index=%s, rid=%s",
+                 table_meta_->name(), index->index_meta().name(), actual_old_record.rid().to_string().c_str());
+      } else {
+        LOG_ERROR("failed to delete entry from index when updating. table name=%s, index name=%s, rid=%s, rc=%s",
+                  table_meta_->name(), index->index_meta().name(), actual_old_record.rid().to_string().c_str(), strrc(rc));
+        // 对于严重错误，需要返回失败
+        return rc;
+      }
+    }
+  }
+
+  // 第二步：使用visit_record更新实际的记录数据
+  rc = record_handler_->visit_record(old_record.rid(), [&new_record](Record &record) -> bool {
+    // 将新数据复制到记录中
+    memcpy(record.data(), new_record.data(), new_record.len());
+    return true;  // 返回true表示记录被修改了
+  });
+  
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("failed to update record data. table name=%s, rid=%s, rc=%s",
+              table_meta_->name(), old_record.rid().to_string().c_str(), strrc(rc));
+    return rc;
+  }
+
+  // 第三步：在所有索引中插入新记录的条目
+  rc = insert_entry_of_indexes(new_record.data(), new_record.rid());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("failed to insert new entry into indexes when updating. table name=%s, rid=%s, rc=%s",
+              table_meta_->name(), new_record.rid().to_string().c_str(), strrc(rc));
+    
+    // 如果插入新索引条目失败，尝试恢复旧索引条目
+    LOG_INFO("attempting to restore old index entries after failed update");
+    for (Index *index : indexes_) {
+      RC restore_rc = index->insert_entry(actual_old_record.data(), &actual_old_record.rid());
+      if (restore_rc != RC::SUCCESS) {
+        LOG_ERROR("failed to restore old index entry. table=%s, index=%s, rid=%s, rc=%s",
+                  table_meta_->name(), index->index_meta().name(), 
+                  actual_old_record.rid().to_string().c_str(), strrc(restore_rc));
+      }
+    }
+    return rc;
+  }
+
+  return RC::SUCCESS;
+}
+
 RC HeapTableEngine::get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode)
 {
   scanner = new HeapRecordScanner(table_, *data_buffer_pool_, trx, db_->log_handler(), mode, nullptr);
