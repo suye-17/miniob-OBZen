@@ -132,7 +132,7 @@ struct UpdateSqlNode
 {
   string                   relation_name;   ///< Relation to update
   string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Value                    value;           ///< 更新的值，仅支持一个字段
+  Expression              *expression;      ///< 更新的表达式，支持复杂计算
   vector<ConditionSqlNode> conditions;
 };
 
