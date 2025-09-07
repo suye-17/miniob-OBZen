@@ -6,6 +6,8 @@
 - [事务](./miniob-transaction.md)
 - [持久化](./miniob-durability.md)
 - [SQL Parser](./miniob-sql-parser.md)
+- [SQL执行流程详解](./miniob-sql-execution-flow.md)
+- [UPDATE功能实现计划](./miniob-update-implementation-plan.md)
 - [如何新增支持一种新类型SQL](./miniob-how-to-add-new-sql.md)
 - [表达式解析](./miniob-sql-expression.md)
 - [B+树实现](./miniob-bplus-tree.md)
