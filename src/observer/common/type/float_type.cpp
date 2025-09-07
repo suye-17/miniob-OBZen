@@ -59,6 +59,31 @@ RC FloatType::negative(const Value &val, Value &result) const
   return RC::SUCCESS;
 }
 
+int FloatType::cast_cost(AttrType type)
+{
+  if (type == AttrType::FLOATS) {
+    return 0;  // 同类型转换成本为0
+  }
+  if (type == AttrType::INTS) {
+    return 2;  // 浮点数转整数成本较高（可能丢失精度）
+  }
+  return INT32_MAX;  // 其他类型转换不支持
+}
+
+RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const
+{
+  switch (type) {
+  case AttrType::INTS: {
+    int int_value = (int)val.get_float();  // 截断小数部分
+    result.set_int(int_value);
+    return RC::SUCCESS;
+  }
+  default:
+    LOG_WARN("unsupported type %d", type);
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
+}
+
 RC FloatType::set_value_from_str(Value &val, const string &data) const
 {
   RC                rc = RC::SUCCESS;

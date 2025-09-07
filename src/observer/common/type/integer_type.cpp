@@ -28,6 +28,17 @@ int IntegerType::compare(const Value &left, const Value &right) const
   return INT32_MAX;
 }
 
+int IntegerType::cast_cost(AttrType type)
+{
+  if (type == AttrType::INTS) {
+    return 0;  // 同类型转换成本为0
+  }
+  if (type == AttrType::FLOATS) {
+    return 1;  // 整数转浮点数成本较低
+  }
+  return INT32_MAX;  // 其他类型转换不支持
+}
+
 RC IntegerType::cast_to(const Value &val, AttrType type, Value &result) const
 {
   switch (type) {
