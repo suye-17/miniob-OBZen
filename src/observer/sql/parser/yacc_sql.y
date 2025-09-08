@@ -118,23 +118,23 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
-  ParsedSqlNode *                            sql_node;
-  ConditionSqlNode *                         condition;
-  Value *                                    value;
-  enum CompOp                                comp;
-  RelAttrSqlNode *                           rel_attr;
-  vector<AttrInfoSqlNode> *                  attr_infos;
-  AttrInfoSqlNode *                          attr_info;
-  Expression *                               expression;
-  vector<unique_ptr<Expression>> *           expression_list;
-  vector<Value> *                            value_list;
-  vector<ConditionSqlNode> *                 condition_list;
-  vector<RelAttrSqlNode> *                   rel_attr_list;
-  vector<string> *                           relation_list;
-  vector<string> *                           key_list;
-  char *                                     cstring;
-  int                                        number;
-  float                                      floats;
+  ParsedSqlNode *                            sql_node;                // SQL节点指针
+  ConditionSqlNode *                         condition;               // 条件节点指针 
+  Value *                                    value;                   // 值指针
+  enum CompOp                                comp;                    // 比较操作符
+  RelAttrSqlNode *                           rel_attr;                // 关系属性节点
+  vector<AttrInfoSqlNode> *                  attr_infos;              // 属性信息列表
+  AttrInfoSqlNode *                          attr_info;               // 单个属性信息
+  Expression *                               expression;              // 表达式指针
+  vector<unique_ptr<Expression>> *           expression_list;         // 表达式列表
+  vector<Value> *                            value_list;              // 值列表
+  vector<ConditionSqlNode> *                 condition_list;          // 条件列表
+  vector<RelAttrSqlNode> *                   rel_attr_list;           // 关系属性列表
+  vector<string> *                           relation_list;           // 关系(表)名列表
+  vector<string> *                           key_list;                // 键列表
+  char *                                     cstring;                 // 字符串指针
+  int                                        number;                  // 整数
+  float                                      floats;                  // 浮点数
 }
 
 %destructor { delete $$; } <condition>
