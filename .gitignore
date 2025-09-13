@@ -30,3 +30,9 @@ src/observer/sql/parser/lex_sql.cpp
 src/observer/sql/parser/lex_sql.h
 src/observer/sql/parser/yacc_sql.cpp
 src/observer/sql/parser/yacc_sql.hpp
+debug.log
+docs/从零开始学习MiniOB
+docs/expression系统详解
+docs/SQL模块功能分析
+.obclient.history
+.miniob.history

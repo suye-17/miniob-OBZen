@@ -320,6 +320,18 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 {
   RC rc = RC::SUCCESS;
 
+  // NULL值传播：任何NULL参与的运算都返回NULL
+  if (left_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+  
+  // 对于二元运算，检查右操作数
+  if (arithmetic_type_ != Type::NEGATIVE && right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
   const AttrType target_type = value_type();
   value.set_type(target_type);
 
@@ -432,6 +444,19 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+
+  // 处理一元运算符（如负号）
+  if (arithmetic_type_ == Type::NEGATIVE) {
+    // 对于负号运算，right_是nullptr，直接对left_value取负
+    return calc_value(left_value, Value(), value);
+  }
+
+  // 处理二元运算符
+  if (right_ == nullptr) {
+    LOG_WARN("right operand is null for binary arithmetic operation");
+    return RC::INVALID_ARGUMENT;
+  }
+
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));

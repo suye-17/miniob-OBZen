@@ -238,7 +238,7 @@ private:
 
 #### 3.2 逻辑计划生成
 
-**修改文件：** `src/observer/sql/optimizer/logical_plan_generator.cpp`
+**修改文件：** `src/observer/sql/optimizer/logical_plan_generator.cpp` 
 
 **算子链构建：**
 ```cpp
@@ -358,6 +358,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       return rc;
     }
     
+
     // 类型转换处理
     Value converted_value;
     if (expression_value.attr_type() != field_meta->type()) {

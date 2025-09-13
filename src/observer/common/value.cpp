@@ -33,6 +33,7 @@ Value::Value(const Value &other)
   this->attr_type_ = other.attr_type_;
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
+  this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   switch (this->attr_type_) {
     case AttrType::CHARS: {
       set_string_from_other(other);
@@ -49,6 +50,7 @@ Value::Value(Value &&other)
   this->attr_type_ = other.attr_type_;
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
+  this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   this->value_     = other.value_;
   other.own_data_  = false;
   other.length_    = 0;
@@ -63,6 +65,7 @@ Value &Value::operator=(const Value &other)
   this->attr_type_ = other.attr_type_;
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
+  this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   switch (this->attr_type_) {
     case AttrType::CHARS: {
       set_string_from_other(other);
@@ -84,6 +87,7 @@ Value &Value::operator=(Value &&other)
   this->attr_type_ = other.attr_type_;
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
+  this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   this->value_     = other.value_;
   other.own_data_  = false;
   other.length_    = 0;
@@ -141,6 +145,7 @@ void Value::set_int(int val)
   attr_type_        = AttrType::INTS;
   value_.int_value_ = val;
   length_           = sizeof(val);
+  is_null_          = false;
 }
 
 void Value::set_float(float val)
@@ -149,6 +154,7 @@ void Value::set_float(float val)
   attr_type_          = AttrType::FLOATS;
   value_.float_value_ = val;
   length_             = sizeof(val);
+  is_null_            = false;
 }
 void Value::set_boolean(bool val)
 {
@@ -156,6 +162,7 @@ void Value::set_boolean(bool val)
   attr_type_         = AttrType::BOOLEANS;
   value_.bool_value_ = val;
   length_            = sizeof(val);
+  is_null_           = false;
 }
 
 void Value::set_string(const char *s, int len /*= 0*/)
@@ -177,6 +184,7 @@ void Value::set_string(const char *s, int len /*= 0*/)
     memcpy(value_.pointer_value_, s, len);
     value_.pointer_value_[len] = '\0';
   }
+  is_null_ = false;
 }
 
 void Value::set_date(int val)
@@ -185,10 +193,17 @@ void Value::set_date(int val)
   attr_type_        = AttrType::DATES;
   value_.int_value_ = val;
   length_           = sizeof(val);
+  is_null_          = false;
 }
 
 void Value::set_value(const Value &value)
 {
+  if (value.is_null()) {
+    set_null();
+    attr_type_ = value.attr_type_; // 保持原有类型信息
+    return;
+  }
+  
   switch (value.attr_type_) {
     case AttrType::INTS: {
       set_int(value.get_int());
@@ -235,6 +250,10 @@ const char *Value::data() const
 
 string Value::to_string() const
 {
+  if (is_null()) {
+    return "NULL";
+  }
+  
   string res;
   RC     rc = DataType::type_instance(this->attr_type_)->to_string(*this, res);
   if (OB_FAIL(rc)) {
@@ -244,7 +263,21 @@ string Value::to_string() const
   return res;
 }
 
-int Value::compare(const Value &other) const { return DataType::type_instance(this->attr_type_)->compare(*this, other); }
+int Value::compare(const Value &other) const 
+{ 
+  // NULL比较处理：NULL == NULL为true，NULL与任何非NULL值比较都为false
+  if (is_null() && other.is_null()) {
+    return 0;  // NULL = NULL
+  }
+  if (is_null()) {
+    return -1;  // NULL < 任何值
+  }
+  if (other.is_null()) {
+    return 1;   // 任何值 > NULL
+  }
+  
+  return DataType::type_instance(this->attr_type_)->compare(*this, other); 
+}
 
 int Value::get_int() const
 {

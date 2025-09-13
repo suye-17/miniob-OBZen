@@ -89,6 +89,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         STRING_T
         FLOAT_T
         DATE_T
+        NULL_T
         VECTOR_T
         HELP
         EXIT
@@ -443,6 +444,11 @@ value:
       $$ = new Value(tmp);
       free(tmp);
     }
+    |NULL_T {
+      $$ = new Value();
+      $$->set_null();
+      @$ = @1;
+    }
     ;
 storage_format:
     /* empty */
@@ -502,6 +508,15 @@ select_stmt:        /*  select 语句的语法解析树*/
         $$->selection.group_by.swap(*$6);
         delete $6;
       }
+    }
+    | SELECT expression_list  /* 不带FROM子句的SELECT语句 MySQL中也支持，所以nminiob也要满足 */
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+      // 不设置relations，表示没有FROM子句
     }
     ;
 calc_stmt:

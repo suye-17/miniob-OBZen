@@ -122,6 +122,13 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
     }
   }
 
+  // 如果没有FROM子句，创建一个CALC操作符来生成单行数据
+  if (tables.empty()) {
+    // 创建一个空的表达式列表，只是为了生成一行数据
+    vector<unique_ptr<Expression>> dummy_expressions;
+    table_oper = make_unique<CalcLogicalOperator>(std::move(dummy_expressions));
+  }
+
 
   if (predicate_oper) {
     if (*last_oper) {

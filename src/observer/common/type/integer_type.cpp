@@ -55,24 +55,40 @@ RC IntegerType::cast_to(const Value &val, AttrType type, Value &result) const
 
 RC IntegerType::add(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_int(left.get_int() + right.get_int());
   return RC::SUCCESS;
 }
 
 RC IntegerType::subtract(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_int(left.get_int() - right.get_int());
   return RC::SUCCESS;
 }
 
 RC IntegerType::multiply(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_int(left.get_int() * right.get_int());
   return RC::SUCCESS;
 }
 
 RC IntegerType::negative(const Value &val, Value &result) const
 {
+  if (val.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_int(-val.get_int());
   return RC::SUCCESS;
 }
