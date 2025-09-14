@@ -15,12 +15,22 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
 #include "sql/expr/arithmetic_operator.hpp"
+#include <cmath>
 
 using namespace std;
 
 RC FieldExpr::get_value(const Tuple &tuple, Value &value) const
 {
-  return tuple.find_cell(TupleCellSpec(table_name(), field_name()), value);
+  LOG_INFO("FieldExpr::get_value: table='%s', field='%s'", 
+           table_name() ? table_name() : "NULL", 
+           field_name() ? field_name() : "NULL");
+           
+  TupleCellSpec spec(table_name(), field_name());
+  RC rc = tuple.find_cell(spec, value);
+  
+  LOG_INFO("FieldExpr::get_value: find_cell returned rc=%s", strrc(rc));
+  
+  return rc;
 }
 
 bool FieldExpr::equal(const Expression &other) const
@@ -308,6 +318,11 @@ AttrType ArithmeticExpr::value_type() const
     return left_->value_type();
   }
 
+  // 如果任一操作数是向量类型，结果也是向量类型
+  if (left_->value_type() == AttrType::VECTORS || right_->value_type() == AttrType::VECTORS) {
+    return AttrType::VECTORS;
+  }
+
   if (left_->value_type() == AttrType::INTS && right_->value_type() == AttrType::INTS &&
       arithmetic_type_ != Type::DIV) {
     return AttrType::INTS;
@@ -323,17 +338,41 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
   const AttrType target_type = value_type();
   value.set_type(target_type);
 
+  // 如果目标类型是向量，需要确保操作数也都是向量类型
+  Value left_converted = left_value;
+  Value right_converted = right_value;
+  
+  if (target_type == AttrType::VECTORS) {
+    // 转换左操作数
+    if (left_value.attr_type() != AttrType::VECTORS) {
+      rc = DataType::type_instance(AttrType::VECTORS)->cast_to(left_value, AttrType::VECTORS, left_converted);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("Failed to convert left operand to vector type");
+        return rc;
+      }
+    }
+    
+    // 转换右操作数
+    if (right_value.attr_type() != AttrType::VECTORS) {
+      rc = DataType::type_instance(AttrType::VECTORS)->cast_to(right_value, AttrType::VECTORS, right_converted);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("Failed to convert right operand to vector type");
+        return rc;
+      }
+    }
+  }
+
   switch (arithmetic_type_) {
     case Type::ADD: {
-      Value::add(left_value, right_value, value);
+      Value::add(left_converted, right_converted, value);
     } break;
 
     case Type::SUB: {
-      Value::subtract(left_value, right_value, value);
+      Value::subtract(left_converted, right_converted, value);
     } break;
 
     case Type::MUL: {
-      Value::multiply(left_value, right_value, value);
+      Value::multiply(left_converted, right_converted, value);
     } break;
 
     case Type::DIV: {
@@ -588,4 +627,197 @@ RC AggregateExpr::type_from_string(const char *type_str, AggregateExpr::Type &ty
     rc = RC::INVALID_ARGUMENT;
   }
   return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// DistanceFunctionExpr
+
+DistanceFunctionExpr::DistanceFunctionExpr(Type type, unique_ptr<Expression> left, unique_ptr<Expression> right)
+    : distance_type_(type), left_(std::move(left)), right_(std::move(right))
+{}
+
+RC DistanceFunctionExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  Value left_value;
+  Value right_value;
+
+  LOG_INFO("DistanceFunctionExpr::get_value: getting left operand (should be embedding field)");
+  
+  // 检查left_是什么类型的表达式
+  if (left_->type() == ExprType::FIELD) {
+    const FieldExpr* field_expr = static_cast<const FieldExpr*>(left_.get());
+    LOG_INFO("DistanceFunctionExpr: left_ is FieldExpr, table='%s', field='%s'",
+             field_expr->table_name() ? field_expr->table_name() : "NULL",
+             field_expr->field_name() ? field_expr->field_name() : "NULL");
+  } else {
+    LOG_INFO("DistanceFunctionExpr: left_ is not FieldExpr, type=%d", static_cast<int>(left_->type()));
+  }
+
+  RC rc = left_->get_value(tuple, left_value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to get left value. rc=%s", strrc(rc));
+    return rc;
+  }
+  
+  LOG_INFO("DistanceFunctionExpr: left value obtained successfully, type=%d", 
+           static_cast<int>(left_value.attr_type()));
+
+  LOG_INFO("DistanceFunctionExpr::get_value: getting right operand");
+  rc = right_->get_value(tuple, right_value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to get right value. rc=%s", strrc(rc));
+    return rc;
+  }
+  
+  LOG_INFO("DistanceFunctionExpr: right value obtained successfully, type=%d", 
+           static_cast<int>(right_value.attr_type()));
+
+  return calculate_distance(left_value, right_value, value);
+}
+
+RC DistanceFunctionExpr::get_column(Chunk &chunk, Column &column)
+{
+  // 获取左右操作数的列数据
+  Column left_column;
+  Column right_column;
+  
+  RC rc = left_->get_column(chunk, left_column);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  
+  rc = right_->get_column(chunk, right_column);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  
+  // 计算距离结果
+  int row_num = chunk.rows();
+  column.init(AttrType::FLOATS, sizeof(float), row_num);
+  
+  for (int i = 0; i < row_num; i++) {
+    Value left_value = left_column.get_value(i);
+    Value right_value = right_column.get_value(i);
+    Value result;
+    
+    rc = calculate_distance(left_value, right_value, result);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    
+    float distance_val = result.get_float();
+    rc = column.append_one(reinterpret_cast<char*>(&distance_val));
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  
+  return RC::SUCCESS;
+}
+
+bool DistanceFunctionExpr::equal(const Expression &other) const
+{
+  if (this == &other) {
+    return true;
+  }
+  if (other.type() != type()) {
+    return false;
+  }
+  
+  const DistanceFunctionExpr &other_distance_expr = static_cast<const DistanceFunctionExpr &>(other);
+  return distance_type_ == other_distance_expr.distance_type_ &&
+         left_->equal(*other_distance_expr.left_) &&
+         right_->equal(*other_distance_expr.right_);
+}
+
+unique_ptr<Expression> DistanceFunctionExpr::copy() const
+{
+  return make_unique<DistanceFunctionExpr>(distance_type_, left_->copy(), right_->copy());
+}
+
+RC DistanceFunctionExpr::calculate_distance(const Value &left_val, const Value &right_val, Value &result) const
+{
+  // 将操作数转换为向量类型
+  Value left_vector = left_val;
+  Value right_vector = right_val;
+  
+  // 转换左操作数
+  if (left_val.attr_type() != AttrType::VECTORS) {
+    RC rc = DataType::type_instance(AttrType::VECTORS)->cast_to(left_val, AttrType::VECTORS, left_vector);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Failed to convert left operand to vector type: %d", static_cast<int>(left_val.attr_type()));
+      return rc;
+    }
+  }
+  
+  // 转换右操作数
+  if (right_val.attr_type() != AttrType::VECTORS) {
+    RC rc = DataType::type_instance(AttrType::VECTORS)->cast_to(right_val, AttrType::VECTORS, right_vector);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Failed to convert right operand to vector type: %d", static_cast<int>(right_val.attr_type()));
+      return rc;
+    }
+  }
+  
+  const vector<float> &left_vec = left_vector.get_vector();
+  const vector<float> &right_vec = right_vector.get_vector();
+  
+  // 检查维度是否相同
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("Vector dimensions mismatch for distance calculation: %zu vs %zu", 
+             left_vec.size(), right_vec.size());
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
+  
+  float distance = 0.0f;
+  
+  switch (distance_type_) {
+    case Type::L2_DISTANCE: {
+      // 欧几里得距离：sqrt(sum((a_i - b_i)^2))
+      float sum_squared = 0.0f;
+      for (size_t i = 0; i < left_vec.size(); i++) {
+        float diff = left_vec[i] - right_vec[i];
+        sum_squared += diff * diff;
+      }
+      distance = sqrt(sum_squared);
+    } break;
+    
+    case Type::COSINE_DISTANCE: {
+      // 余弦距离：1 - (a·b)/(|a||b|)
+      float dot_product = 0.0f;
+      float left_magnitude = 0.0f;
+      float right_magnitude = 0.0f;
+      
+      for (size_t i = 0; i < left_vec.size(); i++) {
+        dot_product += left_vec[i] * right_vec[i];
+        left_magnitude += left_vec[i] * left_vec[i];
+        right_magnitude += right_vec[i] * right_vec[i];
+      }
+      
+      left_magnitude = sqrt(left_magnitude);
+      right_magnitude = sqrt(right_magnitude);
+      
+      if (left_magnitude == 0.0f || right_magnitude == 0.0f) {
+        distance = 1.0f;  // 如果有零向量，余弦距离为1
+      } else {
+        float cosine_similarity = dot_product / (left_magnitude * right_magnitude);
+        distance = 1.0f - cosine_similarity;
+      }
+    } break;
+    
+    case Type::INNER_PRODUCT: {
+      // 内积：sum(a_i * b_i)
+      for (size_t i = 0; i < left_vec.size(); i++) {
+        distance += left_vec[i] * right_vec[i];
+      }
+    } break;
+    
+    default: {
+      LOG_WARN("Unknown distance function type: %d", static_cast<int>(distance_type_));
+      return RC::INTERNAL;
+    }
+  }
+  
+  result.set_float(distance);
+  return RC::SUCCESS;
 }

@@ -30,7 +30,6 @@ Table *BinderContext::find_table(const char *table_name) const
   return *iter;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 static void wildcard_fields(Table *table, vector<unique_ptr<Expression>> &expressions)
 {
   const TableMeta &table_meta = table->table_meta();
@@ -84,6 +83,10 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
 
     case ExprType::ARITHMETIC: {
       return bind_arithmetic_expression(expr, bound_expressions);
+    } break;
+
+    case ExprType::FUNCTION: {
+      return bind_function_expression(expr, bound_expressions);
     } break;
 
     case ExprType::AGGREGATION: {
@@ -161,11 +164,28 @@ RC ExpressionBinder::bind_unbound_field_expression(
   if (0 == strcmp(field_name, "*")) {
     wildcard_fields(table, bound_expressions);
   } else {
+    LOG_INFO("bind_unbound_field_expression: searching for field='%s' in table='%s'", 
+             field_name, table->name());
+             
+    // 调试：列出表中所有字段
+    auto field_metas = table->table_meta().field_metas();
+    if (field_metas) {
+      LOG_INFO("bind_unbound_field_expression: table has %zu fields:", field_metas->size());
+      for (size_t i = 0; i < field_metas->size(); i++) {
+        const FieldMeta &fm = (*field_metas)[i];
+        LOG_INFO("  field[%zu]: name='%s', type=%d, len=%d", 
+                 i, fm.name() ? fm.name() : "NULL", static_cast<int>(fm.type()), fm.len());
+      }
+    }
+    
     const FieldMeta *field_meta = table->table_meta().field(field_name);
     if (nullptr == field_meta) {
-      LOG_INFO("no such field in table: %s.%s", table_name, field_name);
+      LOG_WARN("no such field in table: %s.%s", table->name(), field_name);
       return RC::SCHEMA_FIELD_MISSING;
     }
+
+    LOG_INFO("bind_unbound_field_expression: found field='%s', type=%d, len=%d", 
+             field_meta->name(), static_cast<int>(field_meta->type()), field_meta->len());
 
     Field      field(table, field_meta);
     FieldExpr *field_expr = new FieldExpr(field);
@@ -397,6 +417,58 @@ RC check_aggregate_expression(AggregateExpr &expression)
   RC rc = ExpressionIterator::iterate_child_expr(expression, check_aggregate_expr);
 
   return rc;
+}
+
+RC ExpressionBinder::bind_function_expression(
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+{
+  if (nullptr == expr) {
+    return RC::SUCCESS;
+  }
+
+  LOG_INFO("bind_function_expression: processing function expression");
+
+  // 目前只支持DistanceFunctionExpr
+  auto distance_expr = static_cast<DistanceFunctionExpr *>(expr.get());
+  
+  // 递归绑定左操作数（应该是embedding字段）
+  vector<unique_ptr<Expression>> left_bound_expressions;
+  RC rc = bind_expression(distance_expr->left(), left_bound_expressions);
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to bind left operand of distance function. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  if (left_bound_expressions.size() != 1) {
+    LOG_WARN("invalid left children number of distance function expression: %d", left_bound_expressions.size());
+    return RC::INVALID_ARGUMENT;
+  }
+
+  // 递归绑定右操作数（应该是向量字面量）
+  vector<unique_ptr<Expression>> right_bound_expressions;
+  rc = bind_expression(distance_expr->right(), right_bound_expressions);
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to bind right operand of distance function. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  if (right_bound_expressions.size() != 1) {
+    LOG_WARN("invalid right children number of distance function expression: %d", right_bound_expressions.size());
+    return RC::INVALID_ARGUMENT;
+  }
+
+  LOG_INFO("bind_function_expression: successfully bound left and right operands");
+
+  // 创建新的DistanceFunctionExpr，使用绑定后的操作数
+  auto new_distance_expr = make_unique<DistanceFunctionExpr>(
+      distance_expr->distance_type(),
+      std::move(left_bound_expressions[0]),
+      std::move(right_bound_expressions[0]));
+
+  new_distance_expr->set_name(distance_expr->name());
+  bound_expressions.emplace_back(std::move(new_distance_expr));
+
+  return RC::SUCCESS;
 }
 
 RC ExpressionBinder::bind_aggregate_expression(

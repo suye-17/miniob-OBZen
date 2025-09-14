@@ -269,6 +269,32 @@ RC LogicalPlanGenerator::create_plan(DeleteStmt *delete_stmt, unique_ptr<Logical
   return rc;
 }
 
+RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator)
+{
+  Table                      *table       = update_stmt->table();
+  FilterStmt                 *filter_stmt = update_stmt->filter_stmt();
+  std::unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
+
+  std::unique_ptr<LogicalOperator> predicate_oper;
+
+  RC rc = create_plan(filter_stmt, predicate_oper);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  std::unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->field_name(), update_stmt->expression()));
+
+  if (predicate_oper) {
+    predicate_oper->add_child(std::move(table_get_oper));
+    update_oper->add_child(std::move(predicate_oper));
+  } else {
+    update_oper->add_child(std::move(table_get_oper));
+  }
+
+  logical_operator = std::move(update_oper);
+  return RC::SUCCESS;
+}
+
 RC LogicalPlanGenerator::create_plan(ExplainStmt *explain_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
   unique_ptr<LogicalOperator> child_oper;
@@ -364,28 +390,4 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
   return RC::SUCCESS;
 }
 
-RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator)
-{
-  Table                      *table       = update_stmt->table();
-  FilterStmt                 *filter_stmt = update_stmt->filter_stmt();
-  std::unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 
-  std::unique_ptr<LogicalOperator> predicate_oper;
-
-  RC rc = create_plan(filter_stmt, predicate_oper);
-  if (rc != RC::SUCCESS) {
-    return rc;
-  }
-
-  std::unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->field_name(), update_stmt->expression()));
-
-  if (predicate_oper) {
-    predicate_oper->add_child(std::move(table_get_oper));
-    update_oper->add_child(std::move(predicate_oper));
-  } else {
-    update_oper->add_child(std::move(table_get_oper));
-  }
-
-  logical_operator = std::move(update_oper);
-  return RC::SUCCESS;
-}

@@ -11,6 +11,7 @@
 #include "sql/parser/yacc_sql.hpp"
 #include "sql/parser/lex_sql.h"
 #include "sql/expr/expression.h"
+#include "observer/common/utils.h"
 
 using namespace std;
 
@@ -50,6 +51,17 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   return expr;
 }
 
+DistanceFunctionExpr *create_distance_function_expression(DistanceFunctionExpr::Type type,
+                                                         Expression *left,
+                                                         Expression *right,
+                                                         const char *sql_string,
+                                                         YYLTYPE *llocp)
+{
+  DistanceFunctionExpr *expr = new DistanceFunctionExpr(type, unique_ptr<Expression>(left), unique_ptr<Expression>(right));
+  expr->set_name(token_name(sql_string, llocp));
+  return expr;
+}
+
 %}
 
 %define api.pure full
@@ -81,6 +93,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         UPDATE
         LBRACE
         RBRACE
+        LSBRACE
+        RSBRACE
         COMMA
         TRX_BEGIN
         TRX_COMMIT
@@ -89,7 +103,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         STRING_T
         FLOAT_T
         DATE_T
-        VECTOR_T
+        VECTOR_T     
         HELP
         EXIT
         DOT //QUOTE
@@ -115,6 +129,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         LE
         GE
         NE
+        L2_DISTANCE
+        COSINE_DISTANCE
+        INNER_PRODUCT
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
@@ -154,6 +171,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %token <floats> FLOAT
 %token <cstring> ID
 %token <cstring> SSS
+%token <cstring> VECTOR_LITERAL
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -359,7 +377,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = $4;
+      if ($$->type == AttrType::VECTORS) {
+        $$->length =  $4 * sizeof(float);
+      } else {
+        $$->length = $4;
+      }
     }
     | ID type
     {
@@ -376,8 +398,8 @@ type:
     INT_T      { $$ = static_cast<int>(AttrType::INTS); }
     | STRING_T { $$ = static_cast<int>(AttrType::CHARS); }
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
-    | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
     | DATE_T { $$ = static_cast<int>(AttrType::DATES); }
+    | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
     ;
 primary_key:
     /* empty */
@@ -442,6 +464,17 @@ value:
       char *tmp = common::substr($1,1,strlen($1)-2);
       $$ = new Value(tmp);
       free(tmp);
+    }
+    |VECTOR_LITERAL {
+       std::vector<float> elements;
+       RC rc = parse_vector_literal($1, elements);
+       if (rc != RC::SUCCESS) {
+         LOG_WARN("Failed to parse vector literal: %s", $1);
+         YYABORT;  // 语法解析错误
+       }
+       $$ = new Value();
+       $$->set_vector(elements);
+       @$ = @1;
     }
     ;
 storage_format:
@@ -562,6 +595,15 @@ expression:
     }
     | '*' {
       $$ = new StarExpr();
+    }
+    | L2_DISTANCE LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::L2_DISTANCE, $3, $5, sql_string, &@$);
+    }
+    | COSINE_DISTANCE LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::COSINE_DISTANCE, $3, $5, sql_string, &@$);
+    }
+    | INNER_PRODUCT LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::INNER_PRODUCT, $3, $5, sql_string, &@$);
     }
     // your code here
     ;

@@ -37,6 +37,16 @@ Value::Value(const Value &other)
     case AttrType::CHARS: {
       set_string_from_other(other);
     } break;
+    
+    case AttrType::VECTORS: {
+      if (other.value_.vector_value_ != nullptr) {
+        this->value_.vector_value_ = new vector<float>(*other.value_.vector_value_);
+        this->own_data_ = true;
+      } else {
+        this->value_.vector_value_ = nullptr;
+        this->own_data_ = false;
+      }
+    } break;
 
     default: {
       this->value_ = other.value_;
@@ -66,6 +76,16 @@ Value &Value::operator=(const Value &other)
   switch (this->attr_type_) {
     case AttrType::CHARS: {
       set_string_from_other(other);
+    } break;
+    
+    case AttrType::VECTORS: {
+      if (other.value_.vector_value_ != nullptr) {
+        this->value_.vector_value_ = new vector<float>(*other.value_.vector_value_);
+        this->own_data_ = true;
+      } else {
+        this->value_.vector_value_ = nullptr;
+        this->own_data_ = false;
+      }
     } break;
 
     default: {
@@ -99,6 +119,12 @@ void Value::reset()
         value_.pointer_value_ = nullptr;
       }
       break;
+    case AttrType::VECTORS:
+      if (own_data_ && value_.vector_value_ != nullptr) {
+        delete value_.vector_value_;
+        value_.vector_value_ = nullptr;
+      }
+      break;
     default: break;
   }
 
@@ -128,6 +154,48 @@ void Value::set_data(char *data, int length)
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
       length_            = length;
+    } break;
+    case AttrType::VECTORS: {
+      // data 指向的是 float 数组，需要转换为 vector<float> 对象
+      // 边界检查
+      if (data == nullptr) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      if (length <= 0 || length % sizeof(float) != 0) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      int element_count = length / sizeof(float);
+      
+      // 大小检查
+      if (element_count > 16000) { // 防止过大的向量
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      float *float_array = (float *)data;
+      
+      try {
+        // 创建新的 vector 并复制数据
+        vector<float> vec(float_array, float_array + element_count);
+        
+        value_.vector_value_ = new vector<float>(std::move(vec));
+        length_              = length;
+        own_data_            = true;
+      } catch (const std::exception &e) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+      }
     } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
@@ -187,6 +255,16 @@ void Value::set_date(int val)
   length_           = sizeof(val);
 }
 
+void Value::set_vector(const vector<float> &val)
+{
+  reset();
+  attr_type_          = AttrType::VECTORS;
+  own_data_           = true; 
+  value_.vector_value_ = new vector<float>(val);
+  length_              = val.size() * sizeof(float);
+}
+
+
 void Value::set_value(const Value &value)
 {
   switch (value.attr_type_) {
@@ -204,6 +282,9 @@ void Value::set_value(const Value &value)
     } break;
     case AttrType::DATES: {
       set_int(value.get_int());
+    } break;
+    case AttrType::VECTORS: {
+      set_vector(value.get_vector());
     } break;
     default: {
       ASSERT(false, "got an invalid value type");
@@ -226,6 +307,12 @@ const char *Value::data() const
   switch (attr_type_) {
     case AttrType::CHARS: {
       return value_.pointer_value_;
+    } break;
+    case AttrType::VECTORS: {
+      if (value_.vector_value_ != nullptr && !value_.vector_value_->empty()) {
+        return (const char *)value_.vector_value_->data();
+      }
+      return nullptr;
     } break;
     default: {
       return (const char *)&value_;
@@ -300,6 +387,22 @@ float Value::get_float() const
     }
   }
   return 0;
+}
+
+vector<float> Value::get_vector() const
+{
+  switch (attr_type_) {
+    case AttrType::VECTORS: {
+      if (value_.vector_value_ != nullptr) {
+        return *value_.vector_value_;
+      }
+      return vector<float>();
+    }
+    default: {
+      LOG_WARN("unknown data type. type=%d", attr_type_);
+      return vector<float>();
+    }
+  }
 }
 
 string Value::get_string() const { return this->to_string(); }

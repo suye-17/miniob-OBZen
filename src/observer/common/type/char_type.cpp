@@ -38,6 +38,14 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
       }
       result.set_int(date);
     } break;
+    case AttrType::VECTORS: {
+      std::vector<float> elements;
+      RC rc = parse_vector_literal(val.value_.pointer_value_, elements);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      result.set_vector(elements);
+    } break;
     default: return RC::UNIMPLEMENTED;
   }
   return RC::SUCCESS;
@@ -56,6 +64,9 @@ int CharType::cast_cost(AttrType type)
   }
   if (type == AttrType::FLOATS) {
     return 1;
+  }
+  if (type == AttrType::VECTORS) {
+    return 1;  // 字符串到向量的转换成本
   }
   return INT32_MAX;
 }

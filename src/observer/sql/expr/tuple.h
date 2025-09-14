@@ -189,15 +189,35 @@ public:
   RC cell_at(int index, Value &cell) const override
   {
     if (index < 0 || index >= static_cast<int>(speces_.size())) {
-      LOG_WARN("invalid argument. index=%d", index);
       return RC::INVALID_ARGUMENT;
     }
 
     FieldExpr       *field_expr = speces_[index];
+    if (!field_expr) {
+      LOG_WARN("RowTuple::cell_at: field_expr is null at index=%d", index);
+      return RC::INTERNAL;
+    }
+    
     const FieldMeta *field_meta = field_expr->field().meta();
+    if (!field_meta) {
+      LOG_WARN("RowTuple::cell_at: field_meta is null for field at index=%d", index);
+      return RC::INTERNAL;
+    }
+    
+    if (!record_) {
+      LOG_WARN("RowTuple::cell_at: record_ is null");
+      return RC::INTERNAL;
+    }
+    
+    if (!record_->data()) {
+      LOG_WARN("RowTuple::cell_at: record_->data() is null");
+      return RC::INTERNAL;
+    }
+             
     cell.reset();
     cell.set_type(field_meta->type());
     cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    
     return RC::SUCCESS;
   }
 
@@ -212,17 +232,49 @@ public:
   {
     const char *table_name = spec.table_name();
     const char *field_name = spec.field_name();
+    
+    // 基本的空值检查
+    if (!table_name || !field_name || !table_ || !table_->name()) {
+      LOG_WARN("RowTuple::find_cell: null parameters - table_name=%p, field_name=%p, table_=%p", 
+               table_name, field_name, table_);
+      return RC::INVALID_ARGUMENT;
+    }
+    
+    LOG_INFO("RowTuple::find_cell: searching for table='%s', field='%s' in table='%s'", 
+             table_name, field_name, table_->name());
+             
     if (0 != strcmp(table_name, table_->name())) {
+      LOG_WARN("RowTuple::find_cell: table name mismatch, expected='%s', got='%s'", 
+               table_->name(), table_name);
       return RC::NOTFOUND;
     }
 
+    LOG_INFO("RowTuple::find_cell: table matched, searching in %zu fields", speces_.size());
+
     for (size_t i = 0; i < speces_.size(); ++i) {
       const FieldExpr *field_expr = speces_[i];
-      const Field     &field      = field_expr->field();
+      if (!field_expr) {
+        LOG_WARN("RowTuple::find_cell: field_expr[%zu] is null", i);
+        continue;
+      }
+      
+      const Field &field = field_expr->field();
+      if (!field.field_name()) {
+        LOG_WARN("RowTuple::find_cell: field[%zu].field_name() is null", i);
+        continue;
+      }
+      
+      LOG_INFO("RowTuple::find_cell: checking field[%zu]='%s'", i, field.field_name());
+      
       if (0 == strcmp(field_name, field.field_name())) {
-        return cell_at(i, cell);
+        LOG_INFO("RowTuple::find_cell: found matching field, calling cell_at(%zu)", i);
+        RC rc = cell_at(i, cell);
+        LOG_INFO("RowTuple::find_cell: cell_at returned rc=%s", strrc(rc));
+        return rc;
       }
     }
+    
+    LOG_WARN("RowTuple::find_cell: field '%s' not found in %zu fields", field_name, speces_.size());
     return RC::NOTFOUND;
   }
 
