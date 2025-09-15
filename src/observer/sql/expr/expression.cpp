@@ -124,9 +124,13 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   RC  rc         = RC::SUCCESS;
   int cmp_result = left.compare(right);
   result         = false;
+  LOG_INFO("COMPARE: left=%s(%d), right=%s(%d), cmp_result=%d", 
+           left.to_string().c_str(), (int)left.attr_type(),
+           right.to_string().c_str(), (int)right.attr_type(), cmp_result);
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
+      LOG_INFO("EQUAL_TO result: %s", result ? "true" : "false");
     } break;
     case LESS_EQUAL: {
       result = (cmp_result <= 0);
@@ -154,23 +158,27 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
 
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
-  if (left_->type() == ExprType::VALUE && right_->type() == ExprType::VALUE) {
-    ValueExpr *  left_value_expr  = static_cast<ValueExpr *>(left_.get());
-    ValueExpr *  right_value_expr = static_cast<ValueExpr *>(right_.get());
-    const Value &left_cell        = left_value_expr->get_value();
-    const Value &right_cell       = right_value_expr->get_value();
-
-    bool value = false;
-    RC   rc    = compare_value(left_cell, right_cell, value);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
-    } else {
-      cell.set_boolean(value);
-    }
-    return rc;
+  // 尝试计算常量表达式的值
+  Value left_value, right_value;
+  
+  RC rc = left_->try_get_value(left_value);
+  if (rc != RC::SUCCESS) {
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  rc = right_->try_get_value(right_value);
+  if (rc != RC::SUCCESS) {
+    return RC::INVALID_ARGUMENT;
   }
 
-  return RC::INVALID_ARGUMENT;
+  bool value = false;
+  rc = compare_value(left_value, right_value, value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
+  } else {
+    cell.set_boolean(value);
+  }
+  return rc;
 }
 
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
@@ -334,6 +342,11 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 
   const AttrType target_type = value_type();
   value.set_type(target_type);
+  
+  LOG_INFO("ARITHMETIC calc_value: left=%s(%d), right=%s(%d), target_type=%d, op_type=%d",
+           left_value.to_string().c_str(), (int)left_value.attr_type(),
+           right_value.to_string().c_str(), (int)right_value.attr_type(),
+           (int)target_type, (int)arithmetic_type_);
 
   switch (arithmetic_type_) {
     case Type::ADD: {
@@ -519,19 +532,31 @@ RC ArithmeticExpr::try_get_value(Value &value) const
   Value left_value;
   Value right_value;
 
+  // 减少冗余日志输出 - 只在需要时输出
+  #ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value: type=%d", (int)arithmetic_type_);
+  #endif
+
   rc = left_->try_get_value(left_value);
   if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+    // try_get_value失败是正常的（表达式包含字段时），不需要警告
     return rc;
   }
 
   if (right_) {
     rc = right_->try_get_value(right_value);
     if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+      // try_get_value失败是正常的（表达式包含字段时），不需要警告
       return rc;
     }
   }
+
+  #ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value calling calc_value: left=%s, right=%s, op=%d",
+           left_value.to_string().c_str(), 
+           right_value.to_string().c_str(), 
+           (int)arithmetic_type_);
+  #endif
 
   return calc_value(left_value, right_value, value);
 }

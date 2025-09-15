@@ -59,11 +59,19 @@ RC FloatType::divide(const Value &left, const Value &right, Value &result) const
     result.set_null();
     return RC::SUCCESS;
   }
-  if (right.get_float() > -EPSILON && right.get_float() < EPSILON) {
+  
+  float left_val = left.get_float();
+  float right_val = right.get_float();
+  LOG_INFO("FloatType::divide: %f / %f", left_val, right_val);
+  
+  if (right_val > -EPSILON && right_val < EPSILON) {
     // 除零返回NULL（符合MySQL标准） 已经在attr_type.h中定义了NULLS类型  且在value.h中定义了set_null()方法
     result.set_null();
+    LOG_INFO("FloatType::divide: Division by zero, returning NULL");
   } else {
-    result.set_float(left.get_float() / right.get_float());
+    float div_result = left_val / right_val;
+    result.set_float(div_result);
+    LOG_INFO("FloatType::divide: Result = %f", div_result);
   }
   return RC::SUCCESS;
 }

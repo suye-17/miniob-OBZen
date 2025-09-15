@@ -24,22 +24,121 @@ class Db;
 class Table;
 class FieldMeta;
 
+/**
+ * @brief 过滤对象 - 表示WHERE条件中的一个操作数
+ * @details 支持三种类型：字段引用、常量值、复杂表达式
+ * 使用现代C++设计模式，具有完整的内存管理和类型安全
+ */
 struct FilterObj
 {
-  bool  is_attr;
+  enum class Type {
+    FIELD,      // 字段引用 (如: id, name)
+    VALUE,      // 常量值 (如: 123, 'hello')
+    EXPRESSION  // 复杂表达式 (如: id+1, (col1*2)/3)
+  };
+
+  Type type_;
   Field field;
   Value value;
+  Expression *expression;
+
+  FilterObj() : type_(Type::VALUE), expression(nullptr) {}
+  
+  // 析构函数：释放表达式内存
+  ~FilterObj() {
+    if (expression != nullptr) {
+      delete expression;
+      expression = nullptr;
+    }
+  }
+  
+  // 拷贝构造函数：深拷贝表达式
+  FilterObj(const FilterObj& other) 
+    : type_(other.type_), field(other.field), value(other.value), expression(nullptr) {
+    if (other.expression != nullptr) {
+      expression = other.expression->copy().release();
+    }
+  }
+  
+  // 拷贝赋值运算符：深拷贝表达式
+  FilterObj& operator=(const FilterObj& other) {
+    if (this != &other) {
+      // 先释放当前的表达式
+      delete expression;
+      
+      // 拷贝数据
+      type_ = other.type_;
+      field = other.field;
+      value = other.value;
+      
+      // 深拷贝表达式
+      if (other.expression != nullptr) {
+        expression = other.expression->copy().release();
+      } else {
+        expression = nullptr;
+      }
+    }
+    return *this;
+  }
+  
+  // 移动构造函数
+  FilterObj(FilterObj&& other) noexcept
+    : type_(other.type_), field(std::move(other.field)), 
+      value(std::move(other.value)), expression(other.expression) {
+    other.expression = nullptr;
+  }
+  
+  // 移动赋值运算符
+  FilterObj& operator=(FilterObj&& other) noexcept {
+    if (this != &other) {
+      // 先释放当前的表达式
+      delete expression;
+      
+      // 移动数据
+      type_ = other.type_;
+      field = std::move(other.field);
+      value = std::move(other.value);
+      expression = other.expression;
+      
+      // 清空源对象
+      other.expression = nullptr;
+    }
+    return *this;
+  }
 
   void init_attr(const Field &field)
   {
-    is_attr     = true;
+    clear_expression();
+    type_ = Type::FIELD;
     this->field = field;
   }
 
   void init_value(const Value &value)
   {
-    is_attr     = false;
+    clear_expression();
+    type_ = Type::VALUE;
     this->value = value;
+  }
+  
+  void init_expression(Expression *expr)
+  {
+    clear_expression();
+    type_ = Type::EXPRESSION;
+    expression = expr;
+  }
+  
+  // 查询方法
+  bool is_attr() const { return type_ == Type::FIELD; }
+  bool is_value() const { return type_ == Type::VALUE; }
+  bool is_expression() const { return type_ == Type::EXPRESSION; }
+  Type get_type() const { return type_; }
+
+private:
+  void clear_expression() {
+    if (expression != nullptr) {
+      delete expression;
+      expression = nullptr;
+    }
   }
 };
 
@@ -86,5 +185,20 @@ public:
       const ConditionSqlNode &condition, FilterUnit *&filter_unit);
 
 private:
-  vector<FilterUnit *> filter_units_;  // 默认当前都是AND关系
+  /**
+   * @brief 表达式到FilterObj的统一转换函数
+   * @param expr 待转换的表达式指针
+   * @param default_table 默认表上下文
+   * @param filter_obj 输出的FilterObj对象
+   * @param side_name 调试用的边名称("left"/"right")
+   * @return RC 转换结果
+   * @details 智能处理不同类型的表达式：
+   *   - UNBOUND_FIELD: 直接绑定到表字段
+   *   - VALUE: 静态求值为常量
+   *   - 其他: 尝试静态求值，失败则保存表达式副本
+   */
+  static RC convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
+                                             FilterObj& filter_obj, const char* side_name);
+  
+  vector<FilterUnit *> filter_units_;  ///< 过滤单元列表，默认AND关系
 };

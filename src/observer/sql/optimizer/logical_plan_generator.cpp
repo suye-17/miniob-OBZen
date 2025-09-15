@@ -36,11 +36,130 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/insert_stmt.h"
 #include "sql/stmt/select_stmt.h"
 #include "sql/stmt/stmt.h"
+#include "sql/parser/expression_binder.h"
 
 #include "sql/expr/expression_iterator.h"
 
 using namespace std;
 using namespace common;
+
+// 函数前向声明
+RC bind_expression_fields(unique_ptr<Expression> &expr, const vector<Table *> &tables);
+RC bind_unbound_field(unique_ptr<Expression> &expr, const vector<Table *> &tables);
+RC bind_arithmetic_expression(unique_ptr<Expression> &expr, const vector<Table *> &tables);
+RC bind_comparison_expression(unique_ptr<Expression> &expr, const vector<Table *> &tables);
+
+// 辅助函数：绑定单个未绑定字段
+RC bind_unbound_field(unique_ptr<Expression> &expr, const vector<Table *> &tables) {
+  auto unbound_field = static_cast<UnboundFieldExpr*>(expr.get());
+  const char* field_name = unbound_field->field_name();
+  const char* table_name = unbound_field->table_name();
+  
+  // 查找目标表
+  Table* target_table = nullptr;
+  if (table_name && strlen(table_name) > 0) {
+    // 指定了表名，直接查找
+    auto it = find_if(tables.begin(), tables.end(), 
+                      [table_name](Table* table) { return strcmp(table->name(), table_name) == 0; });
+    target_table = (it != tables.end()) ? *it : nullptr;
+  } else {
+    // 没有指定表名，在所有表中查找字段
+    auto it = find_if(tables.begin(), tables.end(), 
+                      [field_name](Table* table) { 
+                        return table->table_meta().field(field_name) != nullptr; 
+                      });
+    target_table = (it != tables.end()) ? *it : nullptr;
+  }
+  
+  if (!target_table) {
+    LOG_WARN("field not found: %s", field_name);
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+  }
+  
+  const FieldMeta* field_meta = target_table->table_meta().field(field_name);
+  if (!field_meta) {
+    LOG_WARN("field not found in table: %s.%s", target_table->name(), field_name);
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+  }
+  
+  // 替换为FieldExpr
+  Field field(target_table, field_meta);
+  expr = make_unique<FieldExpr>(field);
+  return RC::SUCCESS;
+}
+
+// 辅助函数：绑定算术表达式
+RC bind_arithmetic_expression(unique_ptr<Expression> &expr, const vector<Table *> &tables) {
+  auto arithmetic_expr = static_cast<ArithmeticExpr*>(expr.get());
+  
+  // 获取并绑定左右子表达式
+  auto left = arithmetic_expr->left()->copy();
+  auto right = arithmetic_expr->right() ? arithmetic_expr->right()->copy() : nullptr;
+  
+  RC rc = bind_expression_fields(left, tables);
+  if (rc != RC::SUCCESS) return rc;
+  
+  if (right) {
+    rc = bind_expression_fields(right, tables);
+    if (rc != RC::SUCCESS) return rc;
+  }
+  
+  // 重新构造算术表达式
+  ArithmeticExpr::Type op_type = arithmetic_expr->arithmetic_type();
+  expr = make_unique<ArithmeticExpr>(op_type, left.release(), right.release());
+  return RC::SUCCESS;
+}
+
+// 辅助函数：绑定比较表达式
+RC bind_comparison_expression(unique_ptr<Expression> &expr, const vector<Table *> &tables) {
+  auto comparison_expr = static_cast<ComparisonExpr*>(expr.get());
+  
+  // 获取并绑定左右子表达式
+  auto left = comparison_expr->left()->copy();
+  auto right = comparison_expr->right()->copy();
+  
+  RC rc = bind_expression_fields(left, tables);
+  if (rc != RC::SUCCESS) return rc;
+  
+  rc = bind_expression_fields(right, tables);
+  if (rc != RC::SUCCESS) return rc;
+  
+  // 重新构造比较表达式
+  CompOp comp_op = comparison_expr->comp();
+  expr = make_unique<ComparisonExpr>(comp_op, std::move(left), std::move(right));
+  return RC::SUCCESS;
+}
+
+// 辅助函数：递归绑定表达式中的字段
+RC bind_expression_fields(unique_ptr<Expression> &expr, const vector<Table *> &tables) {
+  if (!expr) {
+    return RC::SUCCESS;
+  }
+  
+  switch (expr->type()) {
+    case ExprType::UNBOUND_FIELD: {
+      return bind_unbound_field(expr, tables);
+    }
+    
+    case ExprType::ARITHMETIC: {
+      return bind_arithmetic_expression(expr, tables);
+    }
+    
+    case ExprType::COMPARISON: {
+      return bind_comparison_expression(expr, tables);
+    }
+    
+    case ExprType::FIELD:
+    case ExprType::VALUE:
+    case ExprType::STAR:
+      // 这些表达式已经绑定或不需要绑定
+      return RC::SUCCESS;
+      
+    default:
+      // 其他类型的表达式暂时不处理
+      return RC::SUCCESS;
+  }
+}
 
 RC LogicalPlanGenerator::create(Stmt *stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
@@ -102,13 +221,13 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   last_oper = &table_oper;
   unique_ptr<LogicalOperator> predicate_oper;
 
-  RC rc = create_plan(select_stmt->filter_stmt(), predicate_oper);
+  const vector<Table *> &tables = select_stmt->tables();
+  
+  RC rc = create_plan(select_stmt->filter_stmt(), tables, predicate_oper);
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to create predicate logical plan. rc=%s", strrc(rc));
     return rc;
   }
-
-  const vector<Table *> &tables = select_stmt->tables();
   for (Table *table : tables) {
 
     unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY));
@@ -162,7 +281,7 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   return RC::SUCCESS;
 }
 
-RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<LogicalOperator> &logical_operator)
+RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, const vector<Table *> &tables, unique_ptr<LogicalOperator> &logical_operator)
 {
   RC                                  rc = RC::SUCCESS;
   vector<unique_ptr<Expression>> cmp_exprs;
@@ -171,13 +290,35 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     const FilterObj &filter_obj_left  = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
 
-    unique_ptr<Expression> left(filter_obj_left.is_attr
-                                    ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
-                                    : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
+    unique_ptr<Expression> left;
+    if (filter_obj_left.is_expression()) {
+      left = unique_ptr<Expression>(filter_obj_left.expression->copy().release());
+      // 绑定表达式中的字段
+      rc = bind_expression_fields(left, tables);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to bind fields in left expression. rc=%s", strrc(rc));
+        return rc;
+      }
+    } else if (filter_obj_left.is_attr()) {
+      left = unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
+    } else {
+      left = unique_ptr<Expression>(new ValueExpr(filter_obj_left.value));
+    }
 
-    unique_ptr<Expression> right(filter_obj_right.is_attr
-                                     ? static_cast<Expression *>(new FieldExpr(filter_obj_right.field))
-                                     : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));
+    unique_ptr<Expression> right;
+    if (filter_obj_right.is_expression()) {
+      right = unique_ptr<Expression>(filter_obj_right.expression->copy().release());
+      // 绑定表达式中的字段
+      rc = bind_expression_fields(right, tables);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to bind fields in right expression. rc=%s", strrc(rc));
+        return rc;
+      }
+    } else if (filter_obj_right.is_attr()) {
+      right = unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
+    } else {
+      right = unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
+    }
 
     if (left->value_type() != right->value_type()) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
@@ -257,8 +398,9 @@ RC LogicalPlanGenerator::create_plan(DeleteStmt *delete_stmt, unique_ptr<Logical
   unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 
   unique_ptr<LogicalOperator> predicate_oper;
+  vector<Table *> tables = {table};
 
-  RC rc = create_plan(filter_stmt, predicate_oper);
+  RC rc = create_plan(filter_stmt, tables, predicate_oper);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -378,8 +520,9 @@ RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<Logical
   std::unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 
   std::unique_ptr<LogicalOperator> predicate_oper;
+  vector<Table *> tables = {table};
 
-  RC rc = create_plan(filter_stmt, predicate_oper);
+  RC rc = create_plan(filter_stmt, tables, predicate_oper);
   if (rc != RC::SUCCESS) {
     return rc;
   }

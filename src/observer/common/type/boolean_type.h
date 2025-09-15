@@ -8,20 +8,21 @@ EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
 MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
-#include "common/type/char_type.h"
-#include "common/type/float_type.h"
-#include "common/type/integer_type.h"
-#include "common/type/date_type.h"
-#include "common/type/data_type.h"
-#include "common/type/vector_type.h"
-#include "common/type/boolean_type.h"
+#pragma once
 
-array<unique_ptr<DataType>, static_cast<int>(AttrType::MAXTYPE)> DataType::type_instances_ = {
-    make_unique<DataType>(AttrType::UNDEFINED),
-    make_unique<CharType>(),
-    make_unique<IntegerType>(),
-    make_unique<FloatType>(),
-    make_unique<DateType>(),
-    make_unique<VectorType>(),
-    make_unique<BooleanType>(),
+#include "common/type/data_type.h"
+
+/**
+ * @brief 布尔类型
+ * @ingroup DataType
+ */
+class BooleanType : public DataType
+{
+public:
+  BooleanType() : DataType(AttrType::BOOLEANS) {}
+  virtual ~BooleanType() = default;
+
+  RC to_string(const Value &val, string &result) const override;
+  RC cast_to(const Value &val, AttrType type, Value &result) const override;
+  int compare(const Value &left, const Value &right) const override;
 };
