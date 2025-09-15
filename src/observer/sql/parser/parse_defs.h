@@ -18,7 +18,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/vector.h"
 #include "common/lang/memory.h"
 #include "common/value.h"
-#include "common/lang/utility.h"
 
 class Expression;
 
@@ -51,6 +50,7 @@ enum CompOp
   LESS_THAN,    ///< "<"
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
+  LIKE_OP,
   NO_OP
 };
 

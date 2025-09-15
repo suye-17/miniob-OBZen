@@ -48,6 +48,12 @@ RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrT
     return RC::INVALID_ARGUMENT;
   }
 
+  // LIKE操作只支持字符串类型
+  if (comp_op == LIKE_OP && attr_type != AttrType::CHARS) {
+    LOG_ERROR("LIKE operation only supports CHARS type, got: %d", attr_type);
+    return RC::INVALID_ARGUMENT;
+  }
+
   left_      = left;
   right_     = right;
   attr_type_ = attr_type;
@@ -117,12 +123,53 @@ RC DefaultConditionFilter::init(Table &table, const ConditionSqlNode &condition)
   return init(left, right, type_left, condition.comp);
 }
 
+// LIKE模式匹配实现：%匹配零个或多个字符，_匹配单个字符
+// 遇到%时递归尝试所有可能的匹配位置
+static bool match_like_pattern(const char *text, const char *pattern)
+{
+  const char *t = text;
+  const char *p = pattern;
+  
+  while (*p) {
+    if (*p == '%') {
+      p++;
+      if (*p == '\0') return true;
+      
+      while (*t) {
+        if (match_like_pattern(t, p)) return true;
+        t++;
+      }
+      return false;
+    } 
+    else if (*p == '_') {
+      if (*t == '\0') return false;
+      p++; t++;
+    } 
+    else {
+      if (*t != *p) return false;
+      p++; t++;
+    }
+  }
+  
+  return *t == '\0';
+}
+
+// LIKE匹配的安全入口函数，负责参数校验和调用核心匹配逻辑
+static bool do_like_match(const char *text, const char *pattern)
+{
+  if (text == nullptr || pattern == nullptr) {
+    return false;
+  }
+  return match_like_pattern(text, pattern);
+}
+
 bool DefaultConditionFilter::filter(const Record &rec) const
 {
   Value left_value;
   Value right_value;
 
-  if (left_.is_attr) {  // value
+  // 获取左右操作数的值（现有逻辑）
+  if (left_.is_attr) {
     left_value.set_type(attr_type_);
     left_value.set_data(rec.data() + left_.attr_offset, left_.attr_length);
   } else {
@@ -136,8 +183,25 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     right_value.set_value(right_.value);
   }
 
-  int cmp_result = left_value.compare(right_value);
+  // 处理LIKE操作
+  if (comp_op_ == LIKE_OP) {
+    // LIKE操作只支持字符串类型
+    if (attr_type_ != AttrType::CHARS) {
+      LOG_WARN("LIKE operation only supports CHARS type, got: %d", attr_type_);
+      return false;
+    }
+    
+    // 获取字符串值
+    std::string text = left_value.get_string();
+    std::string pattern = right_value.get_string();
+    
+    // 执行LIKE匹配
+    return do_like_match(text.c_str(), pattern.c_str());
+  }
 
+  // 现有的比较操作逻辑
+  int cmp_result = left_value.compare(right_value);
+  
   switch (comp_op_) {
     case EQUAL_TO: return 0 == cmp_result;
     case LESS_EQUAL: return cmp_result <= 0;
@@ -145,12 +209,11 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     case LESS_THAN: return cmp_result < 0;
     case GREAT_EQUAL: return cmp_result >= 0;
     case GREAT_THAN: return cmp_result > 0;
-
-    default: break;
+    
+    default:
+      LOG_WARN("Unknown comparison operator: %d", comp_op_);
+      return false;
   }
-
-  LOG_PANIC("Never should print this.");
-  return cmp_result;  // should not go here
 }
 
 CompositeConditionFilter::~CompositeConditionFilter()
@@ -211,3 +274,5 @@ bool CompositeConditionFilter::filter(const Record &rec) const
   }
   return true;
 }
+
+ 

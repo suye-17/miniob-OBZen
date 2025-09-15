@@ -18,6 +18,46 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
+// LIKE模式匹配实现：%匹配零个或多个字符，_匹配单个字符
+// 遇到%时递归尝试所有可能的匹配位置
+static bool match_like_pattern(const char *text, const char *pattern)
+{
+  const char *t = text;
+  const char *p = pattern;
+  
+  while (*p) {
+    if (*p == '%') {
+      p++;
+      if (*p == '\0') return true;
+      
+      while (*t) {
+        if (match_like_pattern(t, p)) return true;
+        t++;
+      }
+      return false;
+    } 
+    else if (*p == '_') {
+      if (*t == '\0') return false;
+      p++; t++;
+    } 
+    else {
+      if (*t != *p) return false;
+      p++; t++;
+    }
+  }
+  
+  return *t == '\0';
+}
+
+// LIKE匹配的安全入口函数
+static bool like_match(const char *text, const char *pattern)
+{
+  if (text == nullptr || pattern == nullptr) {
+    return false;
+  }
+  return match_like_pattern(text, pattern);
+}
+
 RC FieldExpr::get_value(const Tuple &tuple, Value &value) const
 {
   return tuple.find_cell(TupleCellSpec(table_name(), field_name()), value);
@@ -121,9 +161,25 @@ ComparisonExpr::~ComparisonExpr() {}
 
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
-  RC  rc         = RC::SUCCESS;
+  RC rc = RC::SUCCESS;
+  result = false;
+  
+  // 处理LIKE操作
+  if (comp_ == LIKE_OP) {
+    if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
+      LOG_WARN("LIKE operation requires CHARS type values");
+      rc = RC::INTERNAL;
+      return rc;
+    }
+    
+    std::string text = left.get_string();
+    std::string pattern = right.get_string();
+    result = like_match(text.c_str(), pattern.c_str());
+    return rc;
+  }
+  
+  // 现有的比较操作逻辑
   int cmp_result = left.compare(right);
-  result         = false;
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
@@ -200,7 +256,45 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 
 RC ComparisonExpr::eval(Chunk &chunk, vector<uint8_t> &select)
 {
-  RC     rc = RC::SUCCESS;
+  RC rc = RC::SUCCESS;
+  
+  // 处理LIKE操作的向量化执行
+  if (comp_ == LIKE_OP) {
+    Column left_column;
+    Column right_column;
+    
+    rc = left_->get_column(chunk, left_column);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    
+    rc = right_->get_column(chunk, right_column);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    
+    // 确保都是字符串类型
+    if (left_column.attr_type() != AttrType::CHARS || right_column.attr_type() != AttrType::CHARS) {
+      LOG_WARN("LIKE operation requires CHARS type columns");
+      std::fill(select.begin(), select.end(), 0);
+      return RC::SUCCESS;
+    }
+    
+    // 逐行进行LIKE匹配
+    for (int i = 0; i < chunk.rows(); i++) {
+      Value left_value = left_column.get_value(i);
+      Value right_value = right_column.get_value(i);
+      
+      std::string text = left_value.get_string();
+      std::string pattern = right_value.get_string();
+      
+      select[i] = like_match(text.c_str(), pattern.c_str()) ? 1 : 0;
+    }
+    
+    return RC::SUCCESS;
+  }
+  
+  // 现有的比较操作逻辑
   Column left_column;
   Column right_column;
 
