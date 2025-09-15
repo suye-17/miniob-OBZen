@@ -279,8 +279,32 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
             table_meta_.name(), field->name(), value.to_string().c_str());
         break;
       }
+      
+      // 特殊处理向量类型：检查维度是否匹配
+      if (field->type() == AttrType::VECTORS && real_value.attr_type() == AttrType::VECTORS) {
+        const vector<float> &vec = real_value.get_vector();
+        int expected_dimension = field->len() / sizeof(float);  // 字段长度除以float大小得到维度
+        if (static_cast<int>(vec.size()) != expected_dimension) {
+          LOG_WARN("Vector dimension mismatch. table=%s, field=%s, expected=%d, actual=%zu",
+              table_meta_.name(), field->name(), expected_dimension, vec.size());
+          rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+          break;
+        }
+      }
+      
       rc = set_value_to_record(record_data, real_value, field);
     } else {
+      // 即使类型相同，对于向量类型也需要检查维度
+      if (field->type() == AttrType::VECTORS && value.attr_type() == AttrType::VECTORS) {
+        const vector<float> &vec = value.get_vector();
+        int expected_dimension = field->len() / sizeof(float);  // 字段长度除以float大小得到维度
+        if (static_cast<int>(vec.size()) != expected_dimension) {
+          LOG_WARN("Vector dimension mismatch. table=%s, field=%s, expected=%d, actual=%zu",
+              table_meta_.name(), field->name(), expected_dimension, vec.size());
+          rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+          break;
+        }
+      }
       rc = set_value_to_record(record_data, value, field);
     }
   }
