@@ -177,14 +177,27 @@ RC VectorType::to_string(const Value &val, std::string &result) const
       oss << ",";
     }
     
-    // 简单格式化：去掉末尾的0和小数点
+    // 格式化：最大2位小数，去掉尾随零
     float val_f = vec[i];
     if (val_f == static_cast<int>(val_f)) {
       // 整数，直接输出
       oss << static_cast<int>(val_f);
     } else {
-      // 浮点数，保留2位小数
-      oss << std::fixed << std::setprecision(2) << val_f;
+      // 浮点数，最大2位小数，然后去掉尾随零
+      std::ostringstream temp;
+      temp << std::fixed << std::setprecision(2) << val_f;
+      std::string temp_str = temp.str();
+      
+      // 去掉尾随的零
+      while (!temp_str.empty() && temp_str.back() == '0') {
+        temp_str.pop_back();
+      }
+      // 如果最后是小数点，也去掉
+      if (!temp_str.empty() && temp_str.back() == '.') {
+        temp_str.pop_back();
+      }
+      
+      oss << temp_str;
     }
   }
   
