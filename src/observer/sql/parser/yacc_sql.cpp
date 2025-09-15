@@ -605,7 +605,7 @@ union yyalloc
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  44
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  99
+#define YYNRULES  100
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  175
 
@@ -667,11 +667,12 @@ static const yytype_int16 yyrline[] =
      247,   248,   249,   250,   254,   260,   265,   271,   277,   283,
      289,   295,   302,   308,   315,   326,   334,   355,   361,   370,
      377,   386,   389,   390,   391,   392,   393,   397,   400,   407,
-     411,   423,   433,   439,   446,   450,   454,   459,   467,   470,
-     477,   488,   501,   524,   538,   549,   558,   563,   574,   577,
-     580,   583,   587,   591,   594,   599,   605,   612,   616,   624,
-     629,   633,   646,   649,   655,   658,   663,   670,   686,   687,
-     688,   689,   690,   691,   697,   702,   714,   722,   731,   732
+     411,   423,   433,   439,   446,   450,   454,   459,   468,   471,
+     478,   489,   502,   525,   539,   550,   559,   564,   575,   578,
+     581,   584,   588,   592,   595,   600,   606,   613,   617,   625,
+     630,   634,   647,   650,   656,   659,   664,   671,   684,   700,
+     701,   702,   703,   704,   705,   711,   716,   728,   736,   745,
+     746
 };
 #endif
 
@@ -756,20 +757,20 @@ static const yytype_int8 yydefact[] =
 {
        0,     0,     0,     0,     0,     0,     0,    26,     0,     0,
        0,    27,    28,    29,    25,    24,     0,     0,     0,     0,
-       0,    98,    23,    22,    15,    16,    17,    18,     9,    10,
+       0,    99,    23,    22,    15,    16,    17,    18,     9,    10,
       11,    12,    13,    14,     8,     5,     7,     6,     4,     3,
       19,    20,    21,     0,     0,     0,     0,     0,    57,    54,
       55,    77,    56,     0,    76,    74,    65,    66,    75,    64,
-      33,    32,     0,     0,     0,     0,     0,    96,     0,     1,
-      99,     2,     0,     0,    30,     0,     0,     0,    73,     0,
+      33,    32,     0,     0,     0,     0,     0,    97,     0,     1,
+     100,     2,     0,     0,    30,     0,     0,     0,    73,     0,
        0,     0,     0,     0,     0,    84,    63,     0,    82,     0,
        0,     0,    31,     0,     0,     0,    72,    78,    67,    68,
-      69,    70,    71,    79,    80,    82,     0,    83,    85,     0,
-      60,     0,    97,     0,     0,    47,    37,     0,    35,     0,
-      94,    88,    89,    90,    91,    92,    93,     0,    84,     0,
+      69,    70,    71,    79,    80,    82,    88,    83,    85,     0,
+      60,     0,    98,     0,     0,    47,    37,     0,    35,     0,
+      95,    89,    90,    91,    92,    93,    94,     0,    84,     0,
        0,     0,    42,    43,    44,    46,    45,    40,     0,     0,
        0,    81,    62,    87,    86,     0,    52,    82,     0,     0,
-       0,    38,    58,     0,    51,     0,    61,    95,    41,     0,
+       0,    38,    58,     0,    51,     0,    61,    96,    41,     0,
        0,     0,    36,    34,    53,    39,     0,     0,    49,     0,
        0,     0,    48,    59,    50
 };
@@ -872,8 +873,9 @@ static const yytype_int8 yyr1[] =
       86,    87,    88,    88,    89,    89,    89,    89,    90,    90,
       91,    92,    93,    93,    93,    94,    95,    95,    96,    96,
       96,    96,    96,    96,    96,    96,    96,    97,    97,    98,
-      99,    99,   100,   100,   101,   101,   101,   102,   103,   103,
-     103,   103,   103,   103,   104,   105,   106,   107,   108,   108
+      99,    99,   100,   100,   101,   101,   101,   102,   102,   103,
+     103,   103,   103,   103,   103,   104,   105,   106,   107,   108,
+     108
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -888,7 +890,8 @@ static const yytype_int8 yyr2[] =
        4,     7,     6,     3,     2,     2,     1,     3,     3,     3,
        3,     3,     3,     2,     1,     1,     1,     1,     3,     1,
        1,     3,     0,     2,     0,     1,     3,     3,     1,     1,
-       1,     1,     1,     1,     0,     7,     2,     4,     0,     1
+       1,     1,     1,     1,     1,     0,     7,     2,     4,     0,
+       1
 };
 
 
@@ -1456,85 +1459,85 @@ yydestruct (const char *yymsg,
     case YYSYMBOL_attr_def_list: /* attr_def_list  */
 #line 155 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).attr_infos); }
-#line 1460 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1463 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_attr_def: /* attr_def  */
 #line 156 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).attr_info); }
-#line 1466 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1469 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_primary_key: /* primary_key  */
 #line 163 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).key_list); }
-#line 1472 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1475 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_attr_list: /* attr_list  */
 #line 163 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).key_list); }
-#line 1478 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1481 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_value_list: /* value_list  */
 #line 159 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).value_list); }
-#line 1484 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1487 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_value: /* value  */
 #line 153 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).value); }
-#line 1490 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1493 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_expression_list: /* expression_list  */
 #line 158 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).expression_list); }
-#line 1496 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1499 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_expression: /* expression  */
 #line 157 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).expression); }
-#line 1502 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1505 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_rel_attr: /* rel_attr  */
 #line 154 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).rel_attr); }
-#line 1508 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1511 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_rel_list: /* rel_list  */
 #line 162 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).relation_list); }
-#line 1514 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1517 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_where: /* where  */
 #line 160 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).condition_list); }
-#line 1520 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1523 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_condition_list: /* condition_list  */
 #line 160 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).condition_list); }
-#line 1526 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1529 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_condition: /* condition  */
 #line 152 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).condition); }
-#line 1532 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1535 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
     case YYSYMBOL_group_by: /* group_by  */
 #line 158 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             { delete ((*yyvaluep).expression_list); }
-#line 1538 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1541 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
         break;
 
       default:
@@ -1843,7 +1846,7 @@ yyreduce:
     unique_ptr<ParsedSqlNode> sql_node = unique_ptr<ParsedSqlNode>((yyvsp[-1].sql_node));
     sql_result->add_sql_node(std::move(sql_node));
   }
-#line 1847 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1850 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 24: /* exit_stmt: EXIT  */
@@ -1852,7 +1855,7 @@ yyreduce:
       (void)yynerrs;  // 这么写为了消除yynerrs未使用的告警。如果你有更好的方法欢迎提PR
       (yyval.sql_node) = new ParsedSqlNode(SCF_EXIT);
     }
-#line 1856 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1859 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 25: /* help_stmt: HELP  */
@@ -1860,7 +1863,7 @@ yyreduce:
          {
       (yyval.sql_node) = new ParsedSqlNode(SCF_HELP);
     }
-#line 1864 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1867 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 26: /* sync_stmt: SYNC  */
@@ -1868,7 +1871,7 @@ yyreduce:
          {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SYNC);
     }
-#line 1872 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1875 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 27: /* begin_stmt: TRX_BEGIN  */
@@ -1876,7 +1879,7 @@ yyreduce:
                {
       (yyval.sql_node) = new ParsedSqlNode(SCF_BEGIN);
     }
-#line 1880 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1883 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 28: /* commit_stmt: TRX_COMMIT  */
@@ -1884,7 +1887,7 @@ yyreduce:
                {
       (yyval.sql_node) = new ParsedSqlNode(SCF_COMMIT);
     }
-#line 1888 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1891 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 29: /* rollback_stmt: TRX_ROLLBACK  */
@@ -1892,7 +1895,7 @@ yyreduce:
                   {
       (yyval.sql_node) = new ParsedSqlNode(SCF_ROLLBACK);
     }
-#line 1896 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1899 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 30: /* drop_table_stmt: DROP TABLE ID  */
@@ -1901,7 +1904,7 @@ yyreduce:
       (yyval.sql_node) = new ParsedSqlNode(SCF_DROP_TABLE);
       (yyval.sql_node)->drop_table.relation_name = (yyvsp[0].cstring);
     }
-#line 1905 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1908 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 31: /* analyze_table_stmt: ANALYZE TABLE ID  */
@@ -1910,7 +1913,7 @@ yyreduce:
       (yyval.sql_node) = new ParsedSqlNode(SCF_ANALYZE_TABLE);
       (yyval.sql_node)->analyze_table.relation_name = (yyvsp[0].cstring);
     }
-#line 1914 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1917 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 32: /* show_tables_stmt: SHOW TABLES  */
@@ -1918,7 +1921,7 @@ yyreduce:
                 {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SHOW_TABLES);
     }
-#line 1922 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1925 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 33: /* desc_table_stmt: DESC ID  */
@@ -1927,7 +1930,7 @@ yyreduce:
       (yyval.sql_node) = new ParsedSqlNode(SCF_DESC_TABLE);
       (yyval.sql_node)->desc_table.relation_name = (yyvsp[0].cstring);
     }
-#line 1931 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1934 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 34: /* create_index_stmt: CREATE INDEX ID ON ID LBRACE ID RBRACE  */
@@ -1939,7 +1942,7 @@ yyreduce:
       create_index.relation_name = (yyvsp[-3].cstring);
       create_index.attribute_name = (yyvsp[-1].cstring);
     }
-#line 1943 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1946 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 35: /* drop_index_stmt: DROP INDEX ID ON ID  */
@@ -1949,7 +1952,7 @@ yyreduce:
       (yyval.sql_node)->drop_index.index_name = (yyvsp[-2].cstring);
       (yyval.sql_node)->drop_index.relation_name = (yyvsp[0].cstring);
     }
-#line 1953 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1956 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 36: /* create_table_stmt: CREATE TABLE ID LBRACE attr_def_list primary_key RBRACE storage_format  */
@@ -1971,7 +1974,7 @@ yyreduce:
         create_table.storage_format = (yyvsp[0].cstring);
       }
     }
-#line 1975 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1978 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 37: /* attr_def_list: attr_def  */
@@ -1981,7 +1984,7 @@ yyreduce:
       (yyval.attr_infos)->emplace_back(*(yyvsp[0].attr_info));
       delete (yyvsp[0].attr_info);
     }
-#line 1985 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1988 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 38: /* attr_def_list: attr_def_list COMMA attr_def  */
@@ -1991,7 +1994,7 @@ yyreduce:
       (yyval.attr_infos)->emplace_back(*(yyvsp[0].attr_info));
       delete (yyvsp[0].attr_info);
     }
-#line 1995 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 1998 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 39: /* attr_def: ID type LBRACE number RBRACE  */
@@ -2002,7 +2005,7 @@ yyreduce:
       (yyval.attr_info)->name = (yyvsp[-4].cstring);
       (yyval.attr_info)->length = (yyvsp[-1].number);
     }
-#line 2006 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2009 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 40: /* attr_def: ID type  */
@@ -2013,43 +2016,43 @@ yyreduce:
       (yyval.attr_info)->name = (yyvsp[-1].cstring);
       (yyval.attr_info)->length = 4;
     }
-#line 2017 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2020 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 41: /* number: NUMBER  */
 #line 386 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
            {(yyval.number) = (yyvsp[0].number);}
-#line 2023 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2026 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 42: /* type: INT_T  */
 #line 389 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                { (yyval.number) = static_cast<int>(AttrType::INTS); }
-#line 2029 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2032 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 43: /* type: STRING_T  */
 #line 390 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                { (yyval.number) = static_cast<int>(AttrType::CHARS); }
-#line 2035 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2038 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 44: /* type: FLOAT_T  */
 #line 391 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                { (yyval.number) = static_cast<int>(AttrType::FLOATS); }
-#line 2041 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2044 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 45: /* type: VECTOR_T  */
 #line 392 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                { (yyval.number) = static_cast<int>(AttrType::VECTORS); }
-#line 2047 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2050 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 46: /* type: DATE_T  */
 #line 393 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
              { (yyval.number) = static_cast<int>(AttrType::DATES); }
-#line 2053 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2056 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 47: /* primary_key: %empty  */
@@ -2057,7 +2060,7 @@ yyreduce:
     {
       (yyval.key_list) = nullptr;
     }
-#line 2061 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2064 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 48: /* primary_key: COMMA PRIMARY KEY LBRACE attr_list RBRACE  */
@@ -2065,7 +2068,7 @@ yyreduce:
     {
       (yyval.key_list) = (yyvsp[-1].key_list);
     }
-#line 2069 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2072 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 49: /* attr_list: ID  */
@@ -2074,7 +2077,7 @@ yyreduce:
       (yyval.key_list) = new vector<string>();
       (yyval.key_list)->push_back((yyvsp[0].cstring));
     }
-#line 2078 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2081 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 50: /* attr_list: ID COMMA attr_list  */
@@ -2088,7 +2091,7 @@ yyreduce:
 
       (yyval.key_list)->insert((yyval.key_list)->begin(), (yyvsp[-2].cstring));
     }
-#line 2092 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2095 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 51: /* insert_stmt: INSERT INTO ID VALUES LBRACE value_list RBRACE  */
@@ -2099,7 +2102,7 @@ yyreduce:
       (yyval.sql_node)->insertion.values.swap(*(yyvsp[-1].value_list));
       delete (yyvsp[-1].value_list);
     }
-#line 2103 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2106 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 52: /* value_list: value  */
@@ -2109,7 +2112,7 @@ yyreduce:
       (yyval.value_list)->emplace_back(*(yyvsp[0].value));
       delete (yyvsp[0].value);
     }
-#line 2113 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2116 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 53: /* value_list: value_list COMMA value  */
@@ -2119,7 +2122,7 @@ yyreduce:
       (yyval.value_list)->emplace_back(*(yyvsp[0].value));
       delete (yyvsp[0].value);
     }
-#line 2123 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2126 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 54: /* value: NUMBER  */
@@ -2128,7 +2131,7 @@ yyreduce:
       (yyval.value) = new Value((int)(yyvsp[0].number));
       (yyloc) = (yylsp[0]);
     }
-#line 2132 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2135 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 55: /* value: FLOAT  */
@@ -2137,7 +2140,7 @@ yyreduce:
       (yyval.value) = new Value((float)(yyvsp[0].floats));
       (yyloc) = (yylsp[0]);
     }
-#line 2141 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2144 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 56: /* value: SSS  */
@@ -2147,7 +2150,7 @@ yyreduce:
       (yyval.value) = new Value(tmp);
       free(tmp);
     }
-#line 2151 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2154 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 57: /* value: NULL_T  */
@@ -2155,29 +2158,30 @@ yyreduce:
             {
       (yyval.value) = new Value();
       (yyval.value)->set_null();
+      (yyval.value)->set_type(AttrType::UNDEFINED);  // NULL值类型标识
       (yyloc) = (yylsp[0]);
     }
-#line 2161 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2165 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 58: /* storage_format: %empty  */
-#line 467 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 468 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.cstring) = nullptr;
     }
-#line 2169 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2173 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 59: /* storage_format: STORAGE FORMAT EQ ID  */
-#line 471 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 472 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.cstring) = (yyvsp[0].cstring);
     }
-#line 2177 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2181 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 60: /* delete_stmt: DELETE FROM ID where  */
-#line 478 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 479 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_DELETE);
       (yyval.sql_node)->deletion.relation_name = (yyvsp[-1].cstring);
@@ -2186,11 +2190,11 @@ yyreduce:
         delete (yyvsp[0].condition_list);
       }
     }
-#line 2190 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2194 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 61: /* update_stmt: UPDATE ID SET ID EQ expression where  */
-#line 489 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 490 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_UPDATE);
       (yyval.sql_node)->update.relation_name = (yyvsp[-5].cstring);
@@ -2201,11 +2205,11 @@ yyreduce:
         delete (yyvsp[0].condition_list);
       }
     }
-#line 2205 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2209 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 62: /* select_stmt: SELECT expression_list FROM rel_list where group_by  */
-#line 502 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 503 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SELECT);
       if ((yyvsp[-4].expression_list) != nullptr) {
@@ -2228,11 +2232,11 @@ yyreduce:
         delete (yyvsp[0].expression_list);
       }
     }
-#line 2232 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2236 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 63: /* select_stmt: SELECT expression_list where  */
-#line 525 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 526 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SELECT);
       if ((yyvsp[-1].expression_list) != nullptr) {
@@ -2246,11 +2250,11 @@ yyreduce:
       }
       // 不设置relations，表示没有FROM子句
     }
-#line 2250 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2254 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 64: /* select_stmt: SELECT expression_list  */
-#line 539 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 540 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SELECT);
       if ((yyvsp[0].expression_list) != nullptr) {
@@ -2259,30 +2263,30 @@ yyreduce:
       }
       // 不设置relations，表示没有FROM子句
     }
-#line 2263 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2267 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 65: /* calc_stmt: CALC expression_list  */
-#line 550 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 551 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_CALC);
       (yyval.sql_node)->calc.expressions.swap(*(yyvsp[0].expression_list));
       delete (yyvsp[0].expression_list);
     }
-#line 2273 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2277 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 66: /* expression_list: expression  */
-#line 559 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 560 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.expression_list) = new vector<unique_ptr<Expression>>;
       (yyval.expression_list)->emplace_back((yyvsp[0].expression));
     }
-#line 2282 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2286 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 67: /* expression_list: expression COMMA expression_list  */
-#line 564 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 565 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       if ((yyvsp[0].expression_list) != nullptr) {
         (yyval.expression_list) = (yyvsp[0].expression_list);
@@ -2291,126 +2295,126 @@ yyreduce:
       }
       (yyval.expression_list)->emplace((yyval.expression_list)->begin(), (yyvsp[-2].expression));
     }
-#line 2295 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2299 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 68: /* expression: expression '+' expression  */
-#line 574 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 575 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                               {
       (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::ADD, (yyvsp[-2].expression), (yyvsp[0].expression), sql_string, &(yyloc));
     }
-#line 2303 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2307 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 69: /* expression: expression '-' expression  */
-#line 577 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 578 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                 {
       (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::SUB, (yyvsp[-2].expression), (yyvsp[0].expression), sql_string, &(yyloc));
     }
-#line 2311 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2315 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 70: /* expression: expression '*' expression  */
-#line 580 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 581 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                 {
       (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::MUL, (yyvsp[-2].expression), (yyvsp[0].expression), sql_string, &(yyloc));
     }
-#line 2319 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2323 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 71: /* expression: expression '/' expression  */
-#line 583 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 584 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                 {
       printf("DEBUG: Creating DIV expression\n");
       (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::DIV, (yyvsp[-2].expression), (yyvsp[0].expression), sql_string, &(yyloc));
     }
-#line 2328 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2332 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 72: /* expression: LBRACE expression RBRACE  */
-#line 587 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 588 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                {
       (yyval.expression) = (yyvsp[-1].expression);
       (yyval.expression)->set_name(token_name(sql_string, &(yyloc)));
     }
-#line 2337 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2341 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 73: /* expression: '-' expression  */
-#line 591 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 592 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                   {
       (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::NEGATIVE, (yyvsp[0].expression), nullptr, sql_string, &(yyloc));
     }
-#line 2345 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2349 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 74: /* expression: value  */
-#line 594 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 595 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
             {
       (yyval.expression) = new ValueExpr(*(yyvsp[0].value));
       (yyval.expression)->set_name(token_name(sql_string, &(yyloc)));
       delete (yyvsp[0].value);
     }
-#line 2355 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2359 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 75: /* expression: rel_attr  */
-#line 599 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 600 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                {
       RelAttrSqlNode *node = (yyvsp[0].rel_attr);
       (yyval.expression) = new UnboundFieldExpr(node->relation_name, node->attribute_name);
       (yyval.expression)->set_name(token_name(sql_string, &(yyloc)));
       delete (yyvsp[0].rel_attr);
     }
-#line 2366 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2370 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 76: /* expression: '*'  */
-#line 605 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 606 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
           {
       (yyval.expression) = new StarExpr();
     }
-#line 2374 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2378 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 77: /* rel_attr: ID  */
-#line 612 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 613 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
        {
       (yyval.rel_attr) = new RelAttrSqlNode;
       (yyval.rel_attr)->attribute_name = (yyvsp[0].cstring);
     }
-#line 2383 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2387 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 78: /* rel_attr: ID DOT ID  */
-#line 616 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 617 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                 {
       (yyval.rel_attr) = new RelAttrSqlNode;
       (yyval.rel_attr)->relation_name  = (yyvsp[-2].cstring);
       (yyval.rel_attr)->attribute_name = (yyvsp[0].cstring);
     }
-#line 2393 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2397 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 79: /* relation: ID  */
-#line 624 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 625 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
        {
       (yyval.cstring) = (yyvsp[0].cstring);
     }
-#line 2401 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2405 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 80: /* rel_list: relation  */
-#line 629 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 630 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
              {
       (yyval.relation_list) = new vector<string>();
       (yyval.relation_list)->push_back((yyvsp[0].cstring));
     }
-#line 2410 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2414 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 81: /* rel_list: relation COMMA rel_list  */
-#line 633 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 634 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                               {
       if ((yyvsp[0].relation_list) != nullptr) {
         (yyval.relation_list) = (yyvsp[0].relation_list);
@@ -2420,55 +2424,55 @@ yyreduce:
 
       (yyval.relation_list)->insert((yyval.relation_list)->begin(), (yyvsp[-2].cstring));
     }
-#line 2424 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2428 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 82: /* where: %empty  */
-#line 646 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 647 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.condition_list) = nullptr;
     }
-#line 2432 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2436 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 83: /* where: WHERE condition_list  */
-#line 649 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 650 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                            {
       (yyval.condition_list) = (yyvsp[0].condition_list);  
     }
-#line 2440 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2444 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 84: /* condition_list: %empty  */
-#line 655 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 656 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.condition_list) = nullptr;
     }
-#line 2448 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2452 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 85: /* condition_list: condition  */
-#line 658 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 659 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                 {
       (yyval.condition_list) = new vector<ConditionSqlNode>;
       (yyval.condition_list)->emplace_back(*(yyvsp[0].condition));
       delete (yyvsp[0].condition);
     }
-#line 2458 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2462 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 86: /* condition_list: condition AND condition_list  */
-#line 663 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 664 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
                                    {
       (yyval.condition_list) = (yyvsp[0].condition_list);
       (yyval.condition_list)->emplace_back(*(yyvsp[-2].condition));
       delete (yyvsp[-2].condition);
     }
-#line 2468 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2472 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 87: /* condition: expression comp_op expression  */
-#line 671 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 672 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       printf("DEBUG: unified condition expression comp_op expression\n");
       (yyval.condition) = new ConditionSqlNode;
@@ -2481,55 +2485,72 @@ yyreduce:
       (yyval.condition)->left_is_attr = 0;
       (yyval.condition)->right_is_attr = 0;
     }
-#line 2485 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2489 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 88: /* comp_op: EQ  */
-#line 686 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 88: /* condition: expression  */
+#line 685 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+    {
+      printf("DEBUG: single expression condition\n");
+      (yyval.condition) = new ConditionSqlNode;
+      (yyval.condition)->comp = NO_OP;  // 标识单独表达式条件
+      (yyval.condition)->left_expression = (yyvsp[0].expression);
+      (yyval.condition)->right_expression = nullptr;
+      (yyval.condition)->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      (yyval.condition)->left_is_attr = 0;
+      (yyval.condition)->right_is_attr = 0;
+    }
+#line 2506 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+    break;
+
+  case 89: /* comp_op: EQ  */
+#line 700 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = EQUAL_TO; }
-#line 2491 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2512 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 89: /* comp_op: LT  */
-#line 687 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 90: /* comp_op: LT  */
+#line 701 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = LESS_THAN; }
-#line 2497 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2518 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 90: /* comp_op: GT  */
-#line 688 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 91: /* comp_op: GT  */
+#line 702 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = GREAT_THAN; }
-#line 2503 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2524 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 91: /* comp_op: LE  */
-#line 689 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 92: /* comp_op: LE  */
+#line 703 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = LESS_EQUAL; }
-#line 2509 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2530 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 92: /* comp_op: GE  */
-#line 690 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 93: /* comp_op: GE  */
+#line 704 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = GREAT_EQUAL; }
-#line 2515 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2536 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 93: /* comp_op: NE  */
-#line 691 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 94: /* comp_op: NE  */
+#line 705 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = NOT_EQUAL; }
-#line 2521 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2542 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 94: /* group_by: %empty  */
-#line 697 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 95: /* group_by: %empty  */
+#line 711 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.expression_list) = nullptr;
     }
-#line 2529 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2550 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 95: /* load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID  */
-#line 703 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 96: /* load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID  */
+#line 717 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       char *tmp_file_name = common::substr((yyvsp[-3].cstring), 1, strlen((yyvsp[-3].cstring)) - 2);
       
@@ -2538,31 +2559,31 @@ yyreduce:
       (yyval.sql_node)->load_data.file_name = tmp_file_name;
       free(tmp_file_name);
     }
-#line 2542 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2563 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 96: /* explain_stmt: EXPLAIN command_wrapper  */
-#line 715 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 97: /* explain_stmt: EXPLAIN command_wrapper  */
+#line 729 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_EXPLAIN);
       (yyval.sql_node)->explain.sql_node = unique_ptr<ParsedSqlNode>((yyvsp[0].sql_node));
     }
-#line 2551 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2572 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 97: /* set_variable_stmt: SET ID EQ value  */
-#line 723 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+  case 98: /* set_variable_stmt: SET ID EQ value  */
+#line 737 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SET_VARIABLE);
       (yyval.sql_node)->set_variable.name  = (yyvsp[-2].cstring);
       (yyval.sql_node)->set_variable.value = *(yyvsp[0].value);
       delete (yyvsp[0].value);
     }
-#line 2562 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2583 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
 
-#line 2566 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
+#line 2587 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.cpp"
 
       default: break;
     }
@@ -2791,7 +2812,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 734 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 748 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
 
 //_____________________________________________________________________
 extern void scan_string(const char *str, yyscan_t scanner);

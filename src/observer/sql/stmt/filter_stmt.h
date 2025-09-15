@@ -199,6 +199,28 @@ private:
    */
   static RC convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
                                              FilterObj& filter_obj, const char* side_name);
+
+  /**
+   * @brief 处理单独表达式条件（WHERE expression）
+   * @param left_obj 左侧FilterObj（表达式结果）
+   * @param right_obj 右侧FilterObj（将被设置）
+   * @param filter_unit 要配置的FilterUnit
+   * @return RC 处理结果
+   * @details 对于单独表达式：
+   *   - 如果是NULL值，创建恒假条件（1=0）
+   *   - 否则创建 expression=true 的条件
+   */
+  static RC handle_single_expression_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
+
+  /**
+   * @brief 创建恒假条件（用于NULL值处理）
+   */
+  static RC create_always_false_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
+
+  /**
+   * @brief 创建表达式等于真值的条件
+   */
+  static RC create_expression_equals_true_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
   
   vector<FilterUnit *> filter_units_;  ///< 过滤单元列表，默认AND关系
 };

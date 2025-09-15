@@ -65,8 +65,9 @@ RC FloatType::divide(const Value &left, const Value &right, Value &result) const
   LOG_INFO("FloatType::divide: %f / %f", left_val, right_val);
   
   if (right_val > -EPSILON && right_val < EPSILON) {
-    // 除零返回NULL（符合MySQL标准） 已经在attr_type.h中定义了NULLS类型  且在value.h中定义了set_null()方法
+    // 除零返回NULL（符合SQL标准）
     result.set_null();
+    result.set_type(AttrType::FLOATS);  // 保持运算结果类型
     LOG_INFO("FloatType::divide: Division by zero, returning NULL");
   } else {
     float div_result = left_val / right_val;

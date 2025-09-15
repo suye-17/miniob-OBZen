@@ -459,6 +459,7 @@ value:
     |NULL_T {
       $$ = new Value();
       $$->set_null();
+      $$->set_type(AttrType::UNDEFINED);  // NULL值类型标识
       @$ = @1;
     }
     ;
@@ -674,6 +675,19 @@ condition:
       $$->comp = $2;
       $$->left_expression = $1;
       $$->right_expression = $3;
+      $$->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+    }
+    | expression
+    {
+      printf("DEBUG: single expression condition\n");
+      $$ = new ConditionSqlNode;
+      $$->comp = NO_OP;  // 标识单独表达式条件
+      $$->left_expression = $1;
+      $$->right_expression = nullptr;
       $$->is_expression_condition = true;
       
       // 清零旧字段以确保一致性

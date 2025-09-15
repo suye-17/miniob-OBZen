@@ -171,6 +171,12 @@ RC ComparisonExpr::try_get_value(Value &cell) const
     return RC::INVALID_ARGUMENT;
   }
 
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    cell.set_null();
+    return RC::SUCCESS;
+  }
+
   bool value = false;
   rc = compare_value(left_value, right_value, value);
   if (rc != RC::SUCCESS) {
@@ -195,6 +201,12 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
     return rc;
+  }
+
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
   }
 
   bool bool_value = false;

@@ -83,6 +83,53 @@ RC get_table_and_field(Db *db, Table *default_table, unordered_map<string, Table
   return RC::SUCCESS;
 }
 
+// 辅助函数：创建恒假条件（用于NULL处理）
+RC FilterStmt::create_always_false_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+{
+  // 创建 1 = 0 的条件，确保总是返回FALSE
+  Value one_value;
+  one_value.set_int(1);
+  left_obj.init_value(one_value);
+  
+  Value zero_value;
+  zero_value.set_int(0);
+  right_obj.init_value(zero_value);
+  
+  filter_unit->set_left(left_obj);
+  filter_unit->set_right(right_obj);
+  filter_unit->set_comp(EQUAL_TO);
+  
+  return RC::SUCCESS;
+}
+
+// 辅助函数：创建表达式等于真值的条件
+RC FilterStmt::create_expression_equals_true_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+{
+  filter_unit->set_left(left_obj);
+  
+  // 右侧设置为true值
+  Value true_value;
+  true_value.set_boolean(true);
+  right_obj.init_value(true_value);
+  filter_unit->set_right(right_obj);
+  filter_unit->set_comp(EQUAL_TO);
+  
+  return RC::SUCCESS;
+}
+
+// 辅助函数：处理单独表达式条件
+RC FilterStmt::handle_single_expression_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+{
+  // 检查是否为NULL值：如果是，创建恒假条件
+  if (left_obj.is_value() && left_obj.value.is_null()) {
+    LOG_INFO("WHERE condition is NULL, creating always-false condition for empty result");
+    return create_always_false_condition(left_obj, right_obj, filter_unit);
+  } else {
+    // 非NULL的单独表达式，转换为 expression = true
+    return create_expression_equals_true_condition(left_obj, right_obj, filter_unit);
+  }
+}
+
 // 辅助函数：统一处理表达式转换为FilterObj
 RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
                                                 FilterObj& filter_obj, const char* side_name)
@@ -117,6 +164,10 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
     Value result;
     RC rc = expr->try_get_value(result);
     if (rc == RC::SUCCESS) {
+      // 检查NULL值：如果表达式结果是NULL，设置特殊标记
+      if (result.is_null()) {
+        LOG_INFO("WHERE condition contains NULL value, will return empty result");
+      }
       filter_obj.init_value(result);
       return RC::SUCCESS;
     } else {
@@ -129,6 +180,10 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
     RC rc = expr->try_get_value(result);
     if (rc == RC::SUCCESS) {
       // 能静态求值的常量表达式
+      // 检查NULL值：如果表达式结果是NULL，设置特殊标记
+      if (result.is_null()) {
+        LOG_INFO("WHERE condition contains NULL value, will return empty result");
+      }
       filter_obj.init_value(result);
       return RC::SUCCESS;
     } else {
@@ -158,7 +213,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
   RC rc = RC::SUCCESS;
 
   CompOp comp = condition.comp;
-  if (comp < EQUAL_TO || comp >= NO_OP) {
+  if (comp < EQUAL_TO || comp > NO_OP) {
     LOG_WARN("invalid compare operator : %d", comp);
     return RC::INVALID_ARGUMENT;
   }
@@ -176,22 +231,32 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
       return rc;
     }
     
-    // 处理右侧表达式
-    rc = convert_expression_to_filter_obj(condition.right_expression, default_table, right_obj, "right");
-    if (rc != RC::SUCCESS) {
-      delete filter_unit;
-      return rc;
+    // 处理单独表达式条件（NO_OP）
+    if (comp == NO_OP) {
+      rc = handle_single_expression_condition(left_obj, right_obj, filter_unit);
+      if (rc != RC::SUCCESS) {
+        delete filter_unit;
+        return rc;
+      }
+    } else {
+      // 处理右侧表达式
+      rc = convert_expression_to_filter_obj(condition.right_expression, default_table, right_obj, "right");
+      if (rc != RC::SUCCESS) {
+        delete filter_unit;
+        return rc;
+      }
+      filter_unit->set_left(left_obj);
+      filter_unit->set_right(right_obj);
+      filter_unit->set_comp(comp);
     }
-    
-    filter_unit->set_left(left_obj);
-    filter_unit->set_right(right_obj);
-    filter_unit->set_comp(comp);
     
     // 清理原始表达式内存（已经复制到FilterObj中）
     delete condition.left_expression;
-    delete condition.right_expression;
+    if (condition.right_expression != nullptr) {
+      delete condition.right_expression;
+      const_cast<ConditionSqlNode&>(condition).right_expression = nullptr;
+    }
     const_cast<ConditionSqlNode&>(condition).left_expression = nullptr;
-    const_cast<ConditionSqlNode&>(condition).right_expression = nullptr;
     
     return RC::SUCCESS;
   }
