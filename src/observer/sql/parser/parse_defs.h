@@ -73,6 +73,11 @@ struct ConditionSqlNode
                                  ///< 1时，操作符右边是属性名，0时，是属性值
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
+  
+  // 新增字段以支持表达式类型的条件
+  bool is_expression_condition = false;  ///< TRUE if this is an expression vs expression condition
+  Expression *left_expression = nullptr; ///< left-hand side expression if is_expression_condition = TRUE
+  Expression *right_expression = nullptr; ///< right-hand side expression if is_expression_condition = TRUE
 };
 
 /**

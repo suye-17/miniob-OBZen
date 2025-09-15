@@ -50,6 +50,17 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   return expr;
 }
 
+ComparisonExpr *create_comparison_expression(CompOp comp_op,
+                                           Expression *left,
+                                           Expression *right,
+                                           const char *sql_string,
+                                           YYLTYPE *llocp)
+{
+  ComparisonExpr *expr = new ComparisonExpr(comp_op, unique_ptr<Expression>(left), unique_ptr<Expression>(right));
+  expr->set_name(token_name(sql_string, llocp));
+  return expr;
+}
+
 %}
 
 %define api.pure full
@@ -204,6 +215,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 
 %left '+' '-'
 %left '*' '/'
+%left EQ NE LT LE GT GE
 %right UMINUS
 %%
 
@@ -508,8 +520,21 @@ select_stmt:        /*  select 语句的语法解析树*/
         $$->selection.group_by.swap(*$6);
         delete $6;
       }
+    }| SELECT expression_list where  /* 不带FROM子句的SELECT语句 MySQL中也支持，所以nminiob也要满足 */
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+      
+      if ($3 != nullptr) {
+        $$->selection.conditions.swap(*$3);
+        delete $3;
+      }
+      // 不设置relations，表示没有FROM子句
     }
-    | SELECT expression_list  /* 不带FROM子句的SELECT语句 MySQL中也支持，所以nminiob也要满足 */
+    | SELECT expression_list  /* 不带FROM和WHERE子句的SELECT语句 */
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -555,7 +580,26 @@ expression:
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
     }
     | expression '/' expression {
+      printf("DEBUG: Creating DIV expression\n");
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | expression EQ expression {
+      $$ = create_comparison_expression(EQUAL_TO, $1, $3, sql_string, &@$);
+    }
+    | expression NE expression {
+      $$ = create_comparison_expression(NOT_EQUAL, $1, $3, sql_string, &@$);
+    }
+    | expression LT expression {
+      $$ = create_comparison_expression(LESS_THAN, $1, $3, sql_string, &@$);
+    }
+    | expression GT expression {
+      $$ = create_comparison_expression(GREAT_THAN, $1, $3, sql_string, &@$);
+    }
+    | expression LE expression {
+      $$ = create_comparison_expression(LESS_EQUAL, $1, $3, sql_string, &@$);
+    }
+    | expression GE expression {
+      $$ = create_comparison_expression(GREAT_EQUAL, $1, $3, sql_string, &@$);
     }
     | LBRACE expression RBRACE {
       $$ = $2;
@@ -652,17 +696,21 @@ condition:
       delete $1;
       delete $3;
     }
-    | value comp_op value 
+    | expression comp_op expression 
     {
+      printf("DEBUG: condition with expression comp_op expression\n");
+      // 创建ComparisonExpr而不是ConditionSqlNode
+      // 但是这里需要返回ConditionSqlNode，所以需要将表达式存储起来
+      // 我们需要扩展ConditionSqlNode来支持表达式
       $$ = new ConditionSqlNode;
       $$->left_is_attr = 0;
-      $$->left_value = *$1;
       $$->right_is_attr = 0;
-      $$->right_value = *$3;
       $$->comp = $2;
-
-      delete $1;
-      delete $3;
+      $$->left_expression = $1;
+      $$->right_expression = $3;
+      
+      // 设置标记表示这是表达式类型的条件
+      $$->is_expression_condition = true;
     }
     | rel_attr comp_op rel_attr
     {
@@ -686,6 +734,45 @@ condition:
       $$->comp = $2;
 
       delete $1;
+      delete $3;
+    }
+    | value comp_op value
+    {
+      printf("DEBUG: value comp_op value condition\n");
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;
+      $$->right_is_attr = 0;
+      $$->right_value = *$3;
+      $$->comp = $2;
+
+      delete $1;
+      delete $3;
+    }
+    | value comp_op expression
+    {
+      printf("DEBUG: value comp_op expression condition\n");
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = $2;
+      $$->right_expression = $3;
+      $$->is_expression_condition = true;
+
+      delete $1;
+    }
+    | expression comp_op value
+    {
+      printf("DEBUG: expression comp_op value condition\n");
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      $$->comp = $2;
+      $$->left_expression = $1;
+      $$->right_value = *$3;
+      $$->is_expression_condition = true;
+
       delete $3;
     }
     ;

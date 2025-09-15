@@ -18,6 +18,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/sys/rc.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "sql/expr/expression.h"
+#include "sql/expr/tuple.h"
+#include "storage/record/record.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -90,6 +93,54 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
   }
 
   filter_unit = new FilterUnit;
+
+  // 处理表达式类型的条件
+  if (condition.is_expression_condition) {
+    // 对于表达式条件，我们需要计算表达式的值
+    // 这里假设表达式都是常量表达式，可以直接计算
+    
+    // 计算左侧表达式
+    Value left_result;
+    if (condition.left_expression != nullptr) {
+      // 创建一个空的ValueListTuple来计算常量表达式
+      ValueListTuple tuple; // 空tuple用于常量表达式计算
+      rc = condition.left_expression->get_value(tuple, left_result);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to evaluate left expression");
+        delete filter_unit;
+        return rc;
+      }
+    } else {
+      // 左侧是普通value
+      left_result = condition.left_value;
+    }
+    
+    // 计算右侧表达式
+    Value right_result;
+    if (condition.right_expression != nullptr) {
+      ValueListTuple tuple;
+      rc = condition.right_expression->get_value(tuple, right_result);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to evaluate right expression");
+        delete filter_unit;
+        return rc;
+      }
+    } else {
+      // 右侧是普通value
+      right_result = condition.right_value;
+    }
+    
+    // 设置FilterObj
+    FilterObj left_obj, right_obj;
+    left_obj.init_value(left_result);
+    right_obj.init_value(right_result);
+    
+    filter_unit->set_left(left_obj);
+    filter_unit->set_right(right_obj);
+    filter_unit->set_comp(comp);
+    
+    return rc;
+  }
 
   if (condition.left_is_attr) {
     Table           *table = nullptr;
