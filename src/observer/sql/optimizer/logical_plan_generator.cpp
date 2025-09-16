@@ -215,10 +215,7 @@ RC LogicalPlanGenerator::create_plan(CalcStmt *calc_stmt, unique_ptr<LogicalOper
 
 RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
-  unique_ptr<LogicalOperator> *last_oper = nullptr;
-
   unique_ptr<LogicalOperator> table_oper(nullptr);
-  last_oper = &table_oper;
   unique_ptr<LogicalOperator> predicate_oper;
 
   const vector<Table *> &tables = select_stmt->tables();
@@ -250,11 +247,11 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
 
 
   if (predicate_oper) {
-    if (*last_oper) {
-      predicate_oper->add_child(std::move(*last_oper));
+    if (table_oper) {
+      predicate_oper->add_child(std::move(table_oper));
     }
-
-    last_oper = &predicate_oper;
+    // 更新数据流：现在predicate_oper是当前数据流的顶端
+    table_oper = std::move(predicate_oper);
   }
 
   unique_ptr<LogicalOperator> group_by_oper;
@@ -265,16 +262,21 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   }
 
   if (group_by_oper) {
-    if (*last_oper) {
-      group_by_oper->add_child(std::move(*last_oper));
+    if (table_oper) {
+      group_by_oper->add_child(std::move(table_oper));
+    } else {
+      // 如果没有数据源，创建一个空的CALC操作符
+      vector<unique_ptr<Expression>> dummy_expressions;
+      auto calc_oper = make_unique<CalcLogicalOperator>(std::move(dummy_expressions));
+      group_by_oper->add_child(std::move(calc_oper));
     }
-
-    last_oper = &group_by_oper;
+    // 更新数据流：现在group_by_oper是当前数据流的顶端
+    table_oper = std::move(group_by_oper);
   }
 
   auto project_oper = make_unique<ProjectLogicalOperator>(std::move(select_stmt->query_expressions()));
-  if (*last_oper) {
-    project_oper->add_child(std::move(*last_oper));
+  if (table_oper) {
+    project_oper->add_child(std::move(table_oper));
   }
 
   logical_operator = std::move(project_oper);

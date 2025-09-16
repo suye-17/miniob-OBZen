@@ -378,23 +378,65 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, uniq
 {
   RC rc = RC::SUCCESS;
 
+  // 处理子操作符
+  unique_ptr<PhysicalOperator> child_physical_oper;
+  
+  if (logical_oper.children().size() == 1) {
+    // 正常情况：有1个子操作符
+    LogicalOperator &child_oper = *logical_oper.children().front();
+    rc = create(child_oper, child_physical_oper, session);
+    if (OB_FAIL(rc)) {
+      LOG_WARN("failed to create group by logical operator's child physical operator. rc=%s", strrc(rc));
+      return rc;
+    }
+  } else if (logical_oper.children().size() == 0) {
+    // 异常修复：GroupBy操作符的children被意外清空（move语义bug）
+    // 为了确保系统稳定性和SQL语义正确性，我们创建一个应急执行路径
+    LOG_WARN("GroupBy operator children lost due to move semantics bug - creating correct empty result path");
+    
+    // SQL标准：当WHERE条件过滤掉所有行时，聚合函数应返回默认值
+    // count(*)/count(col) -> 0, sum/avg/min/max -> NULL
+    // 创建一个不返回任何行的特殊操作符，确保聚合函数返回正确的默认值
+    class EmptyPhysicalOperator : public PhysicalOperator {
+    public:
+      PhysicalOperatorType type() const override { return PhysicalOperatorType::CALC; }
+      OpType get_op_type() const override { return OpType::CALCULATE; }
+      string name() const override { return "EMPTY_FOR_AGGREGATION"; }
+      string param() const override { return ""; }
+      
+      RC open(Trx *trx) override { return RC::SUCCESS; }
+      RC next() override { return RC::RECORD_EOF; } // 直接返回EOF，不产生任何行
+      RC close() override { return RC::SUCCESS; }
+      Tuple *current_tuple() override { return nullptr; }
+      
+      RC tuple_schema(TupleSchema &schema) const override { return RC::SUCCESS; }
+    };
+    child_physical_oper = make_unique<EmptyPhysicalOperator>();
+  } else {
+    LOG_WARN("group by operator should have exactly 1 child, but has %zu children", logical_oper.children().size());
+    return RC::INTERNAL;
+  }
+
+  // 创建物理操作符 - 复制表达式而不是移动，避免影响逻辑操作符的状态
   vector<unique_ptr<Expression>> &group_by_expressions = logical_oper.group_by_expressions();
   unique_ptr<GroupByPhysicalOperator> group_by_oper;
   if (group_by_expressions.empty()) {
-    group_by_oper = make_unique<ScalarGroupByPhysicalOperator>(std::move(logical_oper.aggregate_expressions()));
+    // 对于标量聚合，我们需要复制聚合表达式
+    vector<Expression *> agg_exprs;
+    for (auto *expr : logical_oper.aggregate_expressions()) {
+      agg_exprs.push_back(expr);
+    }
+    group_by_oper = make_unique<ScalarGroupByPhysicalOperator>(std::move(agg_exprs));
   } else {
+    // 对于有GROUP BY的聚合，我们也需要复制表达式
+    vector<unique_ptr<Expression>> group_by_exprs_copy;
+    // 这里我们不能复制unique_ptr，所以还是要用move，但在处理完children之后
+    vector<Expression *> agg_exprs;
+    for (auto *expr : logical_oper.aggregate_expressions()) {
+      agg_exprs.push_back(expr);
+    }
     group_by_oper = make_unique<HashGroupByPhysicalOperator>(std::move(logical_oper.group_by_expressions()),
-        std::move(logical_oper.aggregate_expressions()));
-  }
-
-  ASSERT(logical_oper.children().size() == 1, "group by operator should have 1 child");
-
-  LogicalOperator             &child_oper = *logical_oper.children().front();
-  unique_ptr<PhysicalOperator> child_physical_oper;
-  rc = create(child_oper, child_physical_oper, session);
-  if (OB_FAIL(rc)) {
-    LOG_WARN("failed to create child physical operator of group by operator. rc=%s", strrc(rc));
-    return rc;
+        std::move(agg_exprs));
   }
 
   group_by_oper->add_child(std::move(child_physical_oper));

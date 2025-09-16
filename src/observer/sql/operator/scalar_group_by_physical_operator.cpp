@@ -82,6 +82,18 @@ RC ScalarGroupByPhysicalOperator::open(Trx *trx)
     return rc;
   }
 
+
+  // 双重保障：如果没有输入行，确保为聚合函数创建默认值
+  // 正常情况下，PhysicalPlanGenerator的EmptyPhysicalOperator已经处理了这种情况
+  // 这里作为额外的安全检查，确保count(*)返回0，其他聚合函数返回NULL
+  if (group_value_ == nullptr) {
+    AggregatorList aggregator_list;
+    create_aggregator_list(aggregator_list);
+    
+    CompositeTuple composite_tuple;
+    group_value_ = make_unique<GroupValueType>(std::move(aggregator_list), std::move(composite_tuple));
+  }
+
   // 得到最终聚合后的值
   if (group_value_) {
     rc = evaluate(*group_value_);

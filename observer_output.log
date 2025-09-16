@@ -1,0 +1,73 @@
+nohup: ignoring input
+
+Welcome to the OceanBase database implementation course.
+
+Copyright (c) 2021 OceanBase and/or its affiliates.
+
+Learn more about OceanBase at https://github.com/oceanbase/oceanbase
+Learn more about MiniOB at https://github.com/oceanbase/miniob
+
+Successfully load ../etc/observer.ini
+Not set log file name, use default observer.log
+Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+Db already exists: sys
+[ObLsmBackground] thread started
+Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+double write buffer load pages done. page num=6
+Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+Init a field with name=id
+Init a field with name=score
+Successfully open buffer pool file miniob/db/sys/test.data.
+Successfully open miniob/db/sys/test.data. file_desc=8, hdr_frame=0x76b2a716c808, file header=pageCount:2, allocatedCount:2
+record file handler init free pages done. free page num=1, rc=SUCCESS
+open record file handle done. rc=SUCCESS
+Open table: test, file: test.table
+Init a field with name=id
+Init a field with name=score
+Successfully open buffer pool file miniob/db/sys/test_expr.data.
+Successfully open miniob/db/sys/test_expr.data. file_desc=9, hdr_frame=0x76b2a7170928, file header=pageCount:2, allocatedCount:2
+record file handler init free pages done. free page num=1, rc=SUCCESS
+open record file handle done. rc=SUCCESS
+Open table: test_expr, file: test_expr.table
+Init a field with name=id
+Init a field with name=col1
+Init a field with name=col2
+Init a field with name=col3
+Init a field with name=col4
+Successfully open buffer pool file miniob/db/sys/exp_table.data.
+Successfully open miniob/db/sys/exp_table.data. file_desc=10, hdr_frame=0x76b2a7174a48, file header=pageCount:2, allocatedCount:2
+record file handler init free pages done. free page num=1, rc=SUCCESS
+open record file handle done. rc=SUCCESS
+Open table: exp_table, file: exp_table.table
+All table have been opened. num=3
+Successfully recover db. db=sys checkpoint_lsn=0
+Default handler init with miniob success
+Successfully init utility
+bind(): can not bind server socket, Address already in use
+Failed to start network

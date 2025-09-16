@@ -101,17 +101,22 @@ extern int yydebug;
     PRIMARY = 302,                 /* PRIMARY  */
     KEY = 303,                     /* KEY  */
     ANALYZE = 304,                 /* ANALYZE  */
-    EQ = 305,                      /* EQ  */
-    LT = 306,                      /* LT  */
-    GT = 307,                      /* GT  */
-    LE = 308,                      /* LE  */
-    GE = 309,                      /* GE  */
-    NE = 310,                      /* NE  */
-    NUMBER = 311,                  /* NUMBER  */
-    FLOAT = 312,                   /* FLOAT  */
-    ID = 313,                      /* ID  */
-    SSS = 314,                     /* SSS  */
-    UMINUS = 315                   /* UMINUS  */
+    COUNT = 305,                   /* COUNT  */
+    SUM = 306,                     /* SUM  */
+    AVG = 307,                     /* AVG  */
+    MAX = 308,                     /* MAX  */
+    MIN = 309,                     /* MIN  */
+    EQ = 310,                      /* EQ  */
+    LT = 311,                      /* LT  */
+    GT = 312,                      /* GT  */
+    LE = 313,                      /* LE  */
+    GE = 314,                      /* GE  */
+    NE = 315,                      /* NE  */
+    NUMBER = 316,                  /* NUMBER  */
+    FLOAT = 317,                   /* FLOAT  */
+    ID = 318,                      /* ID  */
+    SSS = 319,                     /* SSS  */
+    UMINUS = 320                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -120,7 +125,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 132 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 137 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -140,7 +145,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 144 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
+#line 149 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
