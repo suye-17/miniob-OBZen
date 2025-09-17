@@ -185,6 +185,18 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
         result = match_like_pattern(text.c_str(), pattern.c_str());
       }
     } break;
+    case NOT_LIKE_OP: {
+      // NOT LIKE操作只支持字符串类型
+      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
+        LOG_WARN("NOT LIKE operation only supports CHARS type, got left: %d, right: %d", 
+                 left.attr_type(), right.attr_type());
+        rc = RC::INVALID_ARGUMENT;
+      } else {
+        std::string text = left.get_string();
+        std::string pattern = right.get_string();
+        result = !match_like_pattern(text.c_str(), pattern.c_str());
+      }
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -265,8 +277,8 @@ RC ComparisonExpr::eval(Chunk &chunk, vector<uint8_t> &select)
   } else if (left_column.attr_type() == AttrType::FLOATS) {
     rc = compare_column<float>(left_column, right_column, select);
   } else if (left_column.attr_type() == AttrType::CHARS) {
-    // 对于字符串类型，特别是LIKE操作，需要逐行处理
-    if (comp_ == LIKE_OP) {
+    // 对于字符串类型，特别是LIKE和NOT LIKE操作，需要逐行处理
+    if (comp_ == LIKE_OP || comp_ == NOT_LIKE_OP) {
       select.clear();
       select.resize(chunk.rows(), 0);
       
@@ -277,7 +289,12 @@ RC ComparisonExpr::eval(Chunk &chunk, vector<uint8_t> &select)
         std::string text = left_value.get_string();
         std::string pattern = right_value.get_string();
         
-        select[i] = match_like_pattern(text.c_str(), pattern.c_str()) ? 1 : 0;
+        bool match_result = match_like_pattern(text.c_str(), pattern.c_str());
+        if (comp_ == LIKE_OP) {
+          select[i] = match_result ? 1 : 0;
+        } else { // NOT_LIKE_OP
+          select[i] = match_result ? 0 : 1;
+        }
       }
     } else {
       // 对于其他字符串比较操作，也需要逐行处理

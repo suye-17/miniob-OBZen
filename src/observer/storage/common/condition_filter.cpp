@@ -78,9 +78,9 @@ RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrT
     return RC::INVALID_ARGUMENT;
   }
 
-  // LIKE操作只支持字符串类型
-  if (comp_op == LIKE_OP && attr_type != AttrType::CHARS) {
-    LOG_ERROR("LIKE operation only supports CHARS type, got: %d", attr_type);
+  // LIKE和NOT LIKE操作只支持字符串类型
+  if ((comp_op == LIKE_OP || comp_op == NOT_LIKE_OP) && attr_type != AttrType::CHARS) {
+    LOG_ERROR("LIKE/NOT LIKE operation only supports CHARS type, got: %d", attr_type);
     return RC::INVALID_ARGUMENT;
   }
 
@@ -194,6 +194,20 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       
       // 执行LIKE匹配
       return do_like_match(text.c_str(), pattern.c_str());
+    }
+    case NOT_LIKE_OP: {
+      // NOT LIKE操作只支持字符串类型
+      if (attr_type_ != AttrType::CHARS) {
+        LOG_WARN("NOT LIKE operation only supports CHARS type, got: %d", attr_type_);
+        return false;
+      }
+      
+      // 获取字符串值
+      std::string text = left_value.get_string();
+      std::string pattern = right_value.get_string();
+      
+      // 执行NOT LIKE匹配（取反LIKE结果）
+      return !do_like_match(text.c_str(), pattern.c_str());
     }
 
     default: break;
