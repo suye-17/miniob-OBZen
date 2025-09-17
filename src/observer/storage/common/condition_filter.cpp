@@ -18,6 +18,36 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
 #include <math.h>
+
+// LIKE模式匹配函数：%匹配零个或多个字符，_匹配单个字符
+static bool do_like_match(const char *text, const char *pattern)
+{
+  const char *t = text;
+  const char *p = pattern;
+  
+  while (*p) {
+    if (*p == '%') {
+      p++;
+      if (*p == '\0') return true;
+      
+      while (*t) {
+        if (do_like_match(t, p)) return true;
+        t++;
+      }
+      return false;
+    } 
+    else if (*p == '_') {
+      if (*t == '\0') return false;
+      p++; t++;
+    } 
+    else {
+      if (*t != *p) return false;
+      p++; t++;
+    }
+  }
+  
+  return *t == '\0';
+}
 #include <stddef.h>
 
 using namespace common;
@@ -45,6 +75,12 @@ RC DefaultConditionFilter::init(const ConDesc &left, const ConDesc &right, AttrT
 
   if (comp_op < EQUAL_TO || comp_op >= NO_OP) {
     LOG_ERROR("Invalid condition with unsupported compare operation: %d", comp_op);
+    return RC::INVALID_ARGUMENT;
+  }
+
+  // LIKE操作只支持字符串类型
+  if (comp_op == LIKE_OP && attr_type != AttrType::CHARS) {
+    LOG_ERROR("LIKE operation only supports CHARS type, got: %d", attr_type);
     return RC::INVALID_ARGUMENT;
   }
 
@@ -145,6 +181,20 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     case LESS_THAN: return cmp_result < 0;
     case GREAT_EQUAL: return cmp_result >= 0;
     case GREAT_THAN: return cmp_result > 0;
+    case LIKE_OP: {
+      // LIKE操作只支持字符串类型
+      if (attr_type_ != AttrType::CHARS) {
+        LOG_WARN("LIKE operation only supports CHARS type, got: %d", attr_type_);
+        return false;
+      }
+      
+      // 获取字符串值
+      std::string text = left_value.get_string();
+      std::string pattern = right_value.get_string();
+      
+      // 执行LIKE匹配
+      return do_like_match(text.c_str(), pattern.c_str());
+    }
 
     default: break;
   }

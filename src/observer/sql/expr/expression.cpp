@@ -18,6 +18,36 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
+// LIKE模式匹配实现：%匹配零个或多个字符，_匹配单个字符
+static bool match_like_pattern(const char *text, const char *pattern)
+{
+  const char *t = text;
+  const char *p = pattern;
+  
+  while (*p) {
+    if (*p == '%') {
+      p++;
+      if (*p == '\0') return true;
+      
+      while (*t) {
+        if (match_like_pattern(t, p)) return true;
+        t++;
+      }
+      return false;
+    } 
+    else if (*p == '_') {
+      if (*t == '\0') return false;
+      p++; t++;
+    } 
+    else {
+      if (*t != *p) return false;
+      p++; t++;
+    }
+  }
+  
+  return *t == '\0';
+}
+
 RC FieldExpr::get_value(const Tuple &tuple, Value &value) const
 {
   return tuple.find_cell(TupleCellSpec(table_name(), field_name()), value);
@@ -143,6 +173,18 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case GREAT_THAN: {
       result = (cmp_result > 0);
     } break;
+    case LIKE_OP: {
+      // LIKE操作只支持字符串类型
+      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
+        LOG_WARN("LIKE operation only supports CHARS type, got left: %d, right: %d", 
+                 left.attr_type(), right.attr_type());
+        rc = RC::INVALID_ARGUMENT;
+      } else {
+        std::string text = left.get_string();
+        std::string pattern = right.get_string();
+        result = match_like_pattern(text.c_str(), pattern.c_str());
+      }
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -222,8 +264,39 @@ RC ComparisonExpr::eval(Chunk &chunk, vector<uint8_t> &select)
     rc = compare_column<int>(left_column, right_column, select);
   } else if (left_column.attr_type() == AttrType::FLOATS) {
     rc = compare_column<float>(left_column, right_column, select);
+  } else if (left_column.attr_type() == AttrType::CHARS) {
+    // 对于字符串类型，特别是LIKE操作，需要逐行处理
+    if (comp_ == LIKE_OP) {
+      select.clear();
+      select.resize(chunk.rows(), 0);
+      
+      for (int i = 0; i < chunk.rows(); i++) {
+        Value left_value = left_column.get_value(i);
+        Value right_value = right_column.get_value(i);
+        
+        std::string text = left_value.get_string();
+        std::string pattern = right_value.get_string();
+        
+        select[i] = match_like_pattern(text.c_str(), pattern.c_str()) ? 1 : 0;
+      }
+    } else {
+      // 对于其他字符串比较操作，也需要逐行处理
+      select.clear();
+      select.resize(chunk.rows(), 0);
+      
+      for (int i = 0; i < chunk.rows(); i++) {
+        Value left_value = left_column.get_value(i);
+        Value right_value = right_column.get_value(i);
+        
+        bool result = false;
+        rc = compare_value(left_value, right_value, result);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        select[i] = result ? 1 : 0;
+      }
+    }
   } else {
-    // TODO: support string compare
     LOG_WARN("unsupported data type %d", left_column.attr_type());
     return RC::INTERNAL;
   }

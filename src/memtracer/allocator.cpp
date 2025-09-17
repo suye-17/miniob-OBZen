@@ -10,8 +10,17 @@ See the Mulan PSL v2 for more details. */
 
 #include <sys/mman.h>  // mmap/munmap
 #include <string.h>
+#include <cstdlib>     // for exit
+#include <new>         // for std::nothrow_t
 
 #include "memtracer/allocator.h"
+#include "memtracer/memtracer.h"
+
+// Define the global function pointers
+malloc_func_t orig_malloc = nullptr;
+free_func_t   orig_free   = nullptr;
+mmap_func_t   orig_mmap   = nullptr;
+munmap_func_t orig_munmap = nullptr;
 
 // `dlsym` calls `calloc` internally, so here use a dummy buffer
 // to avoid infinite loop when hook functions initialized.
@@ -86,7 +95,7 @@ mt_visible void free(void *ptr)
 
 mt_visible void cfree(void *ptr) { free(ptr); }
 
-mt_visible void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+mt_visible void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) MT_THROW
 {
   MT.init_hook_funcs();
   void *res = orig_mmap(addr, length, prot, flags, fd, offset);
@@ -96,7 +105,7 @@ mt_visible void *mmap(void *addr, size_t length, int prot, int flags, int fd, of
   return res;
 }
 
-mt_visible int munmap(void *addr, size_t length)
+mt_visible int munmap(void *addr, size_t length) MT_THROW
 {
   MT.init_hook_funcs();
   int res = orig_munmap(addr, length);
@@ -130,49 +139,49 @@ mt_visible char *strndup(const char *s, size_t n) MT_THROW
   return t;
 }
 
-mt_visible char *realpath(const char *fname, char *resolved_name)
+mt_visible char *realpath(const char *fname, char *resolved_name) MT_THROW
 {
   MEMTRACER_LOG("realpath not supported\n");
   exit(-1);
 }
-mt_visible void *memalign(size_t alignment, size_t size)
+mt_visible void *memalign(size_t alignment, size_t size) MT_THROW
 {
   MEMTRACER_LOG("memalign not supported\n");
   exit(-1);
 }
 
-mt_visible void *valloc(size_t size)
+mt_visible void *valloc(size_t size) MT_THROW
 {
   MEMTRACER_LOG("valloc not supported\n");
   exit(-1);
 }
 
-mt_visible void *pvalloc(size_t size)
+mt_visible void *pvalloc(size_t size) MT_THROW
 {
   MEMTRACER_LOG("valloc not supported\n");
   exit(-1);
 }
 
-mt_visible int posix_memalign(void **memptr, size_t alignment, size_t size)
+mt_visible int posix_memalign(void **memptr, size_t alignment, size_t size) MT_THROW
 {
   MEMTRACER_LOG("posix_memalign not supported\n");
   exit(-1);
 }
 
-#ifdef LINUX
-mt_visible int brk(void *addr)
+#ifdef __linux__
+mt_visible int brk(void *addr) MT_THROW
 {
   MEMTRACER_LOG("brk not supported\n");
   exit(-1);
 }
 
-mt_visible void *sbrk(intptr_t increment)
+mt_visible void *sbrk(intptr_t increment) MT_THROW
 {
   MEMTRACER_LOG("sbrk not supported\n");
   exit(-1);
 }
 
-mt_visible long int syscall(long int __sysno, ...)
+mt_visible long int syscall(long int __sysno, ...) MT_THROW
 {
   MEMTRACER_LOG("syscall not supported\n");
   exit(-1);

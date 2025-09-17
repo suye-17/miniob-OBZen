@@ -1,0 +1,18 @@
+### 2025-09-17 15:58:25.987
+show tables;
+### 2025-09-17 16:01:59.190
+insert into like_table VALUES (2, 'strawberry');
+### 2025-09-17 17:05:39.261
+CREATE TABLE like_table(id int, name char(30));
+### 2025-09-17 17:06:33.005
+select * from like_table;
+### 2025-09-17 17:06:48.453
+insert into like_table VALUES (0, 'orange');
+### 2025-09-17 17:07:01.535
+insert into like_table VALUES (1, 'coconut');
+### 2025-09-17 17:07:10.502
+insert into like_table VALUES (2, 'strawberry')
+### 2025-09-17 17:07:18.869
+insert into like_table VALUES (3, 'cherry');
+### 2025-09-17 17:07:29.289
+SELECT * FROM like_table WHERE name LIKE 'c%';

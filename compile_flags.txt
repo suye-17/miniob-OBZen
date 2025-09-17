@@ -1,0 +1,7 @@
+-I./src
+-I./deps
+-I/usr/local/include
+-std=c++20
+-DUNIX
+-DLINUX
+-DDEBUG
