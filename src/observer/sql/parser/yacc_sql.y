@@ -117,6 +117,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         NE
         LIKE
         NOT
+        INNER
+        JOIN
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
@@ -134,6 +136,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   vector<RelAttrSqlNode> *                   rel_attr_list;
   vector<string> *                           relation_list;
   vector<string> *                           key_list;
+  vector<JoinSqlNode> *                      join_list;
   char *                                     cstring;
   int                                        number;
   float                                      floats;
@@ -151,6 +154,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 // %destructor { delete $$; } <rel_attr_list>
 %destructor { delete $$; } <relation_list>
 %destructor { delete $$; } <key_list>
+%destructor { delete $$; } <join_list>
 
 %token <number> NUMBER
 %token <floats> FLOAT
@@ -175,6 +179,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <key_list>            primary_key
 %type <key_list>            attr_list
 %type <relation_list>       rel_list
+%type <join_list>           join_clause
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
@@ -482,7 +487,7 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list where group_by
+    SELECT expression_list FROM rel_list join_clause where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -496,13 +501,18 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
 
       if ($5 != nullptr) {
-        $$->selection.conditions.swap(*$5);
+        $$->selection.joins.swap(*$5);
         delete $5;
       }
 
       if ($6 != nullptr) {
-        $$->selection.group_by.swap(*$6);
+        $$->selection.conditions.swap(*$6);
         delete $6;
+      }
+
+      if ($7 != nullptr) {
+        $$->selection.group_by.swap(*$7);
+        delete $7;
       }
     }
     ;
@@ -689,6 +699,29 @@ comp_op:
     ;
 
 // your code here
+join_clause:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | join_clause INNER JOIN relation ON condition
+    {
+      if ($1 == nullptr) {
+        $$ = new vector<JoinSqlNode>;
+      } else {
+        $$ = $1;
+      }
+      
+      JoinSqlNode join_node;
+      join_node.type = JoinType::INNER_JOIN;
+      join_node.relation = $4;
+      join_node.condition = *$6;
+      $$->push_back(join_node);
+      
+      delete $6;
+    }
+    ;
+
 group_by:
     /* empty */
     {

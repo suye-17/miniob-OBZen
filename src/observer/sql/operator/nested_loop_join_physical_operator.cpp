@@ -16,6 +16,17 @@ See the Mulan PSL v2 for more details. */
 
 NestedLoopJoinPhysicalOperator::NestedLoopJoinPhysicalOperator() {}
 
+NestedLoopJoinPhysicalOperator::NestedLoopJoinPhysicalOperator(Expression *condition)
+    : condition_(condition) {}
+
+NestedLoopJoinPhysicalOperator::~NestedLoopJoinPhysicalOperator()
+{
+  if (condition_) {
+    delete condition_;
+    condition_ = nullptr;
+  }
+}
+
 RC NestedLoopJoinPhysicalOperator::open(Trx *trx)
 {
   if (children_.size() != 2) {
@@ -36,7 +47,7 @@ RC NestedLoopJoinPhysicalOperator::open(Trx *trx)
 
 RC NestedLoopJoinPhysicalOperator::next()
 {
-  RC   rc             = RC::SUCCESS;
+  RC rc = RC::SUCCESS;
   while (RC::SUCCESS == rc) {
     bool left_need_step = (left_tuple_ == nullptr);
     if (round_done_) {
@@ -60,6 +71,22 @@ RC NestedLoopJoinPhysicalOperator::next()
         return rc;
       }
     }
+
+    // 评估JOIN条件
+    bool join_condition_satisfied = true;  // 默认满足（无条件时为笛卡尔积）
+    if (condition_ != nullptr) {
+      rc = evaluate_join_condition(join_condition_satisfied);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+    }
+
+    // 如果JOIN条件满足，返回当前组合
+    if (join_condition_satisfied) {
+      return RC::SUCCESS;
+    }
+
+    // JOIN条件不满足，继续寻找下一个组合
   }
   return rc;
 }
@@ -130,4 +157,27 @@ RC NestedLoopJoinPhysicalOperator::right_next()
   right_tuple_ = right_->current_tuple();
   joined_tuple_.set_right(right_tuple_);
   return rc;
+}
+
+RC NestedLoopJoinPhysicalOperator::evaluate_join_condition(bool &result)
+{
+  if (condition_ == nullptr) {
+    result = true;  // 无条件时相当于笛卡尔积
+    return RC::SUCCESS;
+  }
+
+  // 确保joined_tuple_包含当前的左右元组
+  joined_tuple_.set_left(left_tuple_);
+  joined_tuple_.set_right(right_tuple_);
+
+  // 计算JOIN条件表达式的值
+  Value condition_value;
+  RC rc = condition_->get_value(joined_tuple_, condition_value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to evaluate join condition: %s", strrc(rc));
+    return rc;
+  }
+
+  result = condition_value.get_boolean();
+  return RC::SUCCESS;
 }

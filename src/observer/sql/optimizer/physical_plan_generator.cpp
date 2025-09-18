@@ -26,7 +26,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/explain_physical_operator.h"
 #include "sql/operator/expr_vec_physical_operator.h"
 #include "sql/operator/group_by_vec_physical_operator.h"
-#include "sql/operator/hash_join_physical_operator.h"
 #include "sql/operator/index_scan_physical_operator.h"
 #include "sql/operator/insert_logical_operator.h"
 #include "sql/operator/insert_physical_operator.h"
@@ -342,7 +341,13 @@ RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr
   if (session->hash_join_on() && can_use_hash_join(join_oper)) {
     // your code here
   } else {
-    unique_ptr<PhysicalOperator> join_physical_oper(new NestedLoopJoinPhysicalOperator());
+    // 创建带条件的嵌套循环JOIN物理算子
+    Expression *condition_copy = nullptr;
+    if (join_oper.condition() != nullptr) {
+      condition_copy = join_oper.condition()->copy().release();
+    }
+    
+    unique_ptr<PhysicalOperator> join_physical_oper(new NestedLoopJoinPhysicalOperator(condition_copy));
     for (auto &child_oper : child_opers) {
       unique_ptr<PhysicalOperator> child_physical_oper;
       rc = create(*child_oper, child_physical_oper, session);

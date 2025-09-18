@@ -115,13 +115,32 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
     if (table_oper == nullptr) {
       table_oper = std::move(table_get_oper);
     } else {
-      JoinLogicalOperator *join_oper = new JoinLogicalOperator;
+      JoinLogicalOperator *join_oper = new JoinLogicalOperator(JoinType::INNER_JOIN, nullptr);
       join_oper->add_child(std::move(table_oper));
       join_oper->add_child(std::move(table_get_oper));
       table_oper = unique_ptr<LogicalOperator>(join_oper);
     }
   }
 
+  // 处理JOIN表和条件
+  const vector<JoinTable> &join_tables = select_stmt->join_tables();
+  for (const JoinTable &join_table : join_tables) {
+    // 为JOIN表创建扫描算子
+    unique_ptr<LogicalOperator> join_table_get_oper(
+        new TableGetLogicalOperator(join_table.table, ReadWriteMode::READ_ONLY));
+    
+    // 创建带条件的JOIN算子
+    // 注意：这里需要复制条件，因为JoinLogicalOperator会拥有它
+    Expression *condition_copy = nullptr;
+    if (join_table.condition != nullptr) {
+      condition_copy = join_table.condition->copy().release();
+    }
+    
+    JoinLogicalOperator *join_oper = new JoinLogicalOperator(join_table.join_type, condition_copy);
+    join_oper->add_child(std::move(table_oper));
+    join_oper->add_child(std::move(join_table_get_oper));
+    table_oper = unique_ptr<LogicalOperator>(join_oper);
+  }
 
   if (predicate_oper) {
     if (*last_oper) {

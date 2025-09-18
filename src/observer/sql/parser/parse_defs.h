@@ -14,11 +14,15 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "common/lang/string.h"
-#include "common/lang/vector.h"
-#include "common/lang/memory.h"
+#include <string>
+#include <vector> 
+#include <memory>
 #include "common/value.h"
-#include "common/lang/utility.h"
+#include "common/type/attr_type.h"
+
+using std::string;
+using std::vector;
+using std::unique_ptr;
 
 class Expression;
 
@@ -57,6 +61,17 @@ enum CompOp
 };
 
 /**
+ * @brief JOIN类型枚举
+ * @ingroup SQLParser
+ */
+enum class JoinType {
+  INNER_JOIN,
+  LEFT_JOIN,
+  RIGHT_JOIN,
+  FULL_JOIN
+};
+
+/**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
  * @details 条件比较就是SQL查询中的 where a>b 这种。
@@ -78,6 +93,16 @@ struct ConditionSqlNode
 };
 
 /**
+ * @brief JOIN SQL节点
+ * @ingroup SQLParser
+ */
+struct JoinSqlNode {
+  JoinType           type;       ///< JOIN类型
+  string             relation;   ///< 连接的表名
+  ConditionSqlNode   condition;  ///< ON条件
+};
+
+/**
  * @brief 描述一个select语句
  * @ingroup SQLParser
  * @details 一个正常的select语句描述起来比这个要复杂很多，这里做了简化。
@@ -91,7 +116,8 @@ struct ConditionSqlNode
 struct SelectSqlNode
 {
   vector<unique_ptr<Expression>> expressions;  ///< 查询的表达式
-  vector<string>                 relations;    ///< 查询的表
+  vector<string>                 relations;    ///< 查询的表（主表）
+  vector<JoinSqlNode>            joins;        ///< JOIN子句列表
   vector<ConditionSqlNode>       conditions;   ///< 查询条件，使用AND串联起来多个条件
   vector<unique_ptr<Expression>> group_by;     ///< group by clause
 };

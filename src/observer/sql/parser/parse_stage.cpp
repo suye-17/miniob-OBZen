@@ -12,19 +12,20 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/4/13.
 //
 
-#include <string.h>
-
 #include "parse_stage.h"
 
-#include "common/conf/ini.h"
-#include "common/io/io.h"
-#include "common/lang/string.h"
+#include <string>
+#include <memory>
+#include "common/sys/rc.h"
 #include "common/log/log.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "sql/parser/parse.h"
+#include "sql/parser/parse_defs.h"
 
 using namespace common;
+using std::string;
+using std::unique_ptr;
 
 RC ParseStage::handle_request(SQLStageEvent *sql_event)
 {
