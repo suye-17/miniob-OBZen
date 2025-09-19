@@ -426,7 +426,8 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, uniq
     for (auto *expr : logical_oper.aggregate_expressions()) {
       agg_exprs.push_back(expr);
     }
-    group_by_oper = make_unique<ScalarGroupByPhysicalOperator>(std::move(agg_exprs));
+    group_by_oper = make_unique<ScalarGroupByPhysicalOperator>(std::move(agg_exprs) , 
+                                                              logical_oper.having_filter_stmt());
   } else {
     // 对于有GROUP BY的聚合，我们也需要复制表达式
     vector<unique_ptr<Expression>> group_by_exprs_copy;
@@ -435,8 +436,11 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, uniq
     for (auto *expr : logical_oper.aggregate_expressions()) {
       agg_exprs.push_back(expr);
     }
-    group_by_oper = make_unique<HashGroupByPhysicalOperator>(std::move(logical_oper.group_by_expressions()),
-        std::move(agg_exprs));
+    group_by_oper = make_unique<HashGroupByPhysicalOperator>(
+      std::move(logical_oper.group_by_expressions()), 
+      std::move(agg_exprs),
+      logical_oper.having_filter_stmt()
+    );
   }
 
   group_by_oper->add_child(std::move(child_physical_oper));

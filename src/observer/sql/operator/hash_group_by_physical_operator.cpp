@@ -16,13 +16,16 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/hash_group_by_physical_operator.h"
 #include "sql/expr/expression_tuple.h"
 #include "sql/expr/composite_tuple.h"
+#include "sql/stmt/filter_stmt.h"
 
 using namespace std;
 using namespace common;
 
 HashGroupByPhysicalOperator::HashGroupByPhysicalOperator(
-    vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions)
-    : GroupByPhysicalOperator(std::move(expressions)), group_by_exprs_(std::move(group_by_exprs))
+    vector<unique_ptr<Expression>> &&group_by_exprs, 
+    vector<Expression *> &&expressions , 
+    FilterStmt *having_filter_stmt)
+    : GroupByPhysicalOperator(std::move(expressions) , having_filter_stmt), group_by_exprs_(std::move(group_by_exprs))
 {
 }
 
@@ -94,20 +97,27 @@ RC HashGroupByPhysicalOperator::open(Trx *trx)
 
 RC HashGroupByPhysicalOperator::next()
 {
-  if (current_group_ == groups_.end()) {
-    return RC::RECORD_EOF;
+  while (true) {
+    if (current_group_ == groups_.end()) {
+      return RC::RECORD_EOF;
+    }
+  
+    if (first_emited_) {
+      ++current_group_;
+    } else {
+      first_emited_ = true;
+    }
+    if (current_group_ == groups_.end()) {
+      return RC::RECORD_EOF;
+    }
+    //having 检查
+    const GroupValueType &group_value = get<1>(*current_group_);
+    if (check_having_condition(group_value)) {
+      return RC::SUCCESS;
+    } 
+    //如果不满足，直接进行下一组
+    
   }
-
-  if (first_emited_) {
-    ++current_group_;
-  } else {
-    first_emited_ = true;
-  }
-  if (current_group_ == groups_.end()) {
-    return RC::RECORD_EOF;
-  }
-
-  return RC::SUCCESS;
 }
 
 RC HashGroupByPhysicalOperator::close()

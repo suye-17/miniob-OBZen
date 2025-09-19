@@ -497,6 +497,32 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
     collector(expression);
   }
 
+  //collect aggregate expressions from having filter stmt
+  FilterStmt *having_filter_stmt = select_stmt->having_filter_stmt();
+  if(having_filter_stmt != nullptr) {
+    for (const auto &filter_unit : having_filter_stmt->filter_units()) {
+      // 左
+      const FilterObj &left_obj = filter_unit->left();
+      if (left_obj.type_ == FilterObj::Type::EXPRESSION && 
+          left_obj.expression != nullptr && 
+          left_obj.expression->type() == ExprType::AGGREGATION) {
+        Expression *expr = left_obj.expression;
+        expr->set_pos(aggregate_expressions.size() + group_by_expressions.size());
+        aggregate_expressions.push_back(expr);
+      }
+      
+      // 右
+      const FilterObj &right_obj = filter_unit->right();
+      if (right_obj.type_ == FilterObj::Type::EXPRESSION && 
+          right_obj.expression != nullptr && 
+          right_obj.expression->type() == ExprType::AGGREGATION) {
+        Expression *expr = right_obj.expression;
+        expr->set_pos(aggregate_expressions.size() + group_by_expressions.size());
+        aggregate_expressions.push_back(expr);
+      }
+    }
+  }
+
   if (group_by_expressions.empty() && aggregate_expressions.empty()) {
     // 既没有group by也没有聚合函数，不需要group by
     return RC::SUCCESS;
@@ -510,7 +536,8 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
   // 如果只需要聚合，但是没有group by 语句，需要生成一个空的group by 语句
 
   auto group_by_oper = make_unique<GroupByLogicalOperator>(std::move(group_by_expressions),
-                                                           std::move(aggregate_expressions));
+                                                           std::move(aggregate_expressions),
+                                                          select_stmt->having_filter_stmt());
   logical_operator = std::move(group_by_oper);
   return RC::SUCCESS;
 }

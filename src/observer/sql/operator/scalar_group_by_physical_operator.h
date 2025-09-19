@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "sql/operator/group_by_physical_operator.h"
-
+#include "sql/stmt/filter_stmt.h"
 /**
  * @brief 没有 group by 表达式的 group by 物理算子
  * @ingroup PhysicalOperator
@@ -23,7 +23,7 @@ See the Mulan PSL v2 for more details. */
 class ScalarGroupByPhysicalOperator : public GroupByPhysicalOperator
 {
 public:
-  ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions);
+  ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions , FilterStmt *having_filter_stmt = nullptr);
   virtual ~ScalarGroupByPhysicalOperator() = default;
 
   PhysicalOperatorType type() const override { return PhysicalOperatorType::SCALAR_GROUP_BY; }

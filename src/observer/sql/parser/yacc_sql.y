@@ -76,9 +76,12 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 //标识tokens
 %token  SEMICOLON
         BY
+        ORDER
+        ASC
         CREATE
         DROP
         GROUP
+        HAVING
         TABLE
         TABLES
         INDEX
@@ -185,6 +188,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <attr_info>           attr_def
 %type <value_list>          value_list
 %type <condition_list>      where
+%type <condition_list>      having
 %type <condition_list>      condition_list
 %type <cstring>             storage_format
 %type <key_list>            primary_key
@@ -504,7 +508,7 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list where group_by
+    SELECT expression_list FROM rel_list where group_by having
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -525,6 +529,11 @@ select_stmt:        /*  select 语句的语法解析树*/
       if ($6 != nullptr) {
         $$->selection.group_by.swap(*$6);
         delete $6;
+      }
+
+      if ($7 != nullptr) {
+        $$->selection.having.swap(*$7);
+        delete $7;
       }
     }
     | SELECT expression_list where  /* 不带FROM子句的SELECT语句 MySQL中也支持，所以nminiob也要满足 */
@@ -670,6 +679,15 @@ where:
       $$ = $2;  
     }
     ;
+having:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | HAVING condition_list {
+      $$ = $2;
+    }
+    ;
 condition_list:
     /* empty */
     {
@@ -729,6 +747,10 @@ group_by:
     /* empty */
     {
       $$ = nullptr;
+    }
+    | GROUP BY expression_list
+    {
+      $$ = $3; 
     }
     ;
 load_data_stmt:

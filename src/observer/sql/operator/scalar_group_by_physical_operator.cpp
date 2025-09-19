@@ -16,12 +16,12 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/scalar_group_by_physical_operator.h"
 #include "sql/expr/expression_tuple.h"
 #include "sql/expr/composite_tuple.h"
-
+#include "sql/stmt/filter_stmt.h"
 using namespace std;
 using namespace common;
 
-ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions)
-    : GroupByPhysicalOperator(std::move(expressions))
+ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions , FilterStmt *having_filter_stmt)
+    : GroupByPhysicalOperator(std::move(expressions) , having_filter_stmt)
 {}
 
 RC ScalarGroupByPhysicalOperator::open(Trx *trx)
@@ -108,9 +108,14 @@ RC ScalarGroupByPhysicalOperator::next()
   if (group_value_ == nullptr || emitted_) {
     return RC::RECORD_EOF;
   }
+  
+  //检查
+  if (!check_having_condition(*group_value_)) {
+    emitted_ = true;
+    return RC::RECORD_EOF;
+  }
 
   emitted_ = true;
-
   return RC::SUCCESS;
 }
 
