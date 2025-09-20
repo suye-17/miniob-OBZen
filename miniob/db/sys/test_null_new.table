@@ -5,6 +5,7 @@
 			"FIELD_id" : 0,
 			"len" : 4,
 			"name" : "id",
+			"nullable" : false,
 			"offset" : 0,
 			"type" : "ints",
 			"visible" : true
@@ -12,8 +13,18 @@
 		{
 			"FIELD_id" : 1,
 			"len" : 4,
-			"name" : "score",
+			"name" : "name",
+			"nullable" : true,
 			"offset" : 4,
+			"type" : "chars",
+			"visible" : true
+		},
+		{
+			"FIELD_id" : 2,
+			"len" : 4,
+			"name" : "score",
+			"nullable" : true,
+			"offset" : 8,
 			"type" : "ints",
 			"visible" : true
 		}
@@ -22,6 +33,6 @@
 	"primary_keys" : null,
 	"storage_engine" : 0,
 	"storage_format" : 1,
-	"table_id" : 1,
-	"table_name" : "test"
+	"table_id" : 9,
+	"table_name" : "test_null_new"
 }

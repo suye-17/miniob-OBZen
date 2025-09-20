@@ -1,0 +1,5 @@
+* [33mdec6ed7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mchris[m[33m, [m[1;31mminiob-OBZen/chris[m[33m)[m feat: 完整实现Expression表达式系统和SQL聚合查询修复
+* [33m690eba7[m feat: 完善Expression功能NULL值处理和代码优化
+* [33mb115cb3[m feat: 完整实现Expression功能生态系统
+* [33m2953db1[m feat: 实现WHERE条件表达式支持
+* [33m45cbdd5[m[33m ([m[1;32mmaster[m[33m)[m new

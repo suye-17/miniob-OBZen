@@ -104,6 +104,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         FLOAT_T
         DATE_T
         NULL_T
+        NOT
         VECTOR_T
         HELP
         EXIT
@@ -186,6 +187,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
 %type <attr_info>           attr_def
+%type <number>              nullable_spec
 %type <value_list>          value_list
 %type <condition_list>      where
 %type <condition_list>      having
@@ -376,12 +378,29 @@ attr_def_list:
     ;
     
 attr_def:
-    ID type LBRACE number RBRACE 
+    ID type LBRACE number RBRACE nullable_spec
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = $4;
+      $$->nullable = ($6 == 1);
+    }
+    | ID type nullable_spec
+    {
+      $$ = new AttrInfoSqlNode;
+      $$->type = (AttrType)$2;
+      $$->name = $1;
+      $$->length = 4;
+      $$->nullable = ($3 == 1);
+    }
+    | ID type LBRACE number RBRACE 
+    {
+      $$ = new AttrInfoSqlNode;
+      $$->type = (AttrType)$2;
+      $$->name = $1;
+      $$->length = $4;
+      $$->nullable = true;  
     }
     | ID type
     {
@@ -389,8 +408,16 @@ attr_def:
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = 4;
+      $$->nullable = true;  
     }
     ;
+
+nullable_spec:
+    NULL_T              { $$ = 1; }      // nullable = true
+    | NOT NULL_T        { $$ = 0; }      // nullable = false  
+    | /* empty */       { $$ = 1; }      // 默认为nullable = true
+    ;
+
 number:
     NUMBER {$$ = $1;}
     ;

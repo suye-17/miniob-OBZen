@@ -322,7 +322,23 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, const vector<Table
       right = unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
     }
 
-    if (left->value_type() != right->value_type()) {
+    // 检查是否有NULL值参与比较
+    bool has_null = false;
+    if (left->type() == ExprType::VALUE) {
+      Value left_val;
+      if (left->try_get_value(left_val) == RC::SUCCESS && left_val.is_null()) {
+        has_null = true;
+      }
+    }
+    if (right->type() == ExprType::VALUE) {
+      Value right_val;
+      if (right->try_get_value(right_val) == RC::SUCCESS && right_val.is_null()) {
+        has_null = true;
+      }
+    }
+    if (has_null) {
+      //无操作
+    } else if (left->value_type() != right->value_type()) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
       auto right_to_left_cost = implicit_cast_cost(right->value_type(), left->value_type());
       if (left_to_right_cost <= right_to_left_cost && left_to_right_cost != INT32_MAX) {
