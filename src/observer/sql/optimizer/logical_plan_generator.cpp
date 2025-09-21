@@ -308,37 +308,47 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, const vector<Table
     }
 
     unique_ptr<Expression> right;
-    if (filter_obj_right.is_expression()) {
-      right = unique_ptr<Expression>(filter_obj_right.expression->copy().release());
-      // 绑定表达式中的字段
-      rc = bind_expression_fields(right, tables);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to bind fields in right expression. rc=%s", strrc(rc));
-        return rc;
-      }
-    } else if (filter_obj_right.is_attr()) {
-      right = unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
+    // 对于 IS NULL 和 IS NOT NULL 操作，不需要右侧表达式
+    if (filter_unit->comp() == IS_NULL || filter_unit->comp() == IS_NOT_NULL) {
+      // 对于 IS NULL 和 IS NOT NULL，右侧表达式为空
+      right = nullptr;
     } else {
-      right = unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
+      if (filter_obj_right.is_expression()) {
+        right = unique_ptr<Expression>(filter_obj_right.expression->copy().release());
+        // 绑定表达式中的字段
+        rc = bind_expression_fields(right, tables);
+        if (rc != RC::SUCCESS) {
+          LOG_WARN("failed to bind fields in right expression. rc=%s", strrc(rc));
+          return rc;
+        }
+      } else if (filter_obj_right.is_attr()) {
+        right = unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
+      } else {
+        right = unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
+      }
     }
 
-    // 检查是否有NULL值参与比较
-    bool has_null = false;
-    if (left->type() == ExprType::VALUE) {
-      Value left_val;
-      if (left->try_get_value(left_val) == RC::SUCCESS && left_val.is_null()) {
-        has_null = true;
+    // 对于 IS NULL 和 IS NOT NULL，跳过类型检查
+    if (filter_unit->comp() == IS_NULL || filter_unit->comp() == IS_NOT_NULL) {
+      // IS NULL 和 IS NOT NULL 不需要类型检查，直接创建比较表达式
+    } else {
+      // 检查是否有NULL值参与比较
+      bool has_null = false;
+      if (left->type() == ExprType::VALUE) {
+        Value left_val;
+        if (left->try_get_value(left_val) == RC::SUCCESS && left_val.is_null()) {
+          has_null = true;
+        }
       }
-    }
-    if (right->type() == ExprType::VALUE) {
-      Value right_val;
-      if (right->try_get_value(right_val) == RC::SUCCESS && right_val.is_null()) {
-        has_null = true;
+      if (right->type() == ExprType::VALUE) {
+        Value right_val;
+        if (right->try_get_value(right_val) == RC::SUCCESS && right_val.is_null()) {
+          has_null = true;
+        }
       }
-    }
-    if (has_null) {
-      //无操作
-    } else if (left->value_type() != right->value_type()) {
+      if (has_null) {
+        //无操作
+      } else if (left->value_type() != right->value_type()) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
       auto right_to_left_cost = implicit_cast_cost(right->value_type(), left->value_type());
       if (left_to_right_cost <= right_to_left_cost && left_to_right_cost != INT32_MAX) {
@@ -370,10 +380,11 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, const vector<Table
           right = std::move(cast_expr);
         }
 
-      } else {
-        rc = RC::UNSUPPORTED;
-        LOG_WARN("unsupported cast from %s to %s", attr_type_to_string(left->value_type()), attr_type_to_string(right->value_type()));
-        return rc;
+        } else {
+          rc = RC::UNSUPPORTED;
+          LOG_WARN("unsupported cast from %s to %s", attr_type_to_string(left->value_type()), attr_type_to_string(right->value_type()));
+          return rc;
+        }
       }
     }
 

@@ -85,42 +85,43 @@ extern int yydebug;
     DATE_T = 286,                  /* DATE_T  */
     NULL_T = 287,                  /* NULL_T  */
     NOT = 288,                     /* NOT  */
-    VECTOR_T = 289,                /* VECTOR_T  */
-    HELP = 290,                    /* HELP  */
-    EXIT = 291,                    /* EXIT  */
-    DOT = 292,                     /* DOT  */
-    INTO = 293,                    /* INTO  */
-    VALUES = 294,                  /* VALUES  */
-    FROM = 295,                    /* FROM  */
-    WHERE = 296,                   /* WHERE  */
-    AND = 297,                     /* AND  */
-    SET = 298,                     /* SET  */
-    ON = 299,                      /* ON  */
-    LOAD = 300,                    /* LOAD  */
-    DATA = 301,                    /* DATA  */
-    INFILE = 302,                  /* INFILE  */
-    EXPLAIN = 303,                 /* EXPLAIN  */
-    STORAGE = 304,                 /* STORAGE  */
-    FORMAT = 305,                  /* FORMAT  */
-    PRIMARY = 306,                 /* PRIMARY  */
-    KEY = 307,                     /* KEY  */
-    ANALYZE = 308,                 /* ANALYZE  */
-    COUNT = 309,                   /* COUNT  */
-    SUM = 310,                     /* SUM  */
-    AVG = 311,                     /* AVG  */
-    MAX = 312,                     /* MAX  */
-    MIN = 313,                     /* MIN  */
-    EQ = 314,                      /* EQ  */
-    LT = 315,                      /* LT  */
-    GT = 316,                      /* GT  */
-    LE = 317,                      /* LE  */
-    GE = 318,                      /* GE  */
-    NE = 319,                      /* NE  */
-    NUMBER = 320,                  /* NUMBER  */
-    FLOAT = 321,                   /* FLOAT  */
-    ID = 322,                      /* ID  */
-    SSS = 323,                     /* SSS  */
-    UMINUS = 324                   /* UMINUS  */
+    IS = 289,                      /* IS  */
+    VECTOR_T = 290,                /* VECTOR_T  */
+    HELP = 291,                    /* HELP  */
+    EXIT = 292,                    /* EXIT  */
+    DOT = 293,                     /* DOT  */
+    INTO = 294,                    /* INTO  */
+    VALUES = 295,                  /* VALUES  */
+    FROM = 296,                    /* FROM  */
+    WHERE = 297,                   /* WHERE  */
+    AND = 298,                     /* AND  */
+    SET = 299,                     /* SET  */
+    ON = 300,                      /* ON  */
+    LOAD = 301,                    /* LOAD  */
+    DATA = 302,                    /* DATA  */
+    INFILE = 303,                  /* INFILE  */
+    EXPLAIN = 304,                 /* EXPLAIN  */
+    STORAGE = 305,                 /* STORAGE  */
+    FORMAT = 306,                  /* FORMAT  */
+    PRIMARY = 307,                 /* PRIMARY  */
+    KEY = 308,                     /* KEY  */
+    ANALYZE = 309,                 /* ANALYZE  */
+    COUNT = 310,                   /* COUNT  */
+    SUM = 311,                     /* SUM  */
+    AVG = 312,                     /* AVG  */
+    MAX = 313,                     /* MAX  */
+    MIN = 314,                     /* MIN  */
+    EQ = 315,                      /* EQ  */
+    LT = 316,                      /* LT  */
+    GT = 317,                      /* GT  */
+    LE = 318,                      /* LE  */
+    GE = 319,                      /* GE  */
+    NE = 320,                      /* NE  */
+    NUMBER = 321,                  /* NUMBER  */
+    FLOAT = 322,                   /* FLOAT  */
+    ID = 323,                      /* ID  */
+    SSS = 324,                     /* SSS  */
+    UMINUS = 325                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -129,7 +130,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 141 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 142 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -149,7 +150,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 153 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
+#line 154 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

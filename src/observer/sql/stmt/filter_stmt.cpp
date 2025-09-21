@@ -238,8 +238,13 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
         delete filter_unit;
         return rc;
       }
+    } else if (comp == IS_NULL || comp == IS_NOT_NULL) {
+      // 处理 IS NULL 和 IS NOT NULL 条件（没有右侧表达式）
+      filter_unit->set_left(left_obj);
+      // 对于 IS NULL 和 IS NOT NULL，不设置右侧对象
+      filter_unit->set_comp(comp);
     } else {
-      // 处理右侧表达式
+      // 处理其他比较操作符的右侧表达式
       rc = convert_expression_to_filter_obj(condition.right_expression, default_table, right_obj, "right");
       if (rc != RC::SUCCESS) {
         delete filter_unit;
