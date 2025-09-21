@@ -105,6 +105,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         DATE_T
         NULL_T
         NOT
+        IS
         VECTOR_T
         HELP
         EXIT
@@ -739,6 +740,32 @@ condition:
       $$->comp = $2;
       $$->left_expression = $1;
       $$->right_expression = $3;
+      $$->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+    }
+    | expression IS NULL_T
+    {
+      printf("DEBUG: IS NULL condition\n");
+      $$ = new ConditionSqlNode;
+      $$->comp = IS_NULL;
+      $$->left_expression = $1;
+      $$->right_expression = nullptr;
+      $$->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+    }
+    | expression IS NOT NULL_T
+    {
+      printf("DEBUG: IS NOT NULL condition\n");
+      $$ = new ConditionSqlNode;
+      $$->comp = IS_NOT_NULL;
+      $$->left_expression = $1;
+      $$->right_expression = nullptr;
       $$->is_expression_condition = true;
       
       // 清零旧字段以确保一致性

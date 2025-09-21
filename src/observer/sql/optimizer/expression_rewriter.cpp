@@ -82,6 +82,10 @@ RC ExpressionRewriter::rewrite_expression(unique_ptr<Expression> &expr, bool &ch
     return rc;
   }
 
+  if (!expr) {
+    return RC::SUCCESS;
+  }
+
   switch (expr->type()) {
     case ExprType::FIELD:
     case ExprType::VALUE: {

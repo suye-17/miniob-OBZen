@@ -147,6 +147,12 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case GREAT_THAN: {
       result = (cmp_result > 0);
     } break;
+    case IS_NULL: {
+      result = left.is_null();
+    } break;
+    case IS_NOT_NULL: {
+      result = !left.is_null();
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -166,6 +172,14 @@ RC ComparisonExpr::try_get_value(Value &cell) const
     return RC::INVALID_ARGUMENT;
   }
   
+  // IS NULL 和 IS NOT NULL 是一元操作，不需要右操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    cell.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
+  }
+  
+  // 对于其他比较操作，需要右操作数
   rc = right_->try_get_value(right_value);
   if (rc != RC::SUCCESS) {
     return RC::INVALID_ARGUMENT;
@@ -197,6 +211,15 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+
+  // IS NULL 和 IS NOT NULL 处理 - 只需要左操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    value.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
+  }
+
+  // 对于其他比较操作，需要获取右操作数
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));

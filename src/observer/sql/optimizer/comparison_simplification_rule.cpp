@@ -21,7 +21,7 @@ RC ComparisonSimplificationRule::rewrite(unique_ptr<Expression> &expr, bool &cha
   RC rc = RC::SUCCESS;
 
   change_made = false;
-  if (expr->type() == ExprType::COMPARISON) {
+  if (expr && expr->type() == ExprType::COMPARISON) {
     Value value;
 
     ComparisonExpr *cmp_expr = static_cast<ComparisonExpr *>(expr.get());

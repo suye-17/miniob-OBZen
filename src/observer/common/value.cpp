@@ -113,6 +113,20 @@ void Value::reset()
 
 void Value::set_data(char *data, int length)
 {
+  // 检查是否为NULL值（全0xFF填充）
+  bool is_null_data = true;
+  for (int i = 0; i < length; i++) {
+    if ((unsigned char)data[i] != 0xFF) {
+      is_null_data = false;
+      break;
+    }
+  }
+  
+  if (is_null_data) {
+    set_null();
+    return;
+  }
+
   switch (attr_type_) {
     case AttrType::CHARS: {
       set_string(data, length);
