@@ -50,7 +50,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   return expr;
 }
 
-UnboundAggregateExpr *create_aggregate_expression_multi(const char *aggregate_name,
+UnboundAggregateExpr *create_aggregate_expression_multjiangwoi(const char *aggregate_name,
                                                        vector<unique_ptr<Expression>> *children,
                                                        const char *sql_string,
                                                        YYLTYPE *llocp)
@@ -58,6 +58,7 @@ UnboundAggregateExpr *create_aggregate_expression_multi(const char *aggregate_na
   vector<unique_ptr<Expression>> child_vec;
   if (children != nullptr) {
     child_vec = std::move(*children);
+    delete children;  // 释放yacc分配的向量内存
   }
   UnboundAggregateExpr *expr = new UnboundAggregateExpr(aggregate_name, std::move(child_vec));
   expr->set_name(token_name(sql_string, llocp));
