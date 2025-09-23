@@ -49,7 +49,6 @@ See the Mulan PSL v2 for more details. */
 #include <algorithm>
 #include <functional>
 #include <numeric>
-#include <memory>
 #include <utility>
 #include <iterator>
 
