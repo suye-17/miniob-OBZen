@@ -16,16 +16,36 @@ See the Mulan PSL v2 for more details. */
 
 int IntegerType::compare(const Value &left, const Value &right) const
 {
-  ASSERT(left.attr_type() == AttrType::INTS, "left type is not integer");
-  ASSERT(right.attr_type() == AttrType::INTS || right.attr_type() == AttrType::FLOATS, "right type is not numeric");
-  if (right.attr_type() == AttrType::INTS) {
-    return common::compare_int((void *)&left.value_.int_value_, (void *)&right.value_.int_value_);
-  } else if (right.attr_type() == AttrType::FLOATS) {
-    float left_val  = left.get_float();
-    float right_val = right.get_float();
-    return common::compare_float((void *)&left_val, (void *)&right_val);
+  // 确保左操作数是整数类型
+  if (left.attr_type() != AttrType::INTS) {
+    LOG_WARN("Left operand is not an integer type: %d", static_cast<int>(left.attr_type()));
+    return INT32_MAX;
   }
-  return INT32_MAX;
+
+  switch (right.attr_type()) {
+    case AttrType::INTS: {
+      // 整数与整数比较
+      return common::compare_int((void *)&left.value_.int_value_, (void *)&right.value_.int_value_);
+    }
+    case AttrType::FLOATS: {
+      // 整数与浮点数比较
+      float left_val  = left.get_float();
+      float right_val = right.get_float();
+      return common::compare_float((void *)&left_val, (void *)&right_val);
+    }
+    case AttrType::CHARS: {
+      // 整数与字符串比较：将字符串转为整数进行比较
+      int left_int = left.get_int();
+      int right_as_int = right.get_int();  // 使用Value类的转换方法
+      if (left_int < right_as_int) return -1;
+      if (left_int > right_as_int) return 1;
+      return 0;
+    }
+    default: {
+      LOG_WARN("Unsupported type comparison between INTS and %d", static_cast<int>(right.attr_type()));
+      return INT32_MAX;
+    }
+  }
 }
 
 int IntegerType::cast_cost(AttrType type)
