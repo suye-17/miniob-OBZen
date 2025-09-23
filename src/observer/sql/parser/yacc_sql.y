@@ -704,7 +704,7 @@ join_clause:
     {
       $$ = nullptr;
     }
-    | join_clause INNER JOIN relation ON condition
+    | join_clause INNER JOIN relation ON condition_list
     {
       if ($1 == nullptr) {
         $$ = new vector<JoinSqlNode>;
@@ -715,10 +715,11 @@ join_clause:
       JoinSqlNode join_node;
       join_node.type = JoinType::INNER_JOIN;
       join_node.relation = $4;
-      join_node.condition = *$6;
+      if ($6 != nullptr) {
+        join_node.conditions.swap(*$6);
+        delete $6;
+      }
       $$->push_back(join_node);
-      
-      delete $6;
     }
     ;
 

@@ -14,16 +14,16 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/log/log.h"
 #include "common/lang/string.h"
-#include "common/lang/ranges.h"
 #include "sql/parser/expression_binder.h"
 #include "sql/expr/expression_iterator.h"
+#include <algorithm>
 
 using namespace common;
 
 Table *BinderContext::find_table(const char *table_name) const
 {
   auto pred = [table_name](Table *table) { return 0 == strcasecmp(table_name, table->name()); };
-  auto iter = ranges::find_if(query_tables_, pred);
+  auto iter = std::find_if(query_tables_.begin(), query_tables_.end(), pred);
   if (iter == query_tables_.end()) {
     return nullptr;
   }

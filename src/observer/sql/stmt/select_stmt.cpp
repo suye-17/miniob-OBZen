@@ -53,6 +53,36 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   return RC::SUCCESS;
 }
 
+/**
+ * @brief 将多个ConditionSqlNode转换为ConjunctionExpr (AND连接)
+ */
+RC create_join_conditions_expression(const vector<ConditionSqlNode> &conditions, Expression *&expr, 
+                                    const unordered_map<string, Table *> &table_map)
+{
+  if (conditions.empty()) {
+    expr = nullptr;
+    return RC::SUCCESS;
+  }
+  
+  if (conditions.size() == 1) {
+    return create_condition_expression(conditions[0], expr, table_map);
+  }
+  
+  // 多个条件用AND连接
+  vector<unique_ptr<Expression>> condition_exprs;
+  for (const ConditionSqlNode &condition : conditions) {
+    Expression *condition_expr = nullptr;
+    RC rc = create_condition_expression(condition, condition_expr, table_map);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    condition_exprs.emplace_back(condition_expr);
+  }
+  
+  expr = new ConjunctionExpr(ConjunctionExpr::Type::AND, condition_exprs);
+  return RC::SUCCESS;
+}
+
 SelectStmt::~SelectStmt()
 {
   if (nullptr != filter_stmt_) {
@@ -137,26 +167,30 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   for (size_t i = 0; i < select_sql.joins.size(); i++) {
     const JoinSqlNode &join_sql = select_sql.joins[i];
     
-    // 转换ConditionSqlNode为Expression
+    // 转换多个ConditionSqlNode为Expression (用AND连接)
     Expression *condition_expr = nullptr;
-    RC rc = create_condition_expression(join_sql.condition, condition_expr, table_map);
+    RC rc = create_join_conditions_expression(join_sql.conditions, condition_expr, table_map);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to create join condition expression");
       delete select_stmt;
       return rc;
     }
     
-    // 绑定表达式
-    vector<unique_ptr<Expression>> bound_expressions;
-    unique_ptr<Expression> condition_copy(condition_expr);
-    rc = expression_binder.bind_expression(condition_copy, bound_expressions);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to bind join condition expression");
-      delete select_stmt;
-      return rc;
+    if (condition_expr != nullptr) {
+      // 绑定表达式
+      vector<unique_ptr<Expression>> bound_expressions;
+      unique_ptr<Expression> condition_copy(condition_expr);
+      rc = expression_binder.bind_expression(condition_copy, bound_expressions);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to bind join condition expression");
+        delete select_stmt;
+        return rc;
+      }
+      
+      join_tables[i].condition = bound_expressions[0].release();
+    } else {
+      join_tables[i].condition = nullptr;
     }
-    
-    join_tables[i].condition = bound_expressions[0].release();
   }
 
   // 第五步：绑定查询表达式

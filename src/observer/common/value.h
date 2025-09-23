@@ -15,7 +15,6 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "common/lang/string.h"
-#include "common/lang/memory.h"
 #include "common/type/attr_type.h"
 #include "common/type/data_type.h"
 #include "common/type/date_type.h"

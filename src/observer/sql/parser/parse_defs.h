@@ -97,9 +97,9 @@ struct ConditionSqlNode
  * @ingroup SQLParser
  */
 struct JoinSqlNode {
-  JoinType           type;       ///< JOIN类型
-  string             relation;   ///< 连接的表名
-  ConditionSqlNode   condition;  ///< ON条件
+  JoinType                 type;       ///< JOIN类型
+  string                   relation;   ///< 连接的表名
+  vector<ConditionSqlNode> conditions; ///< ON条件列表，支持多个条件用AND连接
 };
 
 /**
