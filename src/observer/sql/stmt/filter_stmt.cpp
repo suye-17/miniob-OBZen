@@ -132,6 +132,7 @@ RC FilterStmt::handle_single_expression_condition(FilterObj& left_obj, FilterObj
 
 // 辅助函数：统一处理表达式转换为FilterObj
 RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
+                                                unordered_map<string, Table *> *tables,
                                                 FilterObj& filter_obj, const char* side_name)
 {
   if (expr == nullptr) {
@@ -141,23 +142,71 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
 
   // 智能处理：区分不同类型的表达式
   if (expr->type() == ExprType::UNBOUND_FIELD) {
-    // 单独的字段表达式，直接绑定
+    // 字段表达式，需要绑定到具体表
     auto unbound_field = static_cast<UnboundFieldExpr*>(expr);
+    const char* table_name = unbound_field->table_name();
     const char* field_name = unbound_field->field_name();
     
-    if (default_table != nullptr) {
-      const FieldMeta* field_meta = default_table->table_meta().field(field_name);
+    Table* target_table = nullptr;
+    
+    // 检查是否指定了表名
+    if (!common::is_blank(table_name)) {
+      // 有表名前缀，在tables中查找
+      if (tables != nullptr) {
+        auto iter = tables->find(table_name);
+        if (iter != tables->end()) {
+          target_table = iter->second;
+        } else {
+          LOG_WARN("table not found: %s", table_name);
+          return RC::SCHEMA_TABLE_NOT_EXIST;
+        }
+      } else {
+        LOG_WARN("no tables provided for field: %s.%s", table_name, field_name);
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+    } else {
+      // 没有表名前缀，需要智能查找
+      if (default_table != nullptr) {
+        // 单表查询，使用默认表
+        target_table = default_table;
+      } else if (tables != nullptr && !tables->empty()) {
+        // 多表查询，在所有表中查找字段
+        vector<Table*> matching_tables;
+        for (const auto& pair : *tables) {
+          Table* table = pair.second;
+          if (table->table_meta().field(field_name) != nullptr) {
+            matching_tables.push_back(table);
+          }
+        }
+        
+        if (matching_tables.empty()) {
+          LOG_WARN("field not found in any table: %s", field_name);
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+        } else if (matching_tables.size() == 1) {
+          // 字段只在一个表中存在，使用该表
+          target_table = matching_tables[0];
+        } else {
+          // 字段在多个表中存在，存在歧义
+          LOG_WARN("ambiguous field reference: %s (found in multiple tables)", field_name);
+          return RC::SCHEMA_FIELD_MISSING;
+        }
+      } else {
+        LOG_WARN("no default table for field: %s", field_name);
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+    }
+    
+    // 在目标表中查找字段
+    if (target_table != nullptr) {
+      const FieldMeta* field_meta = target_table->table_meta().field(field_name);
       if (field_meta != nullptr) {
-        Field field(default_table, field_meta);
+        Field field(target_table, field_meta);
         filter_obj.init_attr(field);
         return RC::SUCCESS;
       } else {
-        LOG_WARN("field not found: %s", field_name);
+        LOG_WARN("field not found: %s.%s", target_table->name(), field_name);
         return RC::SCHEMA_FIELD_NOT_EXIST;
       }
-    } else {
-      LOG_WARN("no default table for field: %s", field_name);
-      return RC::SCHEMA_TABLE_NOT_EXIST;
     }
   } else if (expr->type() == ExprType::VALUE) {
     // 常量表达式，直接求值
@@ -205,6 +254,10 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
       }
     }
   }
+  
+  // 默认返回错误（不应该到达这里）
+  LOG_WARN("unexpected end of convert_expression_to_filter_obj function");
+  return RC::INTERNAL;
 }
 
 RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<string, Table *> *tables,
@@ -225,7 +278,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     FilterObj left_obj, right_obj;
     
     // 处理左侧表达式
-    rc = convert_expression_to_filter_obj(condition.left_expression, default_table, left_obj, "left");
+    rc = convert_expression_to_filter_obj(condition.left_expression, default_table, tables, left_obj, "left");
     if (rc != RC::SUCCESS) {
       delete filter_unit;
       return rc;
@@ -245,7 +298,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
       filter_unit->set_comp(comp);
     } else {
       // 处理其他比较操作符的右侧表达式
-      rc = convert_expression_to_filter_obj(condition.right_expression, default_table, right_obj, "right");
+      rc = convert_expression_to_filter_obj(condition.right_expression, default_table, tables, right_obj, "right");
       if (rc != RC::SUCCESS) {
         delete filter_unit;
         return rc;

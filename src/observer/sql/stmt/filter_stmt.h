@@ -198,6 +198,7 @@ private:
    *   - 其他: 尝试静态求值，失败则保存表达式副本
    */
   static RC convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
+                                             unordered_map<string, Table *> *tables,
                                              FilterObj& filter_obj, const char* side_name);
 
   /**
