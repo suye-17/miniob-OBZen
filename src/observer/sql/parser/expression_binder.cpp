@@ -410,6 +410,13 @@ RC ExpressionBinder::bind_aggregate_expression(
   }
 
   auto unbound_aggregate_expr = static_cast<UnboundAggregateExpr *>(expr.get());
+  
+  // 新增：检测多参数聚合函数并返回错误
+  if (unbound_aggregate_expr->is_multi_param()) {
+    LOG_WARN("Aggregate functions do not support multiple parameters");
+    return RC::INVALID_ARGUMENT;
+  }
+  
   const char *aggregate_name = unbound_aggregate_expr->aggregate_name();
   AggregateExpr::Type aggregate_type;
   RC rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);

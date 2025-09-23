@@ -606,6 +606,10 @@ UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, unique_pt
     : aggregate_name_(aggregate_name), child_(std::move(child))
 {}
 
+UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, vector<unique_ptr<Expression>> children)
+    : aggregate_name_(aggregate_name), children_(std::move(children))
+{}
+
 ////////////////////////////////////////////////////////////////////////////////
 AggregateExpr::AggregateExpr(Type type, Expression *child) : aggregate_type_(type), child_(child) {}
 

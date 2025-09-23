@@ -449,25 +449,46 @@ class UnboundAggregateExpr : public Expression
 public:
   UnboundAggregateExpr(const char *aggregate_name, Expression *child);
   UnboundAggregateExpr(const char *aggregate_name, unique_ptr<Expression> child);
+  // 新增：多参数构造函数
+  UnboundAggregateExpr(const char *aggregate_name, vector<unique_ptr<Expression>> children);
   virtual ~UnboundAggregateExpr() = default;
 
   ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
 
   unique_ptr<Expression> copy() const override
   {
-    return make_unique<UnboundAggregateExpr>(aggregate_name_.c_str(), child_->copy());
+    if (is_multi_param()) {
+      vector<unique_ptr<Expression>> copied_children;
+      for (const auto &child : children_) {
+        copied_children.push_back(child->copy());
+      }
+      return make_unique<UnboundAggregateExpr>(aggregate_name_.c_str(), std::move(copied_children));
+    } else {
+      return make_unique<UnboundAggregateExpr>(aggregate_name_.c_str(), child_->copy());
+    }
   }
 
   const char *aggregate_name() const { return aggregate_name_.c_str(); }
 
   unique_ptr<Expression> &child() { return child_; }
+  
+  // 新增：多参数相关方法
+  bool is_multi_param() const { return !children_.empty(); }
+  const vector<unique_ptr<Expression>>& children() const { return children_; }
 
   RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
-  AttrType value_type() const override { return child_->value_type(); }
+  AttrType value_type() const override { 
+    if (is_multi_param()) {
+      return children_.empty() ? AttrType::UNDEFINED : children_[0]->value_type();
+    } else {
+      return child_->value_type(); 
+    }
+  }
 
 private:
   string                 aggregate_name_;
-  unique_ptr<Expression> child_;
+  unique_ptr<Expression> child_;  // 保持单参数兼容性
+  vector<unique_ptr<Expression>> children_;  // 新增：多参数存储
 };
 
 class AggregateExpr : public Expression

@@ -50,6 +50,20 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   return expr;
 }
 
+UnboundAggregateExpr *create_aggregate_expression_multi(const char *aggregate_name,
+                                                       vector<unique_ptr<Expression>> *children,
+                                                       const char *sql_string,
+                                                       YYLTYPE *llocp)
+{
+  vector<unique_ptr<Expression>> child_vec;
+  if (children != nullptr) {
+    child_vec = std::move(*children);
+  }
+  UnboundAggregateExpr *expr = new UnboundAggregateExpr(aggregate_name, std::move(child_vec));
+  expr->set_name(token_name(sql_string, llocp));
+  return expr;
+}
+
 ComparisonExpr *create_comparison_expression(CompOp comp_op,
                                            Expression *left,
                                            Expression *right,
@@ -651,17 +665,32 @@ expression:
     | COUNT LBRACE expression RBRACE {
       $$ = create_aggregate_expression("count", $3, sql_string, &@$);
     }
+    | COUNT LBRACE expression_list RBRACE {
+      $$ = create_aggregate_expression_multi("count", $3, sql_string, &@$);
+    }
     | SUM LBRACE expression RBRACE {
       $$ = create_aggregate_expression("sum", $3, sql_string, &@$);
+    }
+    | SUM LBRACE expression_list RBRACE {
+      $$ = create_aggregate_expression_multi("sum", $3, sql_string, &@$);
     }
     | AVG LBRACE expression RBRACE {
       $$ = create_aggregate_expression("avg", $3, sql_string, &@$);
     }
+    | AVG LBRACE expression_list RBRACE {
+      $$ = create_aggregate_expression_multi("avg", $3, sql_string, &@$);
+    }
     | MAX LBRACE expression RBRACE {
       $$ = create_aggregate_expression("max", $3, sql_string, &@$);
     }
+    | MAX LBRACE expression_list RBRACE {
+      $$ = create_aggregate_expression_multi("max", $3, sql_string, &@$);
+    }
     | MIN LBRACE expression RBRACE {
       $$ = create_aggregate_expression("min", $3, sql_string, &@$);
+    }
+    | MIN LBRACE expression_list RBRACE {
+      $$ = create_aggregate_expression_multi("min", $3, sql_string, &@$);
     }
     ;
 
