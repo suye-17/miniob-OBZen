@@ -957,11 +957,313 @@ SELECT * FROM users u INNER JOIN orders o ON u.id = o.user_id;  -- 多行结果
 3. **性能基础**：为后续JOIN优化提供了坚实的算法基础
 4. **扩展性设计**：为更多JOIN类型和算法预留了接口
 
+## 类型兼容性增强：字符串与数字比较功能
+
+### 问题背景
+
+在实际使用INNER JOIN功能时，发现了一个严重的类型兼容性问题：
+
+```sql
+-- 这种查询会导致服务器崩溃
+SELECT * FROM join_table_1 INNER JOIN join_table_2 
+ON join_table_1.name < join_table_2.age AND join_table_1.id = join_table_2.id;
+```
+
+**问题分析：**
+- `name`字段是`CHAR`类型，`age`字段是`INT`类型
+- MiniOB原始实现使用`ASSERT`强制要求相同类型比较
+- 不同类型比较时触发断言失败，导致程序异常终止（exit code: -6）
+- 客户端检测到连接断开，报告`POLLHUP/POLLERR`错误
+
+### MySQL兼容性要求
+
+MySQL支持字符串与数字的自动类型转换比较：
+- `'123' < 456` → 转换为 `123 < 456` → `true`
+- `'16a' < 20` → 提取数字部分 `16 < 20` → `true`
+- `'abc' < 123` → 无法转换时使用0 `0 < 123` → `true`
+
+### 解决方案实现
+
+#### 1. 修改 `CharType::compare` 方法
+
+**位置**：`/src/observer/common/type/char_type.cpp`
+
+```cpp
+int CharType::compare(const Value &left, const Value &right) const
+{
+  // 移除导致崩溃的ASSERT，改为优雅的错误处理
+  if (left.attr_type() != AttrType::CHARS) {
+    LOG_WARN("Left operand is not a string type: %d", static_cast<int>(left.attr_type()));
+    return INT32_MAX;
+  }
+
+  switch (right.attr_type()) {
+    case AttrType::CHARS: {
+      // 字符串与字符串比较
+      return common::compare_string(/*...*/);
+    }
+    case AttrType::INTS: {
+      // 字符串与整数比较：将字符串转为整数进行比较
+      int left_as_int = left.get_int();  // 使用Value类已有的转换方法
+      int right_int = right.get_int();
+      if (left_as_int < right_int) return -1;
+      if (left_as_int > right_int) return 1;
+      return 0;
+    }
+    case AttrType::FLOATS: {
+      // 字符串与浮点数比较
+      float left_as_float = left.get_float();
+      float right_float = right.get_float();
+      if (left_as_float < right_float) return -1;
+      if (left_as_float > right_float) return 1;
+      return 0;
+    }
+    default: {
+      LOG_WARN("Unsupported type comparison between CHARS and %d", static_cast<int>(right.attr_type()));
+      return INT32_MAX;
+    }
+  }
+}
+```
+
+#### 2. 修改 `IntegerType::compare` 方法
+
+**位置**：`/src/observer/common/type/integer_type.cpp`
+
+```cpp
+int IntegerType::compare(const Value &left, const Value &right) const
+{
+  // 移除限制性ASSERT
+  if (left.attr_type() != AttrType::INTS) {
+    LOG_WARN("Left operand is not an integer type: %d", static_cast<int>(left.attr_type()));
+    return INT32_MAX;
+  }
+
+  switch (right.attr_type()) {
+    case AttrType::INTS: {
+      // 整数与整数比较
+      return common::compare_int(/*...*/);
+    }
+    case AttrType::FLOATS: {
+      // 整数与浮点数比较
+      float left_val  = left.get_float();
+      float right_val = right.get_float();
+      return common::compare_float(/*...*/);
+    }
+    case AttrType::CHARS: {
+      // 整数与字符串比较：将字符串转为整数进行比较
+      int left_int = left.get_int();
+      int right_as_int = right.get_int();  // 自动转换
+      if (left_int < right_as_int) return -1;
+      if (left_int > right_as_int) return 1;
+      return 0;
+    }
+    default: {
+      LOG_WARN("Unsupported type comparison between INTS and %d", static_cast<int>(right.attr_type()));
+      return INT32_MAX;
+    }
+  }
+}
+```
+
+#### 3. 修改 `FloatType::compare` 方法
+
+**位置**：`/src/observer/common/type/float_type.cpp`
+
+```cpp
+int FloatType::compare(const Value &left, const Value &right) const
+{
+  // 确保左操作数是浮点数类型
+  if (left.attr_type() != AttrType::FLOATS) {
+    LOG_WARN("Left operand is not a float type: %d", static_cast<int>(left.attr_type()));
+    return INT32_MAX;
+  }
+
+  switch (right.attr_type()) {
+    case AttrType::FLOATS:
+    case AttrType::INTS: {
+      // 浮点数与数值类型比较
+      float left_val  = left.get_float();
+      float right_val = right.get_float();
+      return common::compare_float(/*...*/);
+    }
+    case AttrType::CHARS: {
+      // 浮点数与字符串比较：将字符串转为浮点数进行比较
+      float left_float = left.get_float();
+      float right_as_float = right.get_float();
+      if (left_float < right_as_float) return -1;
+      if (left_float > right_as_float) return 1;
+      return 0;
+    }
+    default: {
+      LOG_WARN("Unsupported type comparison between FLOATS and %d", static_cast<int>(right.attr_type()));
+      return INT32_MAX;
+    }
+  }
+}
+```
+
+#### 4. 完善 `CharType::cast_to` 方法
+
+**位置**：`/src/observer/common/type/char_type.cpp`
+
+```cpp
+RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
+{
+  switch (type) {
+    case AttrType::CHARS: {
+      // 字符串到字符串，直接复制
+      result = val;
+      return RC::SUCCESS;
+    }
+    case AttrType::INTS: {
+      // 字符串转整数
+      try {
+        int int_value = std::stoi(val.value_.pointer_value_);
+        result.set_int(int_value);
+        return RC::SUCCESS;
+      } catch (const std::exception& e) {
+        LOG_WARN("Failed to convert string '%s' to integer: %s", val.value_.pointer_value_, e.what());
+        result.set_int(0);  // MySQL行为：转换失败时返回0
+        return RC::SUCCESS;
+      }
+    }
+    case AttrType::FLOATS: {
+      // 字符串转浮点数
+      try {
+        float float_value = std::stof(val.value_.pointer_value_);
+        result.set_float(float_value);
+        return RC::SUCCESS;
+      } catch (const std::exception& e) {
+        LOG_WARN("Failed to convert string '%s' to float: %s", val.value_.pointer_value_, e.what());
+        result.set_float(0.0f);  // MySQL行为：转换失败时返回0.0
+        return RC::SUCCESS;
+      }
+    }
+    case AttrType::DATES: {
+      int date;
+      RC rc = parse_date(val.value_.pointer_value_, date);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      result.set_int(date);
+      return RC::SUCCESS;
+    }
+    default: 
+      LOG_WARN("Unsupported cast from CHARS to type %d", static_cast<int>(type));
+      return RC::UNIMPLEMENTED;
+  }
+}
+```
+
+### 实现效果
+
+#### 修改前（问题状态）
+```sql
+INSERT INTO join_table_1 VALUES (4, '16a');
+SELECT * FROM join_table_1 INNER JOIN join_table_2 
+ON join_table_1.name < join_table_2.age AND join_table_1.id = join_table_2.id;
+
+-- 结果：
+-- failed to receive response from observer. reason=Failed to receive from server. 
+-- poll return POLLHUP=16 or POLLERR=str(event & select.POLLERR)
+-- exit code:-6 (程序崩溃)
+```
+
+#### 修改后（正常工作）
+```sql
+INSERT INTO join_table_1 VALUES (4, '16a');
+SELECT * FROM join_table_1 INNER JOIN join_table_2 
+ON join_table_1.name < join_table_2.age AND join_table_1.id = join_table_2.id;
+
+-- 结果：正常执行JOIN操作，按照MySQL规则进行类型转换
+-- '16a' 转换为整数 16，然后与 age 字段进行比较
+```
+
+### 技术改进点
+
+#### 1. **安全性提升**
+- **问题**：使用`ASSERT`处理可预期的类型不匹配
+- **解决**：改为日志记录和错误码返回，避免程序崩溃
+
+#### 2. **MySQL兼容性**
+- **问题**：不支持跨类型比较
+- **解决**：实现MySQL标准的字符串数字转换规则
+
+#### 3. **错误处理改进**
+- **问题**：程序崩溃，用户体验差
+- **解决**：优雅降级，返回有意义的错误信息
+
+#### 4. **类型转换框架**
+- **问题**：转换功能不完整
+- **解决**：完善各种数据类型之间的转换支持
+
+### 测试验证
+
+#### 基础功能测试
+```sql
+-- 测试1：字符串与整数比较
+SELECT '123' < 456;  -- 结果：true (123 < 456)
+
+-- 测试2：包含字母的字符串
+SELECT '16a' < 20;   -- 结果：true (16 < 20)
+
+-- 测试3：无法转换的字符串
+SELECT 'abc' < 123;  -- 结果：true (0 < 123)
+
+-- 测试4：JOIN中的跨类型比较
+SELECT * FROM join_table_1 INNER JOIN join_table_2 
+ON join_table_1.name < join_table_2.age;  -- 正常执行
+```
+
+#### 边界测试
+```sql
+-- 空字符串处理
+SELECT '' < 10;      -- 结果：true (0 < 10)
+
+-- 纯数字字符串
+SELECT '100' > 50;   -- 结果：true (100 > 50)
+
+-- 浮点数字符串
+SELECT '3.14' < 4;   -- 结果：true (3.14 < 4.0)
+```
+
+### 架构影响分析
+
+#### 1. **类型系统增强**
+- 扩展了数据类型比较的灵活性
+- 保持了原有接口的兼容性
+- 为后续类型系统优化奠定基础
+
+#### 2. **JOIN功能完善**
+- 解决了JOIN条件中的类型限制问题
+- 提升了SQL兼容性
+- 增强了用户体验
+
+#### 3. **错误处理机制**
+- 建立了优雅的错误处理模式
+- 提供了更好的调试信息
+- 提高了系统稳定性
+
+### 性能考虑
+
+#### 1. **转换开销**
+- 字符串到数字的转换有一定开销
+- 通过缓存机制可以优化重复转换
+- 总体性能影响可控
+
+#### 2. **错误处理开销**
+- 类型检查增加了轻微开销
+- 相比程序崩溃，开销完全可接受
+- 可通过编译时优化进一步减少
+
 ### 后续工作
 1. 实现更多JOIN类型（LEFT JOIN、RIGHT JOIN等）
 2. 添加索引嵌套循环JOIN算法
 3. 实现基于代价的JOIN顺序优化
 4. 支持更复杂的多表查询场景
+5. **优化类型转换性能**
+6. **扩展更多数据类型的兼容性支持**
 
 ---
 
