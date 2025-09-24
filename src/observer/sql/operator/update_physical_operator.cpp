@@ -5,6 +5,8 @@
 #include "sql/expr/tuple.h"
 #include "common/type/data_type.h"
 #include "common/type/attr_type.h"
+#include <limits>
+#include <climits>
 
 /**
  * @brief 开启UPDATE物理算子，执行完整的更新操作
@@ -120,33 +122,48 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       converted_value = expression_value;
     }
     
-    switch (field_meta->type()) {
-      case AttrType::INTS: {
-        // 处理整型字段
-        int_val = converted_value.get_int();
-        memcpy(new_record.data() + offset, &int_val, len);
-      } break;
-      case AttrType::FLOATS: {
-        // 处理浮点型字段
-        float_val = converted_value.get_float();
-        memcpy(new_record.data() + offset, &float_val, len);
-      } break;
-      case AttrType::CHARS: {
-        // 处理字符型字段，确保内存安全
-        string_val = converted_value.get_string();
-        
-        // 先清零字段内存区域
-        memset(new_record.data() + offset, 0, len);
-        
-        // 计算实际复制长度，避免缓冲区溢出
-        size_t copy_len = std::min(static_cast<size_t>(len), string_val.length());
-        if (copy_len > 0) {
-          memcpy(new_record.data() + offset, string_val.c_str(), copy_len);
-        }
-      } break;
-      default:
-        LOG_WARN("unsupported field type: %d", field_meta->type());
-        return RC::INTERNAL;
+    // 检查是否为NULL值，需要特殊处理
+    if (converted_value.is_null()) {
+      // 首先检查字段是否允许NULL值
+      if (!field_meta->nullable()) {
+        LOG_WARN("field does not allow null values. table=%s, field=%s", 
+                 table_->name(), field_name_.c_str());
+        return RC::CONSTRAINT_VIOLATION;
+      }
+      
+      // 对于NULL值，使用系统标准的0xFF模式来标记
+      // 这与现有的NULL检测逻辑保持一致，不会引入新的Bug
+      memset(new_record.data() + offset, 0xFF, len);
+    } else {
+      // 非NULL值的正常处理
+      switch (field_meta->type()) {
+        case AttrType::INTS: {
+          // 处理整型字段
+          int_val = converted_value.get_int();
+          memcpy(new_record.data() + offset, &int_val, len);
+        } break;
+        case AttrType::FLOATS: {
+          // 处理浮点型字段
+          float_val = converted_value.get_float();
+          memcpy(new_record.data() + offset, &float_val, len);
+        } break;
+        case AttrType::CHARS: {
+          // 处理字符型字段，确保内存安全
+          string_val = converted_value.get_string();
+          
+          // 先清零字段内存区域
+          memset(new_record.data() + offset, 0, len);
+          
+          // 计算实际复制长度，避免缓冲区溢出
+          size_t copy_len = std::min(static_cast<size_t>(len), string_val.length());
+          if (copy_len > 0) {
+            memcpy(new_record.data() + offset, string_val.c_str(), copy_len);
+          }
+        } break;
+        default:
+          LOG_WARN("unsupported field type: %d", field_meta->type());
+          return RC::INTERNAL;
+      }
     }
 
     // 通过事务接口执行实际的更新操作

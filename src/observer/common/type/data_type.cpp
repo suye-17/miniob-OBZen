@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/data_type.h"
 #include "common/type/vector_type.h"
 #include "common/type/boolean_type.h"
+#include "common/value.h"
 
 array<unique_ptr<DataType>, static_cast<int>(AttrType::MAXTYPE)> DataType::type_instances_ = {
     make_unique<DataType>(AttrType::UNDEFINED),
@@ -25,3 +26,22 @@ array<unique_ptr<DataType>, static_cast<int>(AttrType::MAXTYPE)> DataType::type_
     make_unique<VectorType>(),
     make_unique<BooleanType>(),
 };
+
+/**
+ * @brief 基础DataType类的cast_to实现，专门处理UNDEFINED类型的转换
+ * @details 当源值是UNDEFINED类型（表示NULL）时，将其转换为目标类型的NULL值
+ * 这解决了UPDATE语句中 SET field=null 时的类型转换问题
+ */
+RC DataType::cast_to(const Value &val, AttrType type, Value &result) const
+{
+  // 只有当前DataType实例是UNDEFINED类型时才处理NULL值转换
+  if (attr_type_ == AttrType::UNDEFINED) {
+    // 创建目标类型的NULL值
+    result.set_null();
+    result.set_type(type);  // 设置目标类型
+    return RC::SUCCESS;
+  }
+  
+  // 对于其他类型，返回不支持，让具体的子类处理
+  return RC::UNSUPPORTED;
+}
