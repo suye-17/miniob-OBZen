@@ -57,6 +57,8 @@ enum CompOp
   GREAT_THAN,   ///< ">"
   LIKE_OP,      ///< "LIKE"
   NOT_LIKE_OP,  ///< "NOT LIKE"
+  IN_OP,        ///< "IN"
+  NOT_IN_OP,    ///< "NOT IN"
   NO_OP
 };
 
@@ -90,6 +92,7 @@ struct ConditionSqlNode
                                  ///< 1时，操作符右边是属性名，0时，是属性值
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
+  vector<Value>  right_values;   ///< 用于IN操作的值列表
 };
 
 /**

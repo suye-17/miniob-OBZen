@@ -143,7 +143,12 @@ RC CastExpr::try_get_value(Value &result) const
 ////////////////////////////////////////////////////////////////////////////////
 
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right)
-    : comp_(comp), left_(std::move(left)), right_(std::move(right))
+    : comp_(comp), left_(std::move(left)), right_(std::move(right)), has_value_list_(false)
+{
+}
+
+ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values)
+    : comp_(comp), left_(std::move(left)), right_values_(right_values), has_value_list_(true)
 {
 }
 
@@ -197,6 +202,11 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
         result = !match_like_pattern(text.c_str(), pattern.c_str());
       }
     } break;
+    case IN_OP:
+    case NOT_IN_OP: {
+      LOG_WARN("IN/NOT IN should use compare_with_value_list method");
+      rc = RC::INTERNAL;
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -206,9 +216,45 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   return rc;
 }
 
+RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value> &right_values, bool &result) const
+{
+  result = false;
+  
+  // 遍历值列表进行比较
+  for (const Value &right_value : right_values) {
+    int cmp_result = left.compare(right_value);
+    if (cmp_result == 0) {
+      // 找到匹配项
+      result = (comp_ == IN_OP);
+      return RC::SUCCESS;
+    }
+  }
+  
+  // 没有找到匹配项
+  result = (comp_ == NOT_IN_OP);
+  
+  return RC::SUCCESS;
+}
+
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
-  if (left_->type() == ExprType::VALUE && right_->type() == ExprType::VALUE) {
+  // 处理IN/NOT IN操作
+  if (has_value_list_ && left_->type() == ExprType::VALUE) {
+    ValueExpr *left_value_expr = static_cast<ValueExpr *>(left_.get());
+    const Value &left_cell = left_value_expr->get_value();
+    
+    bool value = false;
+    RC rc = compare_with_value_list(left_cell, right_values_, value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to compare with value list. rc=%s", strrc(rc));
+    } else {
+      cell.set_boolean(value);
+    }
+    return rc;
+  }
+  
+  // 处理普通比较操作
+  if (left_->type() == ExprType::VALUE && right_ && right_->type() == ExprType::VALUE) {
     ValueExpr *  left_value_expr  = static_cast<ValueExpr *>(left_.get());
     ValueExpr *  right_value_expr = static_cast<ValueExpr *>(right_.get());
     const Value &left_cell        = left_value_expr->get_value();
@@ -230,22 +276,31 @@ RC ComparisonExpr::try_get_value(Value &cell) const
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
   Value left_value;
-  Value right_value;
-
   RC rc = left_->get_value(tuple, left_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
-  rc = right_->get_value(tuple, right_value);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
-    return rc;
-  }
 
   bool bool_value = false;
 
-  rc = compare_value(left_value, right_value, bool_value);
+  if (has_value_list_) {
+    // 使用值列表进行比较（IN/NOT IN操作）
+    rc = compare_with_value_list(left_value, right_values_, bool_value);
+  } else if (right_) {
+    // 使用右侧表达式进行比较
+    Value right_value;
+    rc = right_->get_value(tuple, right_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    rc = compare_value(left_value, right_value, bool_value);
+  } else {
+    LOG_WARN("ComparisonExpr: both has_value_list_ is false and right_ is null");
+    return RC::INTERNAL;
+  }
+  
   if (rc == RC::SUCCESS) {
     value.set_boolean(bool_value);
   }

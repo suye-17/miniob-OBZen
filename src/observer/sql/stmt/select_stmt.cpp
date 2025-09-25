@@ -31,7 +31,6 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
                               const unordered_map<string, Table *> &table_map)
 {
   unique_ptr<Expression> left_expr;
-  unique_ptr<Expression> right_expr;
   
   // 处理左侧表达式
   if (condition.left_is_attr) {
@@ -41,7 +40,15 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
     left_expr = make_unique<ValueExpr>(condition.left_value);
   }
   
-  // 处理右侧表达式
+  // 检查是否为IN/NOT IN操作
+  if (condition.comp == IN_OP || condition.comp == NOT_IN_OP) {
+    // 使用值列表构造ComparisonExpr
+    expr = new ComparisonExpr(condition.comp, std::move(left_expr), condition.right_values);
+    return RC::SUCCESS;
+  }
+  
+  // 处理普通比较操作的右侧表达式
+  unique_ptr<Expression> right_expr;
   if (condition.right_is_attr) {
     const RelAttrSqlNode &attr = condition.right_attr;
     right_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);

@@ -16,9 +16,9 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/unordered_map.h"
 #include "common/lang/vector.h"
-#include "sql/expr/expression.h"
 #include "sql/parser/parse_defs.h"
 #include "sql/stmt/stmt.h"
+#include "storage/field/field.h"
 
 class Db;
 class Table;
@@ -29,6 +29,8 @@ struct FilterObj
   bool  is_attr;
   Field field;
   Value value;
+  vector<Value> value_list;  // 用于IN操作的值列表
+  bool has_value_list = false;  // 标记是否使用值列表
 
   void init_attr(const Field &field)
   {
@@ -40,6 +42,13 @@ struct FilterObj
   {
     is_attr     = false;
     this->value = value;
+  }
+
+  void init_value_list(const vector<Value> &values)
+  {
+    is_attr = false;
+    has_value_list = true;
+    value_list = values;
   }
 };
 

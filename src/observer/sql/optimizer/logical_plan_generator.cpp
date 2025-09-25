@@ -187,6 +187,18 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
                                     ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
                                     : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
 
+    // 处理IN/NOT IN操作的值列表
+    if (filter_unit->comp() == IN_OP || filter_unit->comp() == NOT_IN_OP) {
+      if (filter_obj_right.has_value_list) {
+        ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(left), filter_obj_right.value_list);
+        cmp_exprs.emplace_back(cmp_expr);
+        continue;
+      } else {
+        LOG_WARN("IN/NOT IN operation requires value list");
+        return RC::INVALID_ARGUMENT;
+      }
+    }
+
     unique_ptr<Expression> right(filter_obj_right.is_attr
                                      ? static_cast<Expression *>(new FieldExpr(filter_obj_right.field))
                                      : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));

@@ -293,6 +293,7 @@ class ComparisonExpr : public Expression
 {
 public:
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right);
+  ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values);
   virtual ~ComparisonExpr();
 
   ExprType type() const override { return ExprType::COMPARISON; }
@@ -302,7 +303,15 @@ public:
 
   unique_ptr<Expression> copy() const override
   {
-    return make_unique<ComparisonExpr>(comp_, left_->copy(), right_->copy());
+    if (has_value_list_) {
+      return make_unique<ComparisonExpr>(comp_, left_->copy(), right_values_);
+    } else if (right_) {
+      return make_unique<ComparisonExpr>(comp_, left_->copy(), right_->copy());
+    } else {
+      // 这种情况不应该发生，但为了安全起见
+      LOG_WARN("ComparisonExpr copy: both has_value_list_ is false and right_ is null");
+      return nullptr;
+    }
   }
 
   /**
@@ -325,6 +334,7 @@ public:
    * @param value the result of comparison
    */
   RC compare_value(const Value &left, const Value &right, bool &value) const;
+  RC compare_with_value_list(const Value &left, const vector<Value> &right_values, bool &result) const;
 
   template <typename T>
   RC compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const;
@@ -333,6 +343,8 @@ private:
   CompOp                 comp_;
   unique_ptr<Expression> left_;
   unique_ptr<Expression> right_;
+  vector<Value>          right_values_;  ///< 用于IN操作的值列表
+  bool                   has_value_list_ = false;  ///< 是否使用值列表
 };
 
 /**

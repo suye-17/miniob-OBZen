@@ -108,12 +108,24 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     filter_unit->set_left(filter_obj);
   }
 
-  if (condition.right_is_attr) {
+  // 处理IN/NOT IN操作的值列表
+  if (comp == IN_OP || comp == NOT_IN_OP) {
+    if (!condition.right_values.empty()) {
+      FilterObj filter_obj;
+      filter_obj.init_value_list(condition.right_values);
+      filter_unit->set_right(filter_obj);
+    } else {
+      LOG_WARN("IN/NOT IN operation requires value list");
+      delete filter_unit;
+      return RC::INVALID_ARGUMENT;
+    }
+  } else if (condition.right_is_attr) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot find attr");
+      delete filter_unit;
       return rc;
     }
     FilterObj filter_obj;

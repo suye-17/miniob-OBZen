@@ -1,0 +1,18 @@
+### 2025-09-25 10:05:41.093
+cd /home/simpur/miniob-OBZen && ln -s build build_debug
+### 2025-09-25 10:09:41.765
+echo "-- 创建测试表" && echo "CREATE TABLE ssq_1(id int, col1 int, feat1 float);" | ./build/bin/observer -P cli
+### 2025-09-25 10:09:53.933
+./build/bin/observer -f test_sql_queries.sql
+### 2025-09-25 10:10:03.750
+echo "quit" && pkill observer
+### 2025-09-25 10:10:12.828
+./build/bin/observer --help
+### 2025-09-25 10:11:06.941
+pkill -9 observer && sleep 1
+### 2025-09-25 10:11:24.593
+bash -c "echo 'CREATE TABLE ssq_1(id int, col1 int, feat1 float);' | ./build/bin/observer -P cli"
+### 2025-09-25 10:11:35.501
+exit
+### 2025-09-25 10:16:58.417
+exit;

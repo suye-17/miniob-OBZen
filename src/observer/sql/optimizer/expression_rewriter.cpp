@@ -66,6 +66,10 @@ RC ExpressionRewriter::rewrite_expression(unique_ptr<Expression> &expr, bool &ch
   RC rc = RC::SUCCESS;
 
   change_made = false;
+  
+  if (!expr) {
+    return RC::SUCCESS;
+  }
   for (unique_ptr<ExpressionRewriteRule> &rule : expr_rewrite_rules_) {
     bool sub_change_made = false;
 
@@ -80,6 +84,10 @@ RC ExpressionRewriter::rewrite_expression(unique_ptr<Expression> &expr, bool &ch
 
   if (change_made || rc != RC::SUCCESS) {
     return rc;
+  }
+
+  if (!expr) {
+    return RC::SUCCESS;
   }
 
   switch (expr->type()) {

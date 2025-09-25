@@ -117,6 +117,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         NE
         LIKE
         NOT
+        IN
         INNER
         JOIN
 
@@ -685,6 +686,54 @@ condition:
       delete $1;
       delete $3;
     }
+    | rel_attr IN LBRACE value_list RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = IN_OP;
+      $$->right_values = *$4;
+
+      delete $1;
+      delete $4;
+    }
+    | rel_attr NOT IN LBRACE value_list RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = NOT_IN_OP;
+      $$->right_values = *$5;
+
+      delete $1;
+      delete $5;
+    }
+    | value IN LBRACE value_list RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = IN_OP;
+      $$->right_values = *$4;
+
+      delete $1;
+      delete $4;
+    }
+    | value NOT IN LBRACE value_list RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = NOT_IN_OP;
+      $$->right_values = *$5;
+
+      delete $1;
+      delete $5;
+    }
     ;
 
 comp_op:
@@ -696,6 +745,8 @@ comp_op:
     | NE { $$ = NOT_EQUAL; }
     | LIKE { $$ = LIKE_OP; }
     | NOT LIKE { $$ = NOT_LIKE_OP; }
+    | IN { $$ = IN_OP; }
+    | NOT IN { $$ = NOT_IN_OP; }
     ;
 
 // your code here
