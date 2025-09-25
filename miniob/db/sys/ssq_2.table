@@ -30,6 +30,6 @@
 	"primary_keys" : null,
 	"storage_engine" : 0,
 	"storage_format" : 1,
-	"table_id" : 15,
+	"table_id" : 3,
 	"table_name" : "ssq_2"
 }

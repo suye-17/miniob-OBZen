@@ -121,6 +121,19 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         INNER
         JOIN
 
+%code requires {
+#include <string>
+#include <vector>
+#include <memory>
+#include "sql/parser/parse_defs.h"
+#include "common/value.h"
+#include "sql/expr/expression.h"
+
+using std::string;
+using std::vector;
+using std::unique_ptr;
+}
+
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
   ParsedSqlNode *                            sql_node;

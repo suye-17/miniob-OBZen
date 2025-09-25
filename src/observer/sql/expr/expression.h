@@ -339,6 +339,9 @@ public:
    */
   RC compare_value(const Value &left, const Value &right, bool &value) const;
   RC compare_with_value_list(const Value &left, const vector<Value> &right_values, bool &result) const;
+  
+  // 子查询执行方法
+  RC execute_subquery(vector<Value> &results) const;
 
   template <typename T>
   RC compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const;
