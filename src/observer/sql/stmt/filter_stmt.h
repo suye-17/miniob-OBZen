@@ -31,6 +31,10 @@ struct FilterObj
   Value value;
   vector<Value> value_list;  // 用于IN操作的值列表
   bool has_value_list = false;  // 标记是否使用值列表
+  
+  // 新增：子查询支持
+  bool has_subquery = false;  // 标记是否为子查询
+  SelectSqlNode* subquery = nullptr;  // 子查询节点
 
   void init_attr(const Field &field)
   {
@@ -49,6 +53,13 @@ struct FilterObj
     is_attr = false;
     has_value_list = true;
     value_list = values;
+  }
+  
+  void init_subquery(SelectSqlNode* subquery_node)
+  {
+    is_attr = false;
+    has_subquery = true;
+    subquery = subquery_node;
   }
 };
 

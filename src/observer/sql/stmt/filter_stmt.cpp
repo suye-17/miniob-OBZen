@@ -108,14 +108,20 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     filter_unit->set_left(filter_obj);
   }
 
-  // 处理IN/NOT IN操作的值列表
+  // 处理IN/NOT IN操作的值列表或子查询
   if (comp == IN_OP || comp == NOT_IN_OP) {
-    if (!condition.right_values.empty()) {
+    if (condition.has_subquery) {
+      // 处理子查询
+      FilterObj filter_obj;
+      filter_obj.init_subquery(condition.subquery);
+      filter_unit->set_right(filter_obj);
+    } else if (!condition.right_values.empty()) {
+      // 处理值列表
       FilterObj filter_obj;
       filter_obj.init_value_list(condition.right_values);
       filter_unit->set_right(filter_obj);
     } else {
-      LOG_WARN("IN/NOT IN operation requires value list");
+      LOG_WARN("IN/NOT IN operation requires value list or subquery");
       delete filter_unit;
       return RC::INVALID_ARGUMENT;
     }

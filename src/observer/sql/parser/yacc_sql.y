@@ -734,6 +734,32 @@ condition:
       delete $1;
       delete $5;
     }
+    | rel_attr IN LBRACE select_stmt RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = IN_OP;
+      $$->has_subquery = true;
+      $$->subquery = &($4->selection);
+
+      delete $1;
+      delete $4;
+    }
+    | rel_attr NOT IN LBRACE select_stmt RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = NOT_IN_OP;
+      $$->has_subquery = true;
+      $$->subquery = &($5->selection);
+
+      delete $1;
+      delete $5;
+    }
     ;
 
 comp_op:

@@ -24,7 +24,9 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 
+// 前向声明
 class Expression;
+struct SelectSqlNode;
 
 /**
  * @defgroup SQLParser SQL Parser
@@ -93,6 +95,13 @@ struct ConditionSqlNode
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
   vector<Value>  right_values;   ///< 用于IN操作的值列表
+  
+  // 新增：子查询支持
+  bool                     has_subquery;    ///< TRUE if right side is a subquery
+  SelectSqlNode*           subquery;        ///< 子查询节点，用于IN/NOT IN操作
+  
+  // 构造函数，初始化新字段
+  ConditionSqlNode() : left_is_attr(0), comp(NO_OP), right_is_attr(0), has_subquery(false), subquery(nullptr) {}
 };
 
 /**

@@ -294,6 +294,8 @@ class ComparisonExpr : public Expression
 public:
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right);
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values);
+  // 新增：支持子查询的构造函数
+  ComparisonExpr(CompOp comp, unique_ptr<Expression> left, SelectSqlNode* subquery);
   virtual ~ComparisonExpr();
 
   ExprType type() const override { return ExprType::COMPARISON; }
@@ -303,13 +305,15 @@ public:
 
   unique_ptr<Expression> copy() const override
   {
-    if (has_value_list_) {
+    if (has_subquery_) {
+      return make_unique<ComparisonExpr>(comp_, left_->copy(), subquery_);
+    } else if (has_value_list_) {
       return make_unique<ComparisonExpr>(comp_, left_->copy(), right_values_);
     } else if (right_) {
       return make_unique<ComparisonExpr>(comp_, left_->copy(), right_->copy());
     } else {
       // 这种情况不应该发生，但为了安全起见
-      LOG_WARN("ComparisonExpr copy: both has_value_list_ is false and right_ is null");
+      LOG_WARN("ComparisonExpr copy: has_subquery_, has_value_list_ are false and right_ is null");
       return nullptr;
     }
   }
@@ -345,6 +349,10 @@ private:
   unique_ptr<Expression> right_;
   vector<Value>          right_values_;  ///< 用于IN操作的值列表
   bool                   has_value_list_ = false;  ///< 是否使用值列表
+  
+  // 新增：子查询支持
+  SelectSqlNode*           subquery_ = nullptr;   ///< 子查询节点
+  bool                     has_subquery_ = false; ///< 是否使用子查询
 };
 
 /**

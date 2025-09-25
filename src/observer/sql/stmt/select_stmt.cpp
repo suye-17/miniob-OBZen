@@ -42,8 +42,13 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   
   // 检查是否为IN/NOT IN操作
   if (condition.comp == IN_OP || condition.comp == NOT_IN_OP) {
-    // 使用值列表构造ComparisonExpr
-    expr = new ComparisonExpr(condition.comp, std::move(left_expr), condition.right_values);
+    if (condition.has_subquery) {
+      // 使用子查询构造ComparisonExpr
+      expr = new ComparisonExpr(condition.comp, std::move(left_expr), condition.subquery);
+    } else {
+      // 使用值列表构造ComparisonExpr
+      expr = new ComparisonExpr(condition.comp, std::move(left_expr), condition.right_values);
+    }
     return RC::SUCCESS;
   }
   
