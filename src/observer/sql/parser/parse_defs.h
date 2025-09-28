@@ -204,7 +204,10 @@ struct CreateIndexSqlNode
 {
   string index_name;      ///< Index name
   string relation_name;   ///< Relation name
-  string attribute_name;  ///< Attribute name
+  vector<string> attribute_names;  ///< Attribute names
+  string attribute_name() const { 
+    return attribute_names.empty() ? "" : attribute_names[0]; //不为空，返回字段名
+  }
 };
 
 /**
@@ -215,6 +218,16 @@ struct DropIndexSqlNode
 {
   string index_name;     ///< Index name
   string relation_name;  ///< Relation name
+};
+
+/**
+ * @brief 描述一个show index语句
+ * @ingroup SQLParser
+ * @details show index 是查询表索引信息的语句
+ */
+struct ShowIndexSqlNode
+{
+  string relation_name;  ///< 表名
 };
 
 /**
@@ -292,6 +305,7 @@ enum SqlCommandFlag
   SCF_ANALYZE_TABLE,
   SCF_CREATE_INDEX,
   SCF_DROP_INDEX,
+  SCF_SHOW_INDEX,
   SCF_SYNC,
   SCF_SHOW_TABLES,
   SCF_DESC_TABLE,
@@ -324,6 +338,7 @@ public:
   AnalyzeTableSqlNode analyze_table;
   CreateIndexSqlNode  create_index;
   DropIndexSqlNode    drop_index;
+  ShowIndexSqlNode    show_index;
   DescTableSqlNode    desc_table;
   LoadDataSqlNode     load_data;
   ExplainSqlNode      explain;

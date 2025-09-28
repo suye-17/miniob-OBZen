@@ -286,7 +286,75 @@ RC HeapTableEngine::create_index(Trx *trx, const FieldMeta *field_meta, const ch
   LOG_INFO("Successfully added a new index (%s) on the table (%s)", index_name, table_meta_->name());
   return rc;
 }
+RC HeapTableEngine::create_index(Trx *trx, const vector<const FieldMeta *> &field_metas, const char *index_name)
+{
+  if (field_metas.empty()) {
+    LOG_INFO("Invalid input arguments, table name is %s, field_metas is empty", table_meta_->name());
+    return RC::INVALID_ARGUMENT;
+  }
+  if (common::is_blank(index_name)) {
+    LOG_INFO("Invalid input arguments, table name is %s, index_name is blank", table_meta_->name());
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  IndexMeta new_index_meta;
+  RC rc = new_index_meta.init(index_name, field_metas);
+  if (rc != RC::SUCCESS) {
+    LOG_INFO("Failed to init IndexMeta in table:%s, index_name:%s, field_metas=%zu", 
+             table_meta_->name(), index_name, field_metas.size());
+    return rc;
+  }
+  BplusTreeIndex *index = new BplusTreeIndex();
+  string index_file = table_index_file(db_->path().c_str(), table_meta_->name(), index_name);
+  rc = index->create(table_, index_file.c_str(), new_index_meta, field_metas);
+  if (rc != RC::SUCCESS) {
+    delete index;
+    LOG_ERROR("Failed to create bplus tree index. file name=%s, rc=%d:%s", index_file.c_str(), rc, strrc(rc));
+    return rc;
+  }
 
+  // 创建新的表元数据副本
+TableMeta new_table_meta(*table_meta_);
+rc = new_table_meta.add_index(new_index_meta);
+if (rc != RC::SUCCESS) {
+  delete index;
+  LOG_ERROR("Failed to add index (%s) on table (%s). error=%d:%s", index_name, table_meta_->name(), rc, strrc(rc));
+  return rc;
+}
+
+/// 内存中有一份元数据，磁盘文件也有一份元数据。修改磁盘文件时，先创建一个临时文件，写入完成后再rename为正式文件
+/// 这样可以防止文件内容不完整
+// 创建元数据临时文件
+string  tmp_file = table_meta_file(db_->path().c_str(), table_meta_->name()) + ".tmp";
+fstream fs;
+fs.open(tmp_file, ios_base::out | ios_base::binary | ios_base::trunc);
+if (!fs.is_open()) {
+  LOG_ERROR("Failed to open file for write. file name=%s, errmsg=%s", tmp_file.c_str(), strerror(errno));
+  return RC::IOERR_OPEN;  // 创建索引中途出错，要做还原操作
+}
+if (new_table_meta.serialize(fs) < 0) {
+  LOG_ERROR("Failed to dump new table meta to file: %s. sys err=%d:%s", tmp_file.c_str(), errno, strerror(errno));
+  return RC::IOERR_WRITE;
+}
+fs.close();
+
+// 覆盖原始元数据文件
+string meta_file = table_meta_file(db_->path().c_str(), table_meta_->name());
+
+int ret = rename(tmp_file.c_str(), meta_file.c_str());
+if (ret != 0) {
+  LOG_ERROR("Failed to rename tmp meta file (%s) to normal meta file (%s) while creating index (%s) on table (%s). "
+            "system error=%d:%s",
+            tmp_file.c_str(), meta_file.c_str(), index_name, table_meta_->name(), errno, strerror(errno));
+  return RC::IOERR_WRITE;
+}
+
+table_meta_->swap(new_table_meta);
+
+indexes_.push_back(index);
+LOG_INFO("Successfully added a new index (%s) on the table (%s)", index_name, table_meta_->name());
+return RC::SUCCESS;
+}
 RC HeapTableEngine::insert_entry_of_indexes(const char *record, const RID &rid)
 {
   RC rc = RC::SUCCESS;
@@ -382,19 +450,37 @@ RC HeapTableEngine::open()
   const int index_num = table_meta_->index_num();
   for (int i = 0; i < index_num; i++) {
     const IndexMeta *index_meta = table_meta_->index(i);
-    const FieldMeta *field_meta = table_meta_->field(index_meta->field());
-    if (field_meta == nullptr) {
-      LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, field=%s",
-                table_meta_->name(), index_meta->name(), index_meta->field());
-      // skip cleanup
-      //  do all cleanup action in destructive Table function
-      return RC::INTERNAL;
-    }
-
+    
     BplusTreeIndex *index      = new BplusTreeIndex();
     string          index_file = table_index_file(db_->path().c_str(), table_meta_->name(), index_meta->name());
 
-    rc = index->open(table_, index_file.c_str(), *index_meta, *field_meta);
+    // 处理多字段索引和单字段索引
+    if (index_meta->is_multi_field()) {
+      // 多字段索引：获取所有字段元数据
+      vector<const FieldMeta *> field_metas;
+      for (const string &field_name : index_meta->fields()) {
+        const FieldMeta *field_meta = table_meta_->field(field_name.c_str());
+        if (field_meta == nullptr) {
+          LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, field=%s",
+                    table_meta_->name(), index_meta->name(), field_name.c_str());
+          delete index;
+          return RC::INTERNAL;
+        }
+        field_metas.push_back(field_meta);
+      }
+      rc = index->open(table_, index_file.c_str(), *index_meta, field_metas);
+    } else {
+      // 单字段索引：使用原有方式
+      const FieldMeta *field_meta = table_meta_->field(index_meta->field());
+      if (field_meta == nullptr) {
+        LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, field=%s",
+                  table_meta_->name(), index_meta->name(), index_meta->field());
+        delete index;
+        return RC::INTERNAL;
+      }
+      rc = index->open(table_, index_file.c_str(), *index_meta, *field_meta);
+    }
+    
     if (rc != RC::SUCCESS) {
       delete index;
       LOG_ERROR("Failed to open index. table=%s, index=%s, file=%s, rc=%s",

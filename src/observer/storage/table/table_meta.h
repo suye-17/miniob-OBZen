@@ -60,7 +60,7 @@ public:
   const IndexMeta *find_index_by_field(const char *field) const;
   const IndexMeta *index(int i) const;
   int              index_num() const;
-
+  const vector<IndexMeta> *index_metas() const { return &indexes_; }
   const vector<string> &primary_keys() const { return primary_keys_; }
 
   int record_size() const;
@@ -71,6 +71,7 @@ public:
   int  get_serial_size() const override;
   void to_string(string &output) const override;
   void desc(ostream &os) const;
+  
 
 protected:
   int32_t           table_id_ = -1;

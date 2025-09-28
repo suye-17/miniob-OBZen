@@ -212,6 +212,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <cstring>             storage_format
 %type <key_list>            primary_key
 %type <key_list>            attr_list
+%type <key_list>            attribute_name_list
 %type <relation_list>       rel_list
 %type <expression>          expression
 %type <expression_list>     expression_list
@@ -227,6 +228,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <sql_node>            show_tables_stmt
 %type <sql_node>            desc_table_stmt
 %type <sql_node>            create_index_stmt
+%type <sql_node>            show_index_stmt
 %type <sql_node>            drop_index_stmt
 %type <sql_node>            sync_stmt
 %type <sql_node>            begin_stmt
@@ -264,6 +266,7 @@ command_wrapper:
   | drop_table_stmt
   | analyze_table_stmt
   | show_tables_stmt
+  | show_index_stmt
   | desc_table_stmt
   | create_index_stmt
   | drop_index_stmt
@@ -340,16 +343,28 @@ desc_table_stmt:
     ;
 
 create_index_stmt:    /*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID RBRACE
+    CREATE INDEX ID ON ID LBRACE attribute_name_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
       CreateIndexSqlNode &create_index = $$->create_index;
       create_index.index_name = $3;
       create_index.relation_name = $5;
-      create_index.attribute_name = $7;
+      create_index.attribute_names = std::move (*$7);
+      delete $7;
     }
     ;
-
+attribute_name_list:
+    ID
+    {
+      $$ = new vector<string> ();
+      $$->push_back($1);
+    }
+    | attribute_name_list COMMA ID
+    {
+      $$ = $1;
+      $$->push_back($3);
+    }
+    ;
 drop_index_stmt:      /*drop index 语句的语法解析树*/
     DROP INDEX ID ON ID
     {
@@ -357,6 +372,13 @@ drop_index_stmt:      /*drop index 语句的语法解析树*/
       $$->drop_index.index_name = $3;
       $$->drop_index.relation_name = $5;
     }
+    ;
+show_index_stmt:     /*显示表中的索引*/
+    SHOW INDEX FROM ID 
+    {
+      $$ = new ParsedSqlNode(SCF_SHOW_INDEX);
+      $$->show_index.relation_name = $4;  
+    } 
     ;
 create_table_stmt:    /*create table 语句的语法解析树*/
     CREATE TABLE ID LBRACE attr_def_list primary_key RBRACE storage_format

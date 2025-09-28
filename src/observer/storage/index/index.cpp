@@ -18,5 +18,21 @@ RC Index::init(const IndexMeta &index_meta, const FieldMeta &field_meta)
 {
   index_meta_ = index_meta;
   field_meta_ = field_meta;
+  field_metas_.clear();
+  field_metas_.push_back(field_meta);
+  return RC::SUCCESS;
+}
+
+RC Index::init(const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
+{
+  index_meta_ = index_meta;
+  field_metas_.clear();
+  field_metas_.reserve(field_metas.size());
+  for (const auto *field_meta : field_metas) {
+    field_metas_.push_back(*field_meta);
+  }
+  if (!field_metas_.empty()) {
+    field_meta_ = field_metas_[0];  // 保持向后兼容
+  }
   return RC::SUCCESS;
 }

@@ -5,55 +5,43 @@
 			"FIELD_id" : 0,
 			"len" : 4,
 			"name" : "id",
-			"nullable" : true,
+			"nullable" : false,
 			"offset" : 0,
 			"type" : "ints",
 			"visible" : true
 		},
 		{
 			"FIELD_id" : 1,
-			"len" : 10,
-			"name" : "dept",
+			"len" : 4,
+			"name" : "num",
 			"nullable" : true,
 			"offset" : 4,
-			"type" : "chars",
+			"type" : "ints",
 			"visible" : true
 		},
 		{
 			"FIELD_id" : 2,
 			"len" : 4,
-			"name" : "salary",
-			"nullable" : true,
-			"offset" : 14,
-			"type" : "ints",
+			"name" : "price",
+			"nullable" : false,
+			"offset" : 8,
+			"type" : "floats",
 			"visible" : true
 		},
 		{
 			"FIELD_id" : 3,
 			"len" : 4,
-			"name" : "age",
+			"name" : "birthday",
 			"nullable" : true,
-			"offset" : 18,
-			"type" : "ints",
+			"offset" : 12,
+			"type" : "dates",
 			"visible" : true
 		}
 	],
-	"indexes" : 
-	[
-		{
-			"field_name" : "dept",
-			"field_names" : 
-			[
-				"dept",
-				"salary",
-				"age"
-			],
-			"name" : "idx_dept_salary_age"
-		}
-	],
+	"indexes" : null,
 	"primary_keys" : null,
 	"storage_engine" : 0,
 	"storage_format" : 1,
-	"table_id" : 3,
-	"table_name" : "employees2"
+	"table_id" : 10,
+	"table_name" : "null_table"
 }

@@ -32,5 +32,8 @@ RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
 
   Trx   *trx   = session->current_trx();
   Table *table = create_index_stmt->table();
-  return table->create_index(trx, create_index_stmt->field_meta(), create_index_stmt->index_name().c_str());
+  const vector<const FieldMeta *> &field_metas = create_index_stmt->field_metas();
+  
+  
+  return table->create_index(trx, field_metas, create_index_stmt->index_name().c_str());
 }

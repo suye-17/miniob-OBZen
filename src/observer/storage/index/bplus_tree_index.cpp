@@ -105,6 +105,74 @@ IndexScanner *BplusTreeIndex::create_scanner(
 
 RC BplusTreeIndex::sync() { return index_handler_.sync(); }
 
+RC BplusTreeIndex::create(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
+{
+  if (field_metas.empty()) {
+    LOG_WARN("Failed to create index due to empty field_metas. file_name:%s, index:%s", file_name, index_meta.name());
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  // 当前B+树索引实现暂时只支持第一个字段，多字段支持将在后续实现
+  LOG_INFO("Creating multi-field index using first field. file_name:%s, index:%s, field_count:%zu, first_field:%s",
+      file_name, index_meta.name(), field_metas.size(), field_metas[0]->name());
+  
+  if (inited_) {
+    LOG_WARN("Failed to create index due to the index has been created before. file_name:%s, index:%s, field:%s",
+        file_name, index_meta.name(), field_metas[0]->name());
+    return RC::RECORD_OPENNED;
+  }
+
+  Index::init(index_meta, field_metas);
+
+  BufferPoolManager &bpm = table->db()->buffer_pool_manager();
+  RC rc = index_handler_.create(table->db()->log_handler(), bpm, file_name, field_metas[0]->type(), field_metas[0]->len());
+  if (RC::SUCCESS != rc) {
+    LOG_WARN("Failed to create index_handler, file_name:%s, index:%s, field:%s, rc:%s",
+        file_name, index_meta.name(), field_metas[0]->name(), strrc(rc));
+    return rc;
+  }
+
+  inited_ = true;
+  table_  = table;
+  LOG_INFO("Successfully create multi-field index, file_name:%s, index:%s, field_count:%zu",
+    file_name, index_meta.name(), field_metas.size());
+  return RC::SUCCESS;
+}
+
+RC BplusTreeIndex::open(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
+{
+  if (field_metas.empty()) {
+    LOG_WARN("Failed to open index due to empty field_metas. file_name:%s, index:%s", file_name, index_meta.name());
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  // 当前B+树索引实现暂时只支持第一个字段，多字段支持将在后续实现
+  LOG_INFO("Opening multi-field index using first field. file_name:%s, index:%s, field_count:%zu, first_field:%s",
+      file_name, index_meta.name(), field_metas.size(), field_metas[0]->name());
+  
+  if (inited_) {
+    LOG_WARN("Failed to open index due to the index has been initedd before. file_name:%s, index:%s, field:%s",
+        file_name, index_meta.name(), field_metas[0]->name());
+    return RC::RECORD_OPENNED;
+  }
+
+  Index::init(index_meta, field_metas);
+
+  BufferPoolManager &bpm = table->db()->buffer_pool_manager();
+  RC rc = index_handler_.open(table->db()->log_handler(), bpm, file_name);
+  if (RC::SUCCESS != rc) {
+    LOG_WARN("Failed to open index_handler, file_name:%s, index:%s, field:%s, rc:%s",
+        file_name, index_meta.name(), field_metas[0]->name(), strrc(rc));
+    return rc;
+  }
+
+  inited_ = true;
+  table_  = table;
+  LOG_INFO("Successfully open multi-field index, file_name:%s, index:%s, field_count:%zu",
+    file_name, index_meta.name(), field_metas.size());
+  return RC::SUCCESS;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 BplusTreeIndexScanner::BplusTreeIndexScanner(BplusTreeHandler &tree_handler) : tree_scanner_(tree_handler) {}
 

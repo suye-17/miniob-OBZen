@@ -130,7 +130,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 142 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 158 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
