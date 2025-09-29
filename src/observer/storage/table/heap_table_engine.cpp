@@ -82,10 +82,14 @@ RC HeapTableEngine::delete_record(const Record &record)
   RC rc = RC::SUCCESS;
   for (Index *index : indexes_) {
     rc = index->delete_entry(record.data(), &record.rid());
-    ASSERT(RC::SUCCESS == rc, 
-           "failed to delete entry from index. table name=%s, index name=%s, rid=%s, rc=%s",
-           table_meta_->name(), index->index_meta().name(), record.rid().to_string().c_str(), strrc(rc));
+    if (RC::SUCCESS != rc) {
+      LOG_WARN("failed to delete entry from index. table=%s, index=%s, rid=%s, rc=%s", 
+               table_meta_->name(), index->index_meta().name(), 
+               record.rid().to_string().c_str(), strrc(rc));
+      return rc;
+    }
   }
+  
   rc = record_handler_->delete_record(&record.rid());
   return rc;
 }
@@ -312,6 +316,46 @@ RC HeapTableEngine::create_index(Trx *trx, const vector<const FieldMeta *> &fiel
     LOG_ERROR("Failed to create bplus tree index. file name=%s, rc=%d:%s", index_file.c_str(), rc, strrc(rc));
     return rc;
   }
+
+  // 为表中现有数据建立索引条目
+  LOG_INFO("Building index for existing records in table %s", table_meta_->name());
+  printf("=== Building index for existing records ===\n");
+  
+  RecordScanner *scanner = nullptr;
+  rc = get_record_scanner(scanner, nullptr, ReadWriteMode::READ_ONLY);
+  if (rc != RC::SUCCESS) {
+    delete index;
+    LOG_ERROR("Failed to open table scanner for reindexing. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+    return rc;
+  }
+  
+  Record record;
+  int record_count = 0;
+  while (OB_SUCC(rc = scanner->next(record))) {
+    rc = index->insert_entry(record.data(), &record.rid());
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to insert existing record into new index. table=%s, index=%s, rid=%s, rc=%s", 
+                table_meta_->name(), index_name, record.rid().to_string().c_str(), strrc(rc));
+      scanner->close_scan();
+      delete scanner;
+      delete index;
+      return rc;
+    }
+    record_count++;
+    printf("Indexed record %d: RID=%s\n", record_count, record.rid().to_string().c_str());
+  }
+  
+  scanner->close_scan();
+  delete scanner;
+  
+  if (rc != RC::RECORD_EOF) {
+    delete index;
+    LOG_ERROR("Failed to scan table for reindexing. table=%s, rc=%s", table_meta_->name(), strrc(rc));
+    return rc;
+  }
+  
+  LOG_INFO("Successfully built index for %d existing records in table %s", record_count, table_meta_->name());
+  printf("=== Finished building index for %d records ===\n", record_count);
 
   // 创建新的表元数据副本
 TableMeta new_table_meta(*table_meta_);

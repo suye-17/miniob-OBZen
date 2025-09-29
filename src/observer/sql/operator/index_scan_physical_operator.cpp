@@ -93,6 +93,10 @@ RC IndexScanPhysicalOperator::next()
     }
   }
 
+  if (rc != RC::RECORD_EOF && rc != RC::SUCCESS) {
+    LOG_WARN("index scanner error: rc=%s", strrc(rc));
+  }
+
   return rc;
 }
 

@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "storage/index/bplus_tree_index.h"
+#include <cstring>
 #include "common/log/log.h"
 #include "storage/table/table.h"
 #include "storage/db/db.h"
@@ -82,12 +83,71 @@ RC BplusTreeIndex::close()
 
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid)
 {
-  return index_handler_.insert_entry(record + field_meta_.offset(), rid);
+  if (field_metas_.size() == 1) {
+    // 单字段索引（向后兼容）
+    const char *key_data = record + field_meta_.offset();
+    return index_handler_.insert_entry(key_data, rid);
+  } else {
+    // 多字段索引 - 构造组合键值
+    LOG_DEBUG("Multi-field index insert, field count: %zu", field_metas_.size());
+    
+    // 计算组合键值的总长度
+    int total_key_length = 0;
+    for (const FieldMeta &field_meta : field_metas_) {
+      total_key_length += field_meta.len();
+    }
+    
+    // 分配内存存储组合键值
+    char *composite_key = new char[total_key_length];
+    int offset = 0;
+    
+    // 构造组合键值
+    for (const FieldMeta &field_meta : field_metas_) {
+      const char *field_data = record + field_meta.offset();
+      int field_len = field_meta.len();
+      
+      // 复制字段数据到组合键值中
+      memcpy(composite_key + offset, field_data, field_len);
+      offset += field_len;
+    }
+    
+    RC rc = index_handler_.insert_entry(composite_key, rid);
+    delete[] composite_key;
+    return rc;
+  }
 }
 
 RC BplusTreeIndex::delete_entry(const char *record, const RID *rid)
 {
-  return index_handler_.delete_entry(record + field_meta_.offset(), rid);
+  if (field_metas_.size() == 1) {
+    // 单字段索引（向后兼容）
+    return index_handler_.delete_entry(record + field_meta_.offset(), rid);
+  } else {
+    // 多字段索引 - 构造组合键值
+    // 计算组合键值的总长度
+    int total_key_length = 0;
+    for (const FieldMeta &field_meta : field_metas_) {
+      total_key_length += field_meta.len();
+    }
+    
+    // 分配内存存储组合键值
+    char *composite_key = new char[total_key_length];
+    int offset = 0;
+    
+    // 构造组合键值
+    for (const FieldMeta &field_meta : field_metas_) {
+      const char *field_data = record + field_meta.offset();
+      int field_len = field_meta.len();
+      
+      // 复制字段数据到组合键值中
+      memcpy(composite_key + offset, field_data, field_len);
+      offset += field_len;
+    }
+    
+    RC rc = index_handler_.delete_entry(composite_key, rid);
+    delete[] composite_key;
+    return rc;
+  }
 }
 
 IndexScanner *BplusTreeIndex::create_scanner(
