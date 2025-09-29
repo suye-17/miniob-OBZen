@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"
+#include "sql/executor/sql_result.h"
 #include "sql/stmt/drop_table_stmt.h"
 #include "storage/db/db.h"
 
@@ -33,6 +34,11 @@ RC DropTableExecutor::execute(SQLStageEvent *sql_event)
 
   const char *table_name = drop_table_stmt->table_name().c_str();
   RC rc = session->get_current_db()->drop_table(table_name);
+
+  // 设置简单的成功/失败状态，不输出详细日志
+  SqlResult *sql_result = sql_event->session_event()->sql_result();
+  sql_result->set_return_code(rc);
+  sql_result->set_state_string(""); // 空字符串确保只输出 SUCCESS/FAILURE
 
   return rc;
 }

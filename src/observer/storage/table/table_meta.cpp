@@ -100,7 +100,7 @@ RC TableMeta::init(int32_t table_id, const char *name, const vector<FieldMeta> *
   name_     = name;
   storage_format_ = storage_format;
   storage_engine_ = storage_engine;
-  LOG_INFO("Sussessfully initialized table meta. table id=%d, name=%s", table_id, name);
+  LOG_DEBUG("Sussessfully initialized table meta. table id=%d, name=%s", table_id, name);
   return RC::SUCCESS;
 }
 

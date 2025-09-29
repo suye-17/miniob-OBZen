@@ -34,7 +34,7 @@ HeapTableEngine::~HeapTableEngine()
   }
   indexes_.clear();
 
-  LOG_INFO("Table has been closed: %s", table_meta_->name());
+  LOG_DEBUG("Table has been closed: %s", table_meta_->name());
 }
 RC HeapTableEngine::insert_record(Record &record)
 {
@@ -329,7 +329,7 @@ RC HeapTableEngine::sync()
   }
 
   rc = data_buffer_pool_->flush_all_pages();
-  LOG_INFO("Sync table over. table=%s", table_meta_->name());
+  LOG_DEBUG("Sync table over. table=%s", table_meta_->name());
   return rc;
 }
 

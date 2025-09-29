@@ -92,7 +92,7 @@ RC PersistHandler::close_file()
       rc = RC::FILE_CLOSE;
     } else {
       file_desc_ = -1;
-      LOG_INFO("Successfully close file %d:%s.", file_desc_, file_name_.c_str());
+      LOG_DEBUG("Successfully close file %d:%s.", file_desc_, file_name_.c_str());
     }
   }
 

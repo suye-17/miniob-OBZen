@@ -51,7 +51,7 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
     LOG_WARN("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
   }
-  LOG_INFO("Begin to create table %s:%s", base_dir, name);
+  LOG_DEBUG("Begin to create table %s:%s", base_dir, name);
 
   if (attributes.size() == 0) {
     LOG_WARN("Invalid arguments. table_name=%s, attribute_count=%d", name, attributes.size());
@@ -124,7 +124,7 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
     return rc;
   }
 
-  LOG_INFO("Successfully create table %s:%s", base_dir, name);
+  LOG_DEBUG("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
 
@@ -141,7 +141,7 @@ RC Table::drop()
       if (ret != 0 && errno != ENOENT) {
         LOG_WARN("Failed to remove index file: %s, error: %s", index_file_path.c_str(), strerror(errno));
       } else {
-        LOG_INFO("Successfully removed index file: %s", index_file_path.c_str());
+        LOG_DEBUG("Successfully removed index file: %s", index_file_path.c_str());
       }
     }
   }
@@ -157,7 +157,7 @@ RC Table::drop()
   if (ret != 0 && errno != ENOENT) {
     LOG_WARN("Failed to remove table data file: %s, error: %s", table_data_path.c_str(), strerror(errno));
   } else {
-    LOG_INFO("Successfully removed table data file: %s", table_data_path.c_str());
+    LOG_DEBUG("Successfully removed table data file: %s", table_data_path.c_str());
   }
 
   // 4. 删除表元数据文件
@@ -167,7 +167,7 @@ RC Table::drop()
     LOG_WARN("Failed to remove table meta file: %s, error: %s", table_meta_path.c_str(), strerror(errno));
     rc = RC::IOERR_ACCESS;
   } else {
-    LOG_INFO("Successfully removed table meta file: %s", table_meta_path.c_str());
+    LOG_DEBUG("Successfully removed table meta file: %s", table_meta_path.c_str());
   }
 
   return rc;

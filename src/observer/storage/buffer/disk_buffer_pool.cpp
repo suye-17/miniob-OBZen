@@ -223,7 +223,7 @@ DiskBufferPool::DiskBufferPool(
 DiskBufferPool::~DiskBufferPool()
 {
   close_file();
-  LOG_INFO("disk buffer pool exit");
+  LOG_DEBUG("disk buffer pool exit");
 }
 
 RC DiskBufferPool::open_file(const char *file_name)
@@ -304,7 +304,7 @@ RC DiskBufferPool::close_file()
     LOG_ERROR("Failed to close fileId:%d, fileName:%s, error:%s", file_desc_, file_name_.c_str(), strerror(errno));
     return RC::IOERR_CLOSE;
   }
-  LOG_INFO("Successfully close file %d:%s.", file_desc_, file_name_.c_str());
+  LOG_DEBUG("Successfully close file %d:%s.", file_desc_, file_name_.c_str());
   file_desc_ = -1;
 
   bp_manager_.close_file(file_name_.c_str());

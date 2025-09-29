@@ -103,7 +103,7 @@ RC CommandExecutor::execute(SQLStageEvent *sql_event)
   if (OB_SUCC(rc) && stmt_type_ddl(stmt->type())) {
     // 每次做完DDL之后，做一次sync，保证元数据与日志保持一致
     rc = sql_event->session_event()->session()->get_current_db()->sync();
-    LOG_INFO("sync db after ddl. rc=%d", rc);
+    LOG_DEBUG("sync db after ddl. rc=%d", rc);
   }
 
   return rc;

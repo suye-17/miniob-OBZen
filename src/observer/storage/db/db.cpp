@@ -172,7 +172,7 @@ RC Db::create_table(const char *table_name, span<const AttrInfoSqlNode> attribut
   }
 
   opened_tables_[table_name] = table;
-  LOG_INFO("Create table success. table name=%s, table_id:%d", table_name, table_id);
+  LOG_DEBUG("Create table success. table name=%s, table_id:%d", table_name, table_id);
   return RC::SUCCESS;
 }
 
@@ -281,12 +281,12 @@ RC Db::sync()
       LOG_ERROR("Failed to flush table. table=%s.%s, rc=%d:%s", name_.c_str(), table->name(), rc, strrc(rc));
       return rc;
     }
-    LOG_INFO("Successfully sync table db:%s, table:%s.", name_.c_str(), table->name());
+    LOG_DEBUG("Successfully sync table db:%s, table:%s.", name_.c_str(), table->name());
   }
 
   auto dblwr_buffer = static_cast<DiskDoubleWriteBuffer *>(buffer_pool_manager_->get_dblwr_buffer());
   rc                = dblwr_buffer->flush_page();
-  LOG_INFO("double write buffer flush pages ret=%s", strrc(rc));
+  LOG_DEBUG("double write buffer flush pages ret=%s", strrc(rc));
 
   /*
   在sync期间，不允许有未完成的事务，也不允许开启新的事物。
@@ -305,7 +305,7 @@ RC Db::sync()
     LOG_ERROR("Failed to flush meta. db=%s, rc=%d:%s", name_.c_str(), rc, strrc(rc));
     return rc;
   }
-  LOG_INFO("Successfully sync db. db=%s", name_.c_str());
+  LOG_DEBUG("Successfully sync db. db=%s", name_.c_str());
   return rc;
 }
 
@@ -419,7 +419,7 @@ RC Db::flush_meta()
       rc = RC::IOERR_WRITE;
     } else {
 
-      LOG_INFO("Successfully write db meta file. db=%s, file=%s, check_point_lsn=%ld", 
+      LOG_DEBUG("Successfully write db meta file. db=%s, file=%s, check_point_lsn=%ld", 
                name_.c_str(), temp_meta_file_path.c_str(), check_point_lsn_);
     }
   }

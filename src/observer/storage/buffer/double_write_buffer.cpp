@@ -207,7 +207,7 @@ RC DiskDoubleWriteBuffer::clear_pages(DiskBufferPool *buffer_pool)
   erase_if(dblwr_pages_, remove_pred);
   lock_.unlock();
 
-  LOG_INFO("clear pages in double write buffer. file name=%s, page count=%d",
+  LOG_DEBUG("clear pages in double write buffer. file name=%s, page count=%d",
            buffer_pool->filename(), spec_pages.size());
 
   // 页面从小到大排序，防止出现小页面还没有写入，而页面编号更大的seek失败的情况
