@@ -160,6 +160,12 @@ RC UpdatePhysicalOperator::open(Trx *trx)
             memcpy(new_record.data() + offset, string_val.c_str(), copy_len);
           }
         } break;
+        case AttrType::DATES: {
+          // 处理日期型字段
+          // 日期类型在内存中存储为int值
+          int_val = converted_value.get_int();
+          memcpy(new_record.data() + offset, &int_val, len);
+        } break;
         default:
           LOG_WARN("unsupported field type: %d", field_meta->type());
           return RC::INTERNAL;
