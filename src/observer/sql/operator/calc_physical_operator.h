@@ -68,6 +68,23 @@ public:
     return RC::SUCCESS;
   }
 
+  void set_session_context(class Session *session) override
+  {
+    // 设置表达式的session上下文
+    for (auto &expr : expressions_) {
+      if (expr) {
+        expr->set_session_context_recursive(session);
+      }
+    }
+    
+    // 递归设置子操作符的session上下文
+    for (auto &child : children_) {
+      if (child) {
+        child->set_session_context(session);
+      }
+    }
+  }
+
 private:
   vector<unique_ptr<Expression>>          expressions_;
   ExpressionTuple<unique_ptr<Expression>> tuple_;

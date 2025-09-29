@@ -71,3 +71,18 @@ RC PredicatePhysicalOperator::tuple_schema(TupleSchema &schema) const
 {
   return children_[0]->tuple_schema(schema);
 }
+
+void PredicatePhysicalOperator::set_session_context(class Session *session)
+{
+  // 设置表达式的session上下文
+  if (expression_) {
+    expression_->set_session_context_recursive(session);
+  }
+  
+  // 递归设置子操作符的session上下文
+  for (auto &child : children_) {
+    if (child) {
+      child->set_session_context(session);
+    }
+  }
+}

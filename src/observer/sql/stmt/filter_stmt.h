@@ -34,7 +34,41 @@ struct FilterObj
   
   // 新增：子查询支持
   bool has_subquery = false;  // 标记是否为子查询
-  SelectSqlNode* subquery = nullptr;  // 子查询节点
+  unique_ptr<SelectSqlNode> subquery = nullptr;  // 子查询节点
+  
+  // 默认构造函数
+  FilterObj() = default;
+  
+  // 拷贝构造函数
+  FilterObj(const FilterObj& other) 
+    : is_attr(other.is_attr), field(other.field), value(other.value),
+      value_list(other.value_list), has_value_list(other.has_value_list),
+      has_subquery(other.has_subquery)
+  {
+    if (other.subquery) {
+      subquery = SelectSqlNode::create_copy(other.subquery.get());
+    }
+  }
+  
+  // 拷贝赋值操作符
+  FilterObj& operator=(const FilterObj& other)
+  {
+    if (this != &other) {
+      is_attr = other.is_attr;
+      field = other.field;
+      value = other.value;
+      value_list = other.value_list;
+      has_value_list = other.has_value_list;
+      has_subquery = other.has_subquery;
+      
+      if (other.subquery) {
+        subquery = SelectSqlNode::create_copy(other.subquery.get());
+      } else {
+        subquery = nullptr;
+      }
+    }
+    return *this;
+  }
 
   void init_attr(const Field &field)
   {
@@ -55,11 +89,11 @@ struct FilterObj
     value_list = values;
   }
   
-  void init_subquery(SelectSqlNode* subquery_node)
+  void init_subquery(const SelectSqlNode* subquery_node)
   {
     is_attr = false;
     has_subquery = true;
-    subquery = subquery_node;
+    subquery = SelectSqlNode::create_copy(subquery_node);
   }
 };
 

@@ -189,10 +189,11 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
 
     // 处理IN/NOT IN操作的值列表或子查询
     if (filter_unit->comp() == IN_OP || filter_unit->comp() == NOT_IN_OP) {
-      if (filter_obj_right.has_subquery) {
-        // 处理子查询
+      if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
+        // 处理子查询，需要创建子查询的深拷贝
+        auto subquery_copy = SelectSqlNode::create_copy(filter_obj_right.subquery.get());
         ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(left), 
-                                                      filter_obj_right.subquery);
+                                                      std::move(subquery_copy));
         cmp_exprs.emplace_back(cmp_expr);
         continue;
       } else if (filter_obj_right.has_value_list) {

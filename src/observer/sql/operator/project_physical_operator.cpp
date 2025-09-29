@@ -68,3 +68,20 @@ RC ProjectPhysicalOperator::tuple_schema(TupleSchema &schema) const
   }
   return RC::SUCCESS;
 }
+
+void ProjectPhysicalOperator::set_session_context(class Session *session)
+{
+  // 设置表达式的session上下文
+  for (auto &expr : expressions_) {
+    if (expr) {
+      expr->set_session_context_recursive(session);
+    }
+  }
+  
+  // 递归设置子操作符的session上下文
+  for (auto &child : children_) {
+    if (child) {
+      child->set_session_context(session);
+    }
+  }
+}

@@ -85,6 +85,11 @@ public:
 
   virtual Tuple *current_tuple() { return nullptr; }
 
+  /**
+   * @brief 设置session上下文（用于子查询执行）
+   */
+  virtual void set_session_context(class Session *session) { /* 默认实现为空 */ }
+
   virtual RC tuple_schema(TupleSchema &schema) const { return RC::UNIMPLEMENTED; }
 
   void add_child(unique_ptr<PhysicalOperator> oper) { children_.emplace_back(std::move(oper)); }

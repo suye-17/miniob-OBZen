@@ -25,8 +25,10 @@ using std::vector;
 using std::unique_ptr;
 
 // 前向声明
-class Expression;
 struct SelectSqlNode;
+
+// 为了正确使用 unique_ptr<Expression>，需要包含完整的类型定义
+class Expression;
 
 /**
  * @defgroup SQLParser SQL Parser
@@ -98,10 +100,16 @@ struct ConditionSqlNode
   
   // 新增：子查询支持
   bool                     has_subquery;    ///< TRUE if right side is a subquery
-  SelectSqlNode*           subquery;        ///< 子查询节点，用于IN/NOT IN操作
+  unique_ptr<SelectSqlNode> subquery;       ///< 子查询节点，用于IN/NOT IN操作
   
   // 构造函数，初始化新字段
   ConditionSqlNode() : left_is_attr(0), comp(NO_OP), right_is_attr(0), has_subquery(false), subquery(nullptr) {}
+  
+  // 拷贝构造函数
+  ConditionSqlNode(const ConditionSqlNode& other);
+  
+  // 拷贝赋值操作符
+  ConditionSqlNode& operator=(const ConditionSqlNode& other);
 };
 
 /**
@@ -132,6 +140,21 @@ struct SelectSqlNode
   vector<JoinSqlNode>            joins;        ///< JOIN子句列表
   vector<ConditionSqlNode>       conditions;   ///< 查询条件，使用AND串联起来多个条件
   vector<unique_ptr<Expression>> group_by;     ///< group by clause
+  
+  // 构造函数
+  SelectSqlNode() = default;
+  
+  // 析构函数声明（实现在cpp文件中，确保完整的Expression类型定义）
+  ~SelectSqlNode();
+  
+  // 拷贝构造函数声明（实现在cpp文件中）
+  SelectSqlNode(const SelectSqlNode& other);
+  
+  // 拷贝赋值操作符
+  SelectSqlNode& operator=(const SelectSqlNode& other);
+  
+  // 创建深拷贝的静态方法
+  static unique_ptr<SelectSqlNode> create_copy(const SelectSqlNode* original);
 };
 
 /**

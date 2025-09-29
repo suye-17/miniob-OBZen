@@ -28,6 +28,9 @@ RC SqlResult::open()
     return RC::INVALID_ARGUMENT;
   }
 
+  // 设置物理操作符的session上下文（用于子查询执行）
+  operator_->set_session_context(session_);
+
   Trx *trx = session_->current_trx();
   trx->start_if_need();
   return operator_->open(trx);

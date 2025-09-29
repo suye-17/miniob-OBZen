@@ -100,3 +100,20 @@ RC TableScanPhysicalOperator::filter(RowTuple &tuple, bool &result)
   result = true;
   return rc;
 }
+
+void TableScanPhysicalOperator::set_session_context(class Session *session)
+{
+  // 设置谓词表达式的session上下文
+  for (auto &predicate : predicates_) {
+    if (predicate) {
+      predicate->set_session_context_recursive(session);
+    }
+  }
+  
+  // 递归设置子操作符的session上下文
+  for (auto &child : children_) {
+    if (child) {
+      child->set_session_context(session);
+    }
+  }
+}

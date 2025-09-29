@@ -110,10 +110,10 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   // 处理IN/NOT IN操作的值列表或子查询
   if (comp == IN_OP || comp == NOT_IN_OP) {
-    if (condition.has_subquery) {
+    if (condition.has_subquery && condition.subquery) {
       // 处理子查询
       FilterObj filter_obj;
-      filter_obj.init_subquery(condition.subquery);
+      filter_obj.init_subquery(condition.subquery.get());
       filter_unit->set_right(filter_obj);
     } else if (!condition.right_values.empty()) {
       // 处理值列表

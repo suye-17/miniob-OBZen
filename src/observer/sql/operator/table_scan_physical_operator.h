@@ -69,6 +69,8 @@ public:
 
   void set_predicates(vector<unique_ptr<Expression>> &&exprs);
 
+  void set_session_context(class Session *session) override;
+
 private:
   RC filter(RowTuple &tuple, bool &result);
 

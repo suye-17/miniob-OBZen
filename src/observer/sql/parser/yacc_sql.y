@@ -755,7 +755,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = IN_OP;
       $$->has_subquery = true;
-      $$->subquery = &($4->selection);
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
 
       delete $1;
       delete $4;
@@ -768,7 +768,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = NOT_IN_OP;
       $$->has_subquery = true;
-      $$->subquery = &($5->selection);
+      $$->subquery = SelectSqlNode::create_copy(&($5->selection));
 
       delete $1;
       delete $5;
@@ -856,9 +856,25 @@ opt_semicolon: /*empty*/
 //_____________________________________________________________________
 extern void scan_string(const char *str, yyscan_t scanner);
 
-int sql_parse(const char *s, ParsedSqlResult *sql_result) {
+
+//整个数据库系统的编译器前端
+//const char *str：输入参数，要解析的SQL字符串
+//ParsedSqlResult *sql_result：输出参数，存储解析结果的容器
+
+
+
+
+int sql_parse(const char *s, ParsedSqlResult *sql_result) {  
+  
+  //yyscan_t：这是一个类型别名，实际上是词法分析器的句柄
+  //scanner：词法分析器的实例，用于将SQL字符串分解成tokens
   yyscan_t scanner;
-  std::vector<char *> allocated_strings;
+
+
+  //allocated_strings是一个内存管理的容器
+  std::vector<char *> allocated_strings;   
+
+  //初始化词法分析器，并传递额外的自定义数据
   yylex_init_extra(static_cast<void*>(&allocated_strings),&scanner);
   scan_string(s, scanner);
   int result = yyparse(s, sql_result, scanner);

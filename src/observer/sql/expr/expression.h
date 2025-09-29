@@ -127,6 +127,18 @@ public:
    */
   virtual RC eval(Chunk &chunk, vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
 
+  /**
+   * @brief 设置session上下文（用于子查询执行）
+   */
+  virtual void set_session_context(class Session *session) { /* 默认实现为空 */ }
+
+  /**
+   * @brief 遍历表达式树，为所有子表达式设置session上下文
+   */
+  virtual void set_session_context_recursive(class Session *session) { 
+    set_session_context(session); 
+  }
+
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -295,7 +307,7 @@ public:
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right);
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values);
   // 新增：支持子查询的构造函数
-  ComparisonExpr(CompOp comp, unique_ptr<Expression> left, SelectSqlNode* subquery);
+  ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<SelectSqlNode> subquery);
   virtual ~ComparisonExpr();
 
   ExprType type() const override { return ExprType::COMPARISON; }
@@ -306,7 +318,9 @@ public:
   unique_ptr<Expression> copy() const override
   {
     if (has_subquery_) {
-      return make_unique<ComparisonExpr>(comp_, left_->copy(), subquery_);
+      // 需要深拷贝子查询节点
+      auto subquery_copy = make_unique<SelectSqlNode>(*subquery_);
+      return make_unique<ComparisonExpr>(comp_, left_->copy(), std::move(subquery_copy));
     } else if (has_value_list_) {
       return make_unique<ComparisonExpr>(comp_, left_->copy(), right_values_);
     } else if (right_) {
@@ -342,6 +356,16 @@ public:
   
   // 子查询执行方法
   RC execute_subquery(vector<Value> &results) const;
+  RC execute_simple_subquery(const SelectSqlNode *select_node, vector<Value> &results) const;
+  
+  // 缓存管理方法
+  void clear_subquery_cache() const;
+  
+  // 设置会话上下文（用于子查询执行）
+  void set_session_context(class Session *session) override;
+  
+  // 遍历表达式树设置session上下文
+  void set_session_context_recursive(class Session *session) override;
 
   template <typename T>
   RC compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const;
@@ -354,8 +378,15 @@ private:
   bool                   has_value_list_ = false;  ///< 是否使用值列表
   
   // 新增：子查询支持
-  SelectSqlNode*           subquery_ = nullptr;   ///< 子查询节点
+  unique_ptr<SelectSqlNode> subquery_ = nullptr;   ///< 子查询节点（拥有所有权）
   bool                     has_subquery_ = false; ///< 是否使用子查询
+  
+  // 子查询结果缓存
+  mutable vector<Value>    subquery_cache_;       ///< 子查询结果缓存
+  mutable bool             cache_valid_ = false;  ///< 缓存是否有效
+  
+  // 会话上下文（用于子查询执行）
+  mutable class Session   *session_ = nullptr;    ///< 会话上下文
 };
 
 /**
@@ -393,6 +424,9 @@ public:
   Type conjunction_type() const { return conjunction_type_; }
 
   vector<unique_ptr<Expression>> &children() { return children_; }
+
+  // 遍历表达式树设置session上下文
+  void set_session_context_recursive(class Session *session) override;
 
 private:
   Type                           conjunction_type_;
@@ -451,6 +485,9 @@ public:
 
   unique_ptr<Expression> &left() { return left_; }
   unique_ptr<Expression> &right() { return right_; }
+
+  // 遍历表达式树设置session上下文
+  void set_session_context_recursive(class Session *session) override;
 
 private:
   RC calc_value(const Value &left_value, const Value &right_value, Value &value) const;

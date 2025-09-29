@@ -41,6 +41,8 @@ public:
 
   RC tuple_schema(TupleSchema &schema) const override;
 
+  void set_session_context(class Session *session) override;
+
 private:
   unique_ptr<Expression> expression_;
 };
