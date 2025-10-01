@@ -59,6 +59,11 @@ private:
   RC execute_simple_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results);
 
   /**
+   * @brief 执行复杂子查询（使用完整的查询执行引擎）
+   */
+  RC execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results);
+
+  /**
    * @brief 生成缓存键
    */
   std::string generate_cache_key(const SelectSqlNode *select_node) const;

@@ -233,18 +233,44 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
 {
   result = false;
   
+  // 打印调试信息
+  LOG_INFO("=== IN操作调试信息 ===");
+  LOG_INFO("左值: %s (类型: %d)", left.to_string().c_str(), static_cast<int>(left.attr_type()));
+  LOG_INFO("子查询返回了 %zu 个值:", right_values.size());
+  for (size_t i = 0; i < right_values.size(); i++) {
+    LOG_INFO("  [%zu] %s (类型: %d)", i, right_values[i].to_string().c_str(), 
+             static_cast<int>(right_values[i].attr_type()));
+  }
+  
+  // 检查值列表是否为空
+  if (right_values.empty()) {
+    LOG_INFO("子查询返回空结果集，IN 操作返回 false");
+    result = (comp_ == NOT_IN_OP);  // 空集合的情况
+    LOG_INFO("======================");
+    return RC::SUCCESS;
+  }
+  
   // 遍历值列表进行比较
   for (const Value &right_value : right_values) {
     int cmp_result = left.compare(right_value);
+    LOG_DEBUG("比较 %s (类型:%d) 和 %s (类型:%d), 结果: %d", 
+              left.to_string().c_str(), static_cast<int>(left.attr_type()),
+              right_value.to_string().c_str(), static_cast<int>(right_value.attr_type()),
+              cmp_result);
+    
     if (cmp_result == 0) {
       // 找到匹配项
       result = (comp_ == IN_OP);
+      LOG_INFO("找到匹配项! 左值 %s 在子查询结果中", left.to_string().c_str());
+      LOG_INFO("======================");
       return RC::SUCCESS;
     }
   }
   
   // 没有找到匹配项
   result = (comp_ == NOT_IN_OP);
+  LOG_INFO("未找到匹配项。左值 %s 不在子查询结果中", left.to_string().c_str());
+  LOG_INFO("======================");
   
   return RC::SUCCESS;
 }
@@ -299,7 +325,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 
   if (has_subquery_) {
     // 处理子查询
-    LOG_DEBUG("Executing subquery in ComparisonExpr");
+    LOG_INFO("开始执行子查询 (IN操作)");
     
     // 为了简化实现，我们实现一个基本的子查询执行逻辑
     // 这里需要执行子查询并获取结果集
@@ -311,13 +337,16 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     // 实际执行子查询
     RC subquery_rc = execute_subquery(subquery_results);
     if (subquery_rc != RC::SUCCESS) {
-      LOG_WARN("Failed to execute subquery. rc=%s", strrc(subquery_rc));
-      // 如果子查询执行失败，fallback到原来的硬编码逻辑用于调试
-      subquery_results.push_back(Value(10));
-      subquery_results.push_back(Value(20));
-      subquery_results.push_back(Value(30));
-      subquery_results.push_back(Value(40));
+      LOG_ERROR("子查询执行失败! rc=%s", strrc(subquery_rc));
+      return subquery_rc;
     }
+    
+    LOG_INFO("子查询执行成功，共返回 %zu 个值", subquery_results.size());
+    
+    // 去重子查询结果（避免重复比较）
+    // 注意：这里简单处理，实际 SQL 中 IN 子查询通常不需要去重，因为逻辑上是"存在即可"
+    // 但为了优化性能，我们可以去重
+    LOG_DEBUG("子查询返回的原始值数量: %zu", subquery_results.size());
     
     // 使用子查询结果进行比较
     rc = compare_with_value_list(left_value, subquery_results, bool_value);
@@ -471,44 +500,9 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
     }
   }
   
-  // Fallback：根据子查询的表名返回相应的测试数据
-  // 这样至少能让基本测试用例通过
-  string table_name;
-  if (!select_node->relations.empty()) {
-    table_name = select_node->relations[0];
-  }
-  
-  if (!table_name.empty()) {
-    LOG_INFO("Using fallback data for table: %s", table_name.c_str());
-    
-    if (table_name == "ssq_2") {
-      // 为ssq_2表返回ID值: 36, 37, 38, 92
-      results.push_back(Value(36));
-      results.push_back(Value(37)); 
-      results.push_back(Value(38));
-      results.push_back(Value(92));
-    } else if (table_name == "ssq_1") {
-      results.push_back(Value(36));
-    } else if (table_name == "ssq_3") {
-      results.push_back(Value(36));
-      results.push_back(Value(37));
-    } else {
-      // 默认测试数据
-      results.push_back(Value(36));
-      results.push_back(Value(92));
-    }
-  } else {
-    // 完全的fallback
-    results.push_back(Value(36));
-    results.push_back(Value(92));
-  }
-  
-  // 缓存fallback结果
-  subquery_cache_ = results;
-  cache_valid_ = true;
-  
-  LOG_DEBUG("Subquery executed with fallback data, returned %zu values", results.size());
-  return RC::SUCCESS;
+  // 如果SubqueryExecutor也失败了，返回错误
+  LOG_ERROR("All subquery execution methods failed");
+  return RC::INTERNAL;
 }
 
 RC ComparisonExpr::execute_simple_subquery(const SelectSqlNode *select_node, vector<Value> &results) const
@@ -559,6 +553,23 @@ void ComparisonExpr::set_session_context_recursive(class Session *session)
   }
   if (right_) {
     right_->set_session_context_recursive(session);
+  }
+}
+
+void ComparisonExpr::clear_subquery_cache_recursive()
+{
+  // 清理当前表达式的子查询缓存
+  if (has_subquery_) {
+    clear_subquery_cache();
+    LOG_DEBUG("Cleared subquery cache for ComparisonExpr");
+  }
+  
+  // 递归清理子表达式的缓存
+  if (left_) {
+    left_->clear_subquery_cache_recursive();
+  }
+  if (right_) {
+    right_->clear_subquery_cache_recursive();
   }
 }
 

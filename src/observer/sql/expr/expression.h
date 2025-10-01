@@ -139,6 +139,13 @@ public:
     set_session_context(session); 
   }
 
+  /**
+   * @brief 递归清理子查询缓存（针对所有子表达式）
+   */
+  virtual void clear_subquery_cache_recursive() { 
+    /* 默认实现为空 - 只有包含子查询的表达式需要实现 */ 
+  }
+
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -366,6 +373,7 @@ public:
   
   // 遍历表达式树设置session上下文
   void set_session_context_recursive(class Session *session) override;
+  void clear_subquery_cache_recursive() override;
 
   template <typename T>
   RC compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const;
