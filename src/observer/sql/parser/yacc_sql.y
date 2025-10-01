@@ -101,6 +101,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         TABLE
         TABLES
         INDEX
+        UNIQUE
         CALC
         SELECT
         DESC
@@ -349,8 +350,19 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       CreateIndexSqlNode &create_index = $$->create_index;
       create_index.index_name = $3;
       create_index.relation_name = $5;
+      create_index.is_unique = false;
       create_index.attribute_names = std::move (*$7);
       delete $7;
+    }
+    | CREATE UNIQUE INDEX ID ON ID LBRACE attribute_name_list RBRACE
+    {
+      $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
+      CreateIndexSqlNode &create_index = $$->create_index;
+      create_index.index_name = $4;
+      create_index.relation_name = $6;
+      create_index.is_unique = true;
+      create_index.attribute_names = std::move (*$8);
+      delete $8;
     }
     ;
 attribute_name_list:

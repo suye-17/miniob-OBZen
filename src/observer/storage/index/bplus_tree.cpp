@@ -1262,7 +1262,7 @@ RC BplusTreeHandler::crabing_protocal_fetch_page(
 RC BplusTreeHandler::insert_entry_into_leaf_node(BplusTreeMiniTransaction &mtr, Frame *frame, const char *key, const RID *rid)
 {
   LeafIndexNodeHandler leaf_node(mtr, file_header_, frame);
-  bool                 exists          = false;  // 该数据是否已经存在指定的叶子节点中了
+  bool                 exists          = false;
   int                  insert_position = leaf_node.lookup(key_comparator_, key, &exists);
   if (exists) {
     LOG_TRACE("entry exists");
@@ -1272,7 +1272,6 @@ RC BplusTreeHandler::insert_entry_into_leaf_node(BplusTreeMiniTransaction &mtr, 
   if (leaf_node.size() < leaf_node.max_size()) {
     leaf_node.insert(insert_position, key, (const char *)rid);
     frame->mark_dirty();
-    // disk_buffer_pool_->unpin_page(frame); // unpin pages 由latch memo 来操作
     return RC::SUCCESS;
   }
 
@@ -1829,6 +1828,7 @@ BplusTreeScanner::~BplusTreeScanner() { close(); }
 RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inclusive, const char *right_user_key,
     int right_len, bool right_inclusive)
 {
+
   RC rc = RC::SUCCESS;
   if (inited_) {
     LOG_WARN("tree scanner has been inited");
@@ -1867,7 +1867,8 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
   } else {
 
     char *fixed_left_key = const_cast<char *>(left_user_key);
-    if (tree_handler_.file_header_.attr_type == AttrType::CHARS) {
+    // 多字段组合键 key_len == attr_length，不需要 fix
+    if (tree_handler_.file_header_.attr_type == AttrType::CHARS && left_len < tree_handler_.file_header_.attr_length) {
       bool should_inclusive_after_fix = false;
       rc = fix_user_key(left_user_key, left_len, true /*greater*/, &fixed_left_key, &should_inclusive_after_fix);
       if (OB_FAIL(rc)) {
@@ -1895,6 +1896,7 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
     }
 
     rc = tree_handler_.find_leaf(mtr_, BplusTreeOperationType::READ, left_key, current_frame_);
+    
     if (rc == RC::EMPTY) {
       rc             = RC::SUCCESS;
       current_frame_ = nullptr;
@@ -1934,7 +1936,8 @@ RC BplusTreeScanner::open(const char *left_user_key, int left_len, bool left_inc
 
     char *fixed_right_key          = const_cast<char *>(right_user_key);
     bool  should_include_after_fix = false;
-    if (tree_handler_.file_header_.attr_type == AttrType::CHARS) {
+    // 多字段组合键不需要 fix
+    if (tree_handler_.file_header_.attr_type == AttrType::CHARS && right_len < tree_handler_.file_header_.attr_length) {
       rc = fix_user_key(right_user_key, right_len, false /*want_greater*/, &fixed_right_key, &should_include_after_fix);
       if (OB_FAIL(rc)) {
         LOG_WARN("failed to fix right user key. rc=%s", strrc(rc));
@@ -2051,9 +2054,8 @@ RC BplusTreeScanner::fix_user_key(
     return RC::INVALID_ARGUMENT;
   }
 
-  // 这里很粗暴，变长字段才需要做调整，其它默认都不需要做调整
   assert(tree_handler_.file_header_.attr_type == AttrType::CHARS);
-  assert(strlen(user_key) >= static_cast<size_t>(key_len));
+  // CHAR 类型 strlen 可能小于 key_len，不能断言 strlen(user_key) >= key_len
 
   *should_inclusive = false;
 

@@ -33,7 +33,8 @@ RC CreateIndexExecutor::execute(SQLStageEvent *sql_event)
   Trx   *trx   = session->current_trx();
   Table *table = create_index_stmt->table();
   const vector<const FieldMeta *> &field_metas = create_index_stmt->field_metas();
+  bool is_unique = create_index_stmt->is_unique();
   
   
-  return table->create_index(trx, field_metas, create_index_stmt->index_name().c_str());
+  return table->create_index(trx, field_metas, create_index_stmt->index_name().c_str(), is_unique);
 }

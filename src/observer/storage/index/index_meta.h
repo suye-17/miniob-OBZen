@@ -35,8 +35,8 @@ class IndexMeta
 public:
   IndexMeta() = default;
 
-  RC init(const char *name, const FieldMeta &field);
-  RC init(const char *name, const vector<const FieldMeta *> &fields);
+  RC init(const char *name, const FieldMeta &field, bool is_unique = false);
+  RC init(const char *name, const vector<const FieldMeta *> &fields, bool is_unique = false);
 
 public:
   const char *name() const;
@@ -44,6 +44,8 @@ public:
   const vector<string> &fields() const;         // 返回所有字段名
   size_t field_count() const;                   // 字段数量
   bool is_multi_field() const;                  // 是否多字段索引
+  bool is_unique() const;                       // 是否为唯一索引
+  void set_unique(bool unique);              // 设置是否为唯一索引
 
   void desc(ostream &os) const;
 
@@ -55,4 +57,5 @@ protected:
   string name_;                    // index's name
   string field_;                   // field's name (保持兼容性，存储第一个字段名)
   vector<string> field_names_;     // 多字段名列表
+  bool is_unique_ = false;        // 是是否为唯一索引
 };

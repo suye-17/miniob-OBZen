@@ -205,6 +205,7 @@ struct CreateIndexSqlNode
   string index_name;      ///< Index name
   string relation_name;   ///< Relation name
   vector<string> attribute_names;  ///< Attribute names
+  bool is_unique = false; ///< Whether this is a unique index
   string attribute_name() const { 
     return attribute_names.empty() ? "" : attribute_names[0]; //不为空，返回字段名
   }

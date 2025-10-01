@@ -48,6 +48,11 @@ private:
   bool             inited_ = false;
   Table           *table_  = nullptr;
   BplusTreeHandler index_handler_;
+  
+  // 唯一性检查辅助方法
+  bool is_null_key(const char *key_data, int key_len) const;
+  RC check_key_exists(const char *key_data, int key_len, bool &exists);
+  RC build_index(const char *record, char *&composite_key, int &key_len);
 };
 
 /**
