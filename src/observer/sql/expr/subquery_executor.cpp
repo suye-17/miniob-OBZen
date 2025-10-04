@@ -14,11 +14,20 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/expr/subquery_executor.h"
 #include "sql/operator/table_scan_physical_operator.h"
+#include "sql/operator/physical_operator.h"
 #include "session/session.h"
 #include "storage/db/db.h"
+#include "storage/table/table.h"
 #include "common/log/log.h"
+#include "common/value.h"
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
+#include "sql/parser/parse_defs.h"
+#include "sql/stmt/select_stmt.h"
+#include "sql/operator/logical_operator.h"
+#include "sql/optimizer/logical_plan_generator.h"
+#include "sql/optimizer/physical_plan_generator.h"
+#include "sql/optimizer/rewriter.h"
 #include <sstream>
 
 using namespace common;
@@ -57,18 +66,31 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
   // 执行子查询
   RC rc = RC::SUCCESS;
   
-  // 检查是否是简单的单表查询
-  if (select_node->relations.size() == 1 && 
+  // 检查是否包含聚合函数（包括未绑定和已绑定的）
+  bool has_aggregate = false;
+  for (const auto &expr : select_node->expressions) {
+    if (expr->type() == ExprType::AGGREGATION || expr->type() == ExprType::UNBOUND_AGGREGATION) {
+      has_aggregate = true;
+      LOG_INFO("Subquery contains aggregate function (type=%d), using full query engine", 
+               static_cast<int>(expr->type()));
+      break;
+    }
+  }
+  
+  // 检查是否是简单的单表查询（无聚合函数、无条件、无JOIN）
+  if (!has_aggregate && 
+      select_node->relations.size() == 1 && 
       select_node->conditions.empty() && 
       select_node->joins.empty()) {
     rc = execute_simple_subquery(select_node, session, results);
   } else {
-    // 对于复杂子查询，尝试使用完整的查询执行引擎
-    LOG_INFO("Executing complex subquery with full query engine");
+    // 对于复杂子查询或包含聚合函数的查询，使用完整的查询执行引擎
+    LOG_INFO("Executing complex subquery with full query engine (aggregates: %d, relations: %zu, conditions: %zu, joins: %zu)",
+             has_aggregate, select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
     rc = execute_complex_subquery(select_node, session, results);
     
-    // 如果复杂子查询失败，回退到简单实现
-    if (rc != RC::SUCCESS) {
+    // 如果复杂子查询失败，并且没有聚合函数，回退到简单实现
+    if (rc != RC::SUCCESS && !has_aggregate) {
       LOG_WARN("Complex subquery execution failed, falling back to simple implementation");
       rc = execute_simple_subquery(select_node, session, results);
     }
@@ -231,266 +253,86 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     LOG_WARN("No current database in session");
     return RC::SCHEMA_DB_NOT_EXIST;
   }
-
-  // 创建表映射
-  std::unordered_map<std::string, Table*> table_map;
-  for (const auto &relation : select_node->relations) {
-    Table *table = db->find_table(relation.c_str());
-    if (table == nullptr) {
-      LOG_WARN("Table %s not found", relation.c_str());
-      return RC::SCHEMA_TABLE_NOT_EXIST;
-    }
-    table_map[relation] = table;
-  }
-
-  // 处理JOIN表
-  for (const auto &join : select_node->joins) {
-    Table *table = db->find_table(join.relation.c_str());
-    if (table == nullptr) {
-      LOG_WARN("JOIN table %s not found", join.relation.c_str());
-      return RC::SCHEMA_TABLE_NOT_EXIST;
-    }
-    table_map[join.relation] = table;
-  }
-
-  // 创建表扫描操作符（暂时只处理第一个表）
-  Table *main_table = table_map[select_node->relations[0]];
-  TableScanPhysicalOperator scan_op(main_table, ReadWriteMode::READ_ONLY);
-
-  // 打开扫描器
-  RC rc = scan_op.open(nullptr);
+  
+  // 使用完整的查询执行引擎
+  // 1. 创建 SelectStmt
+  SelectSqlNode mutable_select_node = *select_node;
+  Stmt *stmt = nullptr;
+  RC rc = SelectStmt::create(db, mutable_select_node, stmt);
   if (rc != RC::SUCCESS) {
-    LOG_WARN("Failed to open table scan operator: %d", rc);
+    LOG_WARN("Failed to create SelectStmt for subquery, rc=%d", rc);
     return rc;
   }
-
-  LOG_DEBUG("Complex subquery scan operator opened successfully");
-
-  // 扫描数据
-  int row_count = 0;
-  LOG_DEBUG("Starting complex subquery execution");
   
-  while (RC::SUCCESS == (rc = scan_op.next())) {
-    Tuple *tuple = scan_op.current_tuple();
+  std::unique_ptr<Stmt> stmt_guard(stmt);
+  SelectStmt *select_stmt = static_cast<SelectStmt *>(stmt);
+  
+  // 2. 生成逻辑计划
+  std::unique_ptr<LogicalOperator> logical_oper;
+  LogicalPlanGenerator logical_generator;
+  rc = logical_generator.create(select_stmt, logical_oper);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to create logical plan for subquery, rc=%d", rc);
+    return rc;
+  }
+  
+  // 3. 优化逻辑计划
+  Rewriter rewriter;
+  bool change_made = false;
+  rc = rewriter.rewrite(logical_oper, change_made);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to rewrite logical plan for subquery, rc=%d", rc);
+    return rc;
+  }
+  
+  // 4. 生成物理计划
+  std::unique_ptr<PhysicalOperator> physical_oper;
+  PhysicalPlanGenerator physical_generator;
+  rc = physical_generator.create(*logical_oper, physical_oper, session);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to create physical plan for subquery, rc=%d", rc);
+    return rc;
+  }
+  
+  // 5. 执行物理计划
+  rc = physical_oper->open(nullptr);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to open physical operator for subquery, rc=%d", rc);
+    return rc;
+  }
+  
+  // 6. 收集结果
+  int row_count = 0;
+  while (RC::SUCCESS == (rc = physical_oper->next())) {
+    Tuple *tuple = physical_oper->current_tuple();
     if (tuple == nullptr) {
-      LOG_DEBUG("Got null tuple, continuing...");
       continue;
     }
-
+    
     row_count++;
-    LOG_DEBUG("Processing row %d in complex subquery", row_count);
-
-    // 检查WHERE条件
-    bool condition_passed = true;
-    for (const auto &condition : select_node->conditions) {
-      // 实现条件检查逻辑
-      Value left_value;
-      Value right_value;
-      
-      // 获取左侧值
-      if (condition.left_is_attr) {
-        // 左边是属性
-        const char* field_name = condition.left_attr.attribute_name.c_str();
-        const char* table_name = condition.left_attr.relation_name.empty() ? main_table->name() : condition.left_attr.relation_name.c_str();
-        
-        // 先尝试通过字段名直接获取
-        RC field_rc = tuple->find_cell(TupleCellSpec(field_name), left_value);
-        if (field_rc != RC::SUCCESS) {
-          // 尝试使用完整表名
-          field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), left_value);
-          if (field_rc != RC::SUCCESS) {
-            // 尝试通过字段元数据获取
-            const TableMeta& table_meta = main_table->table_meta();
-            const FieldMeta* field_meta = table_meta.field(field_name);
-            if (field_meta != nullptr) {
-              // 通过字段索引获取（跳过前面的系统字段）
-              int cell_index = 0;
-              for (int i = 0; i < table_meta.field_num(); i++) {
-                const FieldMeta* fm = table_meta.field(i);
-                if (!fm->visible()) continue;  // 跳过不可见字段
-                if (strcmp(fm->name(), field_name) == 0) {
-                  field_rc = tuple->cell_at(cell_index, left_value);
-                  break;
-                }
-                cell_index++;
-              }
-            }
-            
-            if (field_rc != RC::SUCCESS) {
-              LOG_WARN("Failed to get left field value: %s from table %s", field_name, table_name);
-              condition_passed = false;
-              break;
-            }
-          }
-        }
-        LOG_DEBUG("Left field %s value: %s", field_name, left_value.to_string().c_str());
-      } else {
-        // 左边是常量值
-        left_value = condition.left_value;
-        LOG_DEBUG("Left constant value: %s", left_value.to_string().c_str());
-      }
-      
-      // 获取右侧值
-      if (condition.right_is_attr) {
-        // 右边是属性
-        const char* field_name = condition.right_attr.attribute_name.c_str();
-        const char* table_name = condition.right_attr.relation_name.empty() ? main_table->name() : condition.right_attr.relation_name.c_str();
-        
-        // 先尝试通过字段名直接获取
-        RC field_rc = tuple->find_cell(TupleCellSpec(field_name), right_value);
-        if (field_rc != RC::SUCCESS) {
-          // 尝试使用完整表名
-          field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), right_value);
-          if (field_rc != RC::SUCCESS) {
-            // 尝试通过字段元数据获取
-            const TableMeta& table_meta = main_table->table_meta();
-            const FieldMeta* field_meta = table_meta.field(field_name);
-            if (field_meta != nullptr) {
-              // 通过字段索引获取（跳过前面的系统字段）
-              int cell_index = 0;
-              for (int i = 0; i < table_meta.field_num(); i++) {
-                const FieldMeta* fm = table_meta.field(i);
-                if (!fm->visible()) continue;  // 跳过不可见字段
-                if (strcmp(fm->name(), field_name) == 0) {
-                  field_rc = tuple->cell_at(cell_index, right_value);
-                  break;
-                }
-                cell_index++;
-              }
-            }
-            
-            if (field_rc != RC::SUCCESS) {
-              LOG_WARN("Failed to get right field value: %s from table %s", field_name, table_name);
-              condition_passed = false;
-              break;
-            }
-          }
-        }
-        LOG_DEBUG("Right field %s value: %s", field_name, right_value.to_string().c_str());
-      } else {
-        // 右边是常量值
-        right_value = condition.right_value;
-        LOG_DEBUG("Right constant value: %s", right_value.to_string().c_str());
-      }
-      
-      // 执行比较操作
-      int cmp_result = left_value.compare(right_value);
-      bool condition_result = false;
-      
-      switch (condition.comp) {
-        case EQUAL_TO:
-          condition_result = (cmp_result == 0);
-          break;
-        case LESS_THAN:
-          condition_result = (cmp_result < 0);
-          break;
-        case GREAT_THAN:
-          condition_result = (cmp_result > 0);
-          break;
-        case LESS_EQUAL:
-          condition_result = (cmp_result <= 0);
-          break;
-        case GREAT_EQUAL:
-          condition_result = (cmp_result >= 0);
-          break;
-        case NOT_EQUAL:
-          condition_result = (cmp_result != 0);
-          break;
-        default:
-          break;
-      }
-      
-      LOG_DEBUG("Condition result: %s (cmp=%d, op=%d)", condition_result ? "true" : "false", cmp_result, condition.comp);
-      
-      if (!condition_result) {
-        condition_passed = false;
-        break;
-      }
-    }
-
-    if (!condition_passed) {
-      LOG_DEBUG("Row %d did not pass conditions, skipping", row_count);
-      continue;
-    }
-
-    // 处理查询表达式
-    for (size_t i = 0; i < select_node->expressions.size(); i++) {
-      const auto &expr = select_node->expressions[i];
-      LOG_DEBUG("Processing expression %zu of type %d", i, static_cast<int>(expr->type()));
-      
+    
+    // 获取tuple中的所有值
+    for (int i = 0; i < tuple->cell_num(); i++) {
       Value value;
-      RC expr_rc = RC::SUCCESS;
-      
-      // 处理不同类型的表达式
-      if (expr->type() == ExprType::UNBOUND_FIELD) {
-        // 处理未绑定的字段表达式
-        const UnboundFieldExpr* field_expr = static_cast<const UnboundFieldExpr*>(expr.get());
-        const char* field_name = field_expr->field_name();
-        const char* table_name = field_expr->table_name();
-        
-        LOG_DEBUG("Processing unbound field: %s.%s", table_name ? table_name : "NULL", field_name);
-        
-        // 尝试从tuple中获取字段值
-        Value field_value;
-        RC field_rc = tuple->find_cell(TupleCellSpec(field_name), field_value);
-        if (field_rc == RC::SUCCESS) {
-          value = field_value;
-          expr_rc = RC::SUCCESS;
-          LOG_DEBUG("Found field %s: %s", field_name, value.to_string().c_str());
-        } else {
-          // 如果通过字段名找不到，尝试通过索引获取
-          LOG_DEBUG("Field %s not found by name, trying by index", field_name);
-          
-          // 获取表的字段信息
-          const TableMeta& table_meta = main_table->table_meta();
-          const FieldMeta* field_meta = table_meta.field(field_name);
-          if (field_meta != nullptr) {
-            field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), field_value);
-            if (field_rc == RC::SUCCESS) {
-              value = field_value;
-              expr_rc = RC::SUCCESS;
-              LOG_DEBUG("Found field %s by full name: %s", field_name, value.to_string().c_str());
-            } else {
-              // 最后尝试通过字段ID获取
-              int field_id = field_meta->field_id();
-              field_rc = tuple->cell_at(field_id, field_value);
-              if (field_rc == RC::SUCCESS) {
-                value = field_value;
-                expr_rc = RC::SUCCESS;
-                LOG_DEBUG("Found field %s by ID %d: %s", field_name, field_id, value.to_string().c_str());
-              } else {
-                LOG_WARN("Failed to get field %s by ID %d, rc=%d", field_name, field_id, field_rc);
-              }
-            }
-          } else {
-            LOG_WARN("Field %s not found in table %s", field_name, main_table->name());
-          }
-        }
-      } else {
-        // 处理其他类型的表达式
-        expr_rc = expr->get_value(*tuple, value);
-      }
-      
-      if (expr_rc == RC::SUCCESS) {
+      rc = tuple->cell_at(i, value);
+      if (rc == RC::SUCCESS) {
         results.push_back(value);
-        LOG_DEBUG("Complex subquery result: %s", value.to_string().c_str());
+        LOG_DEBUG("Complex subquery result[%d]: %s", i, value.to_string().c_str());
       } else {
-        LOG_WARN("Failed to get value from expression %zu, rc=%d", i, expr_rc);
-        LOG_WARN("Expression type: %d, name: %s", static_cast<int>(expr->type()), expr->name());
+        LOG_WARN("Failed to get cell %d from tuple, rc=%d", i, rc);
       }
     }
   }
-
-  scan_op.close();
-
+  
+  physical_oper->close();
+  
   if (rc == RC::RECORD_EOF) {
-    rc = RC::SUCCESS;  // 正常结束
-    LOG_DEBUG("Reached end of table in complex subquery, processed %d rows", row_count);
+    rc = RC::SUCCESS;
+    LOG_INFO("Complex subquery executed successfully, returned %zu values from %d rows", 
+             results.size(), row_count);
   } else {
-    LOG_WARN("Complex subquery table scan ended with error: %d", rc);
+    LOG_WARN("Complex subquery execution ended with error, rc=%d", rc);
   }
-
-  LOG_DEBUG("Complex subquery executed successfully, returned %zu values", results.size());
   
   return rc;
 }

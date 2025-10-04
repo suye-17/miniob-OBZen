@@ -176,6 +176,14 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   RC  rc         = RC::SUCCESS;
   int cmp_result = left.compare(right);
   result         = false;
+  
+  // 检查比较是否成功（INT32_MAX表示类型不匹配或比较失败）
+  if (cmp_result == INT32_MAX) {
+    LOG_WARN("Type comparison failed between %d and %d", 
+             static_cast<int>(left.attr_type()), static_cast<int>(right.attr_type()));
+    return RC::INVALID_ARGUMENT;
+  }
+  
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
@@ -531,8 +539,19 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
   LOG_DEBUG("Executing subquery with %zu relations, %zu expressions", 
            select_node->relations.size(), select_node->expressions.size());
   
-  // 检查是否是简单的单表查询
-  if (select_node->relations.size() == 1 && 
+  // 检查是否包含聚合函数（包括未绑定和已绑定的）
+  bool has_aggregate = false;
+  for (const auto &expr : select_node->expressions) {
+    if (expr && (expr->type() == ExprType::UNBOUND_AGGREGATION || expr->type() == ExprType::AGGREGATION)) {
+      has_aggregate = true;
+      LOG_DEBUG("Detected aggregate expression in subquery (type=%d)", static_cast<int>(expr->type()));
+      break;
+    }
+  }
+  
+  // 检查是否是简单的单表查询（不包含聚合函数、条件或JOIN）
+  if (!has_aggregate && 
+      select_node->relations.size() == 1 && 
       select_node->conditions.empty() && 
       select_node->joins.empty()) {
     // 简单单表查询，尝试直接执行
@@ -544,13 +563,25 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
       LOG_DEBUG("Simple subquery executed successfully, returned %zu values", results.size());
       return RC::SUCCESS;
     } else {
-      LOG_WARN("Simple subquery execution failed, falling back to test data");
+      LOG_WARN("Simple subquery execution failed, will try complex subquery execution");
     }
   }
   
-  // 如果SubqueryExecutor也失败了，返回错误
-  LOG_ERROR("All subquery execution methods failed");
-  return RC::INTERNAL;
+  // 使用完整的SubqueryExecutor执行（支持聚合函数、JOIN、WHERE等复杂查询）
+  LOG_DEBUG("Using SubqueryExecutor for complex subquery execution");
+  static SubqueryExecutor executor;
+  RC rc = executor.execute_subquery(select_node, session_, results);
+  
+  if (rc == RC::SUCCESS) {
+    // 缓存结果
+    subquery_cache_ = results;
+    cache_valid_ = true;
+    LOG_DEBUG("Complex subquery executed successfully, returned %zu values", results.size());
+    return RC::SUCCESS;
+  } else {
+    LOG_ERROR("SubqueryExecutor execution failed, rc=%d", rc);
+    return rc;
+  }
 }
 
 RC ComparisonExpr::execute_simple_subquery(const SelectSqlNode *select_node, vector<Value> &results) const
@@ -974,6 +1005,22 @@ unique_ptr<Aggregator> AggregateExpr::create_aggregator() const
   switch (aggregate_type_) {
     case Type::SUM: {
       aggregator = make_unique<SumAggregator>();
+      break;
+    }
+    case Type::MIN: {
+      aggregator = make_unique<MinAggregator>();
+      break;
+    }
+    case Type::MAX: {
+      aggregator = make_unique<MaxAggregator>();
+      break;
+    }
+    case Type::COUNT: {
+      aggregator = make_unique<CountAggregator>();
+      break;
+    }
+    case Type::AVG: {
+      aggregator = make_unique<AvgAggregator>();
       break;
     }
     default: {

@@ -155,6 +155,8 @@ function do_build
   ${CMAKE_COMMAND_MINIOB} -S ${TOPDIR} $@
 }
 
+
+
 function do_clean
 {
   echo "clean build_* dirs"

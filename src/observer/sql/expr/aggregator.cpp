@@ -34,3 +34,86 @@ RC SumAggregator::evaluate(Value& result)
   result = value_;
   return RC::SUCCESS;
 }
+
+RC MinAggregator::accumulate(const Value &value)
+{
+  if (!has_value_) {
+    value_ = value;
+    has_value_ = true;
+    return RC::SUCCESS;
+  }
+  
+  if (value.compare(value_) < 0) {
+    value_ = value;
+  }
+  return RC::SUCCESS;
+}
+
+RC MinAggregator::evaluate(Value& result)
+{
+  result = value_;
+  return RC::SUCCESS;
+}
+
+RC MaxAggregator::accumulate(const Value &value)
+{
+  if (!has_value_) {
+    value_ = value;
+    has_value_ = true;
+    return RC::SUCCESS;
+  }
+  
+  if (value.compare(value_) > 0) {
+    value_ = value;
+  }
+  return RC::SUCCESS;
+}
+
+RC MaxAggregator::evaluate(Value& result)
+{
+  result = value_;
+  return RC::SUCCESS;
+}
+
+RC CountAggregator::accumulate(const Value &value)
+{
+  count_++;
+  return RC::SUCCESS;
+}
+
+RC CountAggregator::evaluate(Value& result)
+{
+  result.set_int(count_);
+  return RC::SUCCESS;
+}
+
+RC AvgAggregator::accumulate(const Value &value)
+{
+  if (sum_.attr_type() == AttrType::UNDEFINED) {
+    sum_ = value;
+    count_ = 1;
+    return RC::SUCCESS;
+  }
+  
+  Value::add(value, sum_, sum_);
+  count_++;
+  return RC::SUCCESS;
+}
+
+RC AvgAggregator::evaluate(Value& result)
+{
+  if (count_ == 0) {
+    result.set_type(AttrType::UNDEFINED);
+    return RC::SUCCESS;
+  }
+  
+  // 计算平均值
+  if (sum_.attr_type() == AttrType::INTS) {
+    result.set_float(static_cast<float>(sum_.get_int()) / count_);
+  } else if (sum_.attr_type() == AttrType::FLOATS) {
+    result.set_float(sum_.get_float() / count_);
+  } else {
+    result = sum_;
+  }
+  return RC::SUCCESS;
+}

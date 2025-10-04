@@ -54,6 +54,14 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   }
   
   // 处理普通比较操作的右侧表达式
+  // 检查右侧是否为子查询
+  if (condition.has_subquery && condition.subquery) {
+    // 右侧是子查询（例如: attr >= (SELECT ...)）
+    auto subquery_copy = SelectSqlNode::create_copy(condition.subquery.get());
+    expr = new ComparisonExpr(condition.comp, std::move(left_expr), std::move(subquery_copy));
+    return RC::SUCCESS;
+  }
+  
   unique_ptr<Expression> right_expr;
   if (condition.right_is_attr) {
     const RelAttrSqlNode &attr = condition.right_attr;
