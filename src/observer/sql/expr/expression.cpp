@@ -245,20 +245,9 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
 {
   result = false;
   
-  // 打印调试信息
-  LOG_INFO("=== IN操作调试信息 ===");
-  LOG_INFO("左值: %s (类型: %d)", left.to_string().c_str(), static_cast<int>(left.attr_type()));
-  LOG_INFO("子查询返回了 %zu 个值:", right_values.size());
-  for (size_t i = 0; i < right_values.size(); i++) {
-    LOG_INFO("  [%zu] %s (类型: %d)", i, right_values[i].to_string().c_str(), 
-             static_cast<int>(right_values[i].attr_type()));
-  }
-  
   // 检查值列表是否为空
   if (right_values.empty()) {
-    LOG_INFO("子查询返回空结果集，IN 操作返回 false");
     result = (comp_ == NOT_IN_OP);  // 空集合的情况
-    LOG_INFO("======================");
     return RC::SUCCESS;
   }
   
@@ -273,16 +262,12 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
     if (cmp_result == 0) {
       // 找到匹配项
       result = (comp_ == IN_OP);
-      LOG_INFO("找到匹配项! 左值 %s 在子查询结果中", left.to_string().c_str());
-      LOG_INFO("======================");
       return RC::SUCCESS;
     }
   }
   
   // 没有找到匹配项
   result = (comp_ == NOT_IN_OP);
-  LOG_INFO("未找到匹配项。左值 %s 不在子查询结果中", left.to_string().c_str());
-  LOG_INFO("======================");
   
   return RC::SUCCESS;
 }
@@ -340,12 +325,9 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       return subquery_rc;
     }
     
-    LOG_INFO("子查询执行成功，共返回 %zu 个值", subquery_results.size());
-    
     // 区分 IN/NOT_IN 和标量子查询
     if (comp_ == IN_OP || comp_ == NOT_IN_OP) {
       // IN/NOT_IN 子查询：使用值列表比较
-      LOG_INFO("处理 IN/NOT_IN 子查询");
       Value left_value;
       rc = left_->get_value(tuple, left_value);
       if (rc != RC::SUCCESS) {
@@ -355,7 +337,6 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       rc = compare_with_value_list(left_value, subquery_results, bool_value);
     } else {
       // 标量子查询：只能返回一个值
-      LOG_INFO("处理标量子查询 (比较运算符: %d)", comp_);
       if (subquery_results.empty()) {
         LOG_WARN("标量子查询返回空结果集");
         // 空结果集返回 NULL，在布尔上下文中为 false
