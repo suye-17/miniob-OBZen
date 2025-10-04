@@ -164,54 +164,84 @@ RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, S
         // 处理未绑定的字段表达式
         const UnboundFieldExpr* field_expr = static_cast<const UnboundFieldExpr*>(expr.get());
         const char* field_name = field_expr->field_name();
-        const char* table_name = field_expr->table_name();
+        const char* table_name_from_expr = field_expr->table_name();
         
-        LOG_DEBUG("Processing unbound field: %s.%s", table_name ? table_name : "NULL", field_name);
+        // 使用实际的表名（优先使用表达式中的表名，否则使用当前表名）
+        const char* table_name_to_use = (table_name_from_expr && strlen(table_name_from_expr) > 0) ? 
+                                         table_name_from_expr : table->name();
         
-        // 尝试从tuple中获取字段值
+        LOG_DEBUG("Processing unbound field: %s.%s (actual table: %s)", 
+                  table_name_from_expr ? table_name_from_expr : "NULL", 
+                  field_name, table_name_to_use);
+        
+        // 方法1：尝试直接通过字段名获取
         Value field_value;
         RC field_rc = tuple->find_cell(TupleCellSpec(field_name), field_value);
+        
+        if (field_rc != RC::SUCCESS) {
+          // 方法2：尝试通过完整的表名.字段名获取
+          LOG_DEBUG("Field %s not found by name alone, trying with table name", field_name);
+          field_rc = tuple->find_cell(TupleCellSpec(table_name_to_use, field_name), field_value);
+        }
+        
+        if (field_rc != RC::SUCCESS) {
+          // 方法3：通过字段元数据和索引获取
+          LOG_DEBUG("Field %s not found by TupleCellSpec, trying by field metadata", field_name);
+          const TableMeta& table_meta = table->table_meta();
+          const FieldMeta* field_meta = table_meta.field(field_name);
+          
+          if (field_meta != nullptr) {
+            // 方法3a：通过字段在可见字段中的索引获取
+            int cell_index = 0;
+            bool found = false;
+            for (int j = 0; j < table_meta.field_num(); j++) {
+              const FieldMeta* fm = table_meta.field(j);
+              if (!fm->visible()) {
+                continue;  // 跳过系统字段（如__trx_id等）
+              }
+              if (strcmp(fm->name(), field_name) == 0) {
+                field_rc = tuple->cell_at(cell_index, field_value);
+                found = true;
+                LOG_DEBUG("Found field %s at cell index %d: %s", 
+                         field_name, cell_index, 
+                         field_rc == RC::SUCCESS ? field_value.to_string().c_str() : "FAILED");
+                break;
+              }
+              cell_index++;
+            }
+            
+            if (!found) {
+              LOG_WARN("Field %s found in metadata but not mapped to tuple cell", field_name);
+              field_rc = RC::SCHEMA_FIELD_NOT_EXIST;
+            }
+          } else {
+            LOG_WARN("Field %s not found in table %s metadata", field_name, table->name());
+            field_rc = RC::SCHEMA_FIELD_NOT_EXIST;
+          }
+        }
+        
         if (field_rc == RC::SUCCESS) {
           value = field_value;
           expr_rc = RC::SUCCESS;
-          LOG_DEBUG("Found field %s: %s", field_name, value.to_string().c_str());
+          LOG_DEBUG("Successfully got field %s value: %s (type: %d)", 
+                   field_name, value.to_string().c_str(), static_cast<int>(value.attr_type()));
         } else {
-          // 如果通过字段名找不到，尝试通过索引获取
-          LOG_DEBUG("Field %s not found by name, trying by index", field_name);
-          
-          // 获取表的字段信息
-          const TableMeta& table_meta = table->table_meta();
-          const FieldMeta* field_meta = table_meta.field(field_name);
-          if (field_meta != nullptr) {
-            field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), field_value);
-            if (field_rc == RC::SUCCESS) {
-              value = field_value;
-              expr_rc = RC::SUCCESS;
-              LOG_DEBUG("Found field %s by full name: %s", field_name, value.to_string().c_str());
-            } else {
-              // 最后尝试通过字段ID获取
-              int field_id = field_meta->field_id();
-              field_rc = tuple->cell_at(field_id, field_value);
-              if (field_rc == RC::SUCCESS) {
-                value = field_value;
-                expr_rc = RC::SUCCESS;
-                LOG_DEBUG("Found field %s by ID %d: %s", field_name, field_id, value.to_string().c_str());
-              } else {
-                LOG_WARN("Failed to get field %s by ID %d, rc=%d", field_name, field_id, field_rc);
-              }
-            }
-          } else {
-            LOG_WARN("Field %s not found in table %s", field_name, table->name());
-          }
+          LOG_WARN("Failed to get field %s value after all attempts, rc=%d", field_name, field_rc);
+          expr_rc = field_rc;
         }
       } else {
         // 处理其他类型的表达式
         expr_rc = expr->get_value(*tuple, value);
+        if (expr_rc == RC::SUCCESS) {
+          LOG_DEBUG("Got value from expression type %d: %s", 
+                   static_cast<int>(expr->type()), value.to_string().c_str());
+        }
       }
       
       if (expr_rc == RC::SUCCESS) {
         results.push_back(value);
-        LOG_DEBUG("Subquery result: %s", value.to_string().c_str());
+        LOG_DEBUG("Added subquery result[%zu]: %s (type: %d)", 
+                 results.size() - 1, value.to_string().c_str(), static_cast<int>(value.attr_type()));
       } else {
         LOG_WARN("Failed to get value from expression %zu, rc=%d", i, expr_rc);
         LOG_WARN("Expression type: %d, name: %s", static_cast<int>(expr->type()), expr->name());
