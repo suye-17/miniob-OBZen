@@ -17,7 +17,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple_cell.h"
-#include "sql/parser/parse.h"
 #include "common/value.h"
 #include "storage/record/record.h"
 

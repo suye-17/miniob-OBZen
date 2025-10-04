@@ -13,7 +13,6 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "net/plain_communicator.h"
-#include "common/io/io.h"
 #include "common/log/log.h"
 #include "event/session_event.h"
 #include "net/buffered_writer.h"
