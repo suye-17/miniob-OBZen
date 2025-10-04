@@ -17,6 +17,10 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/arithmetic_operator.hpp"
 #include "sql/stmt/select_stmt.h"
 #include "sql/expr/subquery_executor.h"
+#include "sql/parser/parse_defs.h"
+#include "session/session.h"
+#include "storage/db/db.h"
+#include "storage/table/table.h"
 
 using namespace std;
 
@@ -314,24 +318,11 @@ RC ComparisonExpr::try_get_value(Value &cell) const
 
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
-  Value left_value;
-  RC rc = left_->get_value(tuple, left_value);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
-    return rc;
-  }
-
   bool bool_value = false;
+  RC rc = RC::SUCCESS;
 
   if (has_subquery_) {
     // 处理子查询
-    LOG_INFO("开始执行子查询 (IN操作)");
-    
-    // 为了简化实现，我们实现一个基本的子查询执行逻辑
-    // 这里需要执行子查询并获取结果集
-    // 暂时实现一个假设的执行逻辑，实际应该调用查询执行引擎
-    
-    // 简化实现：假设子查询返回一些值，我们模拟这个过程
     vector<Value> subquery_results;
     
     // 实际执行子查询
@@ -343,18 +334,75 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     
     LOG_INFO("子查询执行成功，共返回 %zu 个值", subquery_results.size());
     
-    // 去重子查询结果（避免重复比较）
-    // 注意：这里简单处理，实际 SQL 中 IN 子查询通常不需要去重，因为逻辑上是"存在即可"
-    // 但为了优化性能，我们可以去重
-    LOG_DEBUG("子查询返回的原始值数量: %zu", subquery_results.size());
-    
-    // 使用子查询结果进行比较
-    rc = compare_with_value_list(left_value, subquery_results, bool_value);
+    // 区分 IN/NOT_IN 和标量子查询
+    if (comp_ == IN_OP || comp_ == NOT_IN_OP) {
+      // IN/NOT_IN 子查询：使用值列表比较
+      LOG_INFO("处理 IN/NOT_IN 子查询");
+      Value left_value;
+      rc = left_->get_value(tuple, left_value);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+        return rc;
+      }
+      rc = compare_with_value_list(left_value, subquery_results, bool_value);
+    } else {
+      // 标量子查询：只能返回一个值
+      LOG_INFO("处理标量子查询 (比较运算符: %d)", comp_);
+      if (subquery_results.empty()) {
+        LOG_WARN("标量子查询返回空结果集");
+        // 空结果集返回 NULL，在布尔上下文中为 false
+        bool_value = false;
+        rc = RC::SUCCESS;
+      } else {
+        if (subquery_results.size() > 1) {
+          LOG_WARN("标量子查询返回多个值 (%zu 个)，只使用第一个值", subquery_results.size());
+        }
+        
+        // 获取子查询值（第一个）
+        Value subquery_value = subquery_results[0];
+        
+        // 判断子查询在左边还是右边
+        if (left_) {
+          // 子查询在右边，left_ 是要比较的值
+          Value left_value;
+          rc = left_->get_value(tuple, left_value);
+          if (rc != RC::SUCCESS) {
+            LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+            return rc;
+          }
+          rc = compare_value(left_value, subquery_value, bool_value);
+        } else if (right_) {
+          // 子查询在左边，right_ 是要比较的值
+          Value right_value;
+          rc = right_->get_value(tuple, right_value);
+          if (rc != RC::SUCCESS) {
+            LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+            return rc;
+          }
+          rc = compare_value(subquery_value, right_value, bool_value);
+        } else {
+          LOG_ERROR("标量子查询：左右表达式都为空");
+          return RC::INTERNAL;
+        }
+      }
+    }
   } else if (has_value_list_) {
     // 使用值列表进行比较（IN/NOT IN操作）
+    Value left_value;
+    rc = left_->get_value(tuple, left_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
     rc = compare_with_value_list(left_value, right_values_, bool_value);
   } else if (right_) {
     // 使用右侧表达式进行比较
+    Value left_value;
+    rc = left_->get_value(tuple, left_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
     Value right_value;
     rc = right_->get_value(tuple, right_value);
     if (rc != RC::SUCCESS) {
@@ -958,4 +1006,111 @@ RC AggregateExpr::type_from_string(const char *type_str, AggregateExpr::Type &ty
     rc = RC::INVALID_ARGUMENT;
   }
   return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SubqueryExpr
+
+SubqueryExpr::SubqueryExpr(unique_ptr<SelectSqlNode> subquery) : subquery_(std::move(subquery)) {}
+
+unique_ptr<Expression> SubqueryExpr::copy() const
+{
+  return make_unique<SubqueryExpr>(SelectSqlNode::create_copy(subquery_.get()));
+}
+
+AttrType SubqueryExpr::value_type() const
+{
+  if (type_cached_) {
+    return cached_value_type_;
+  }
+
+  // 需要分析子查询的SELECT列表来确定类型
+  // 对于标量子查询，应该只有一个SELECT表达式
+  if (subquery_ && !subquery_->expressions.empty()) {
+    const auto& first_expr = subquery_->expressions[0];
+    
+    // 如果是UnboundFieldExpr，需要绑定后才能确定类型
+    // 这里我们暂时返回UNDEFINED，实际类型会在绑定后确定
+    if (first_expr->type() == ExprType::UNBOUND_FIELD) {
+      const UnboundFieldExpr* field_expr = static_cast<const UnboundFieldExpr*>(first_expr.get());
+      
+      // 如果有session上下文，尝试获取实际类型
+      if (session_ != nullptr) {
+        Db *db = session_->get_current_db();
+        if (db != nullptr && !subquery_->relations.empty()) {
+          Table *table = db->find_table(subquery_->relations[0].c_str());
+          if (table != nullptr) {
+            const TableMeta& table_meta = table->table_meta();
+            const FieldMeta* field_meta = table_meta.field(field_expr->field_name());
+            if (field_meta != nullptr) {
+              cached_value_type_ = field_meta->type();
+              type_cached_ = true;
+              return cached_value_type_;
+            }
+          }
+        }
+      }
+    } else {
+      // 对于其他类型的表达式，直接获取其类型
+      cached_value_type_ = first_expr->value_type();
+      type_cached_ = true;
+      return cached_value_type_;
+    }
+  }
+  
+  return AttrType::UNDEFINED;
+}
+
+int SubqueryExpr::value_length() const
+{
+  // 暂时返回固定长度，实际应该根据子查询结果确定
+  return 4;
+}
+
+RC SubqueryExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  if (subquery_ == nullptr) {
+    LOG_WARN("Subquery is null");
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  if (session_ == nullptr) {
+    LOG_WARN("No session context available for subquery execution");
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  // 执行子查询
+  std::vector<Value> results;
+  static SubqueryExecutor executor;
+  RC rc = executor.execute_subquery(subquery_.get(), session_, results);
+  
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to execute subquery, rc=%d", rc);
+    return rc;
+  }
+  
+  // 标量子查询应该返回单个值
+  if (results.empty()) {
+    // 空结果集，返回一个空的默认值
+    value = Value();  // 创建空Value，类型为UNDEFINED
+    LOG_DEBUG("Subquery returned empty result set, returning empty value");
+    return RC::SUCCESS;
+  }
+  
+  if (results.size() > 1) {
+    LOG_WARN("Scalar subquery returned more than one row (%zu rows)", results.size());
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  value = results[0];
+  LOG_DEBUG("Subquery returned value: %s", value.to_string().c_str());
+  
+  return RC::SUCCESS;
+}
+
+void SubqueryExpr::set_session_context_recursive(class Session *session)
+{
+  session_ = session;
+  // 清除缓存的类型信息，以便重新计算
+  type_cached_ = false;
 }

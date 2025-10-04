@@ -164,7 +164,7 @@ function do_clean
 function build {
   # 默认参数是 debug
   if [ -z "${BUILD_ARGS[0]}" ]; then
-    set -- "debug"  # 如果没有参数，则设置默认值
+    set -- "debug"  # 如果没有参数，则设置默认值                  
   else
     set -- "${BUILD_ARGS[@]}"  # 否则使用 BUILD_ARGS 的第一个参数
   fi

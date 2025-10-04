@@ -773,6 +773,32 @@ condition:
       delete $1;
       delete $5;
     }
+    | LBRACE select_stmt RBRACE comp_op rel_attr
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 1;
+      $$->right_attr = *$5;
+      $$->comp = $4;
+      $$->has_subquery = true;
+      $$->subquery = SelectSqlNode::create_copy(&($2->selection));
+
+      delete $2;
+      delete $5;
+    }
+    | rel_attr comp_op LBRACE select_stmt RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->comp = $2;
+      $$->has_subquery = true;
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
+
+      delete $1;
+      delete $4;
+    }
     ;
 
 comp_op:

@@ -91,6 +91,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   filter_unit = new FilterUnit;
 
+  // 处理左侧表达式：可能是属性、值或子查询
   if (condition.left_is_attr) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
@@ -102,7 +103,13 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_left(filter_obj);
+  } else if (condition.has_subquery && condition.subquery) {
+    // 左侧是子查询的情况（例如: (SELECT ...) = attr 或 (SELECT ...) = value）
+    FilterObj filter_obj;
+    filter_obj.init_subquery(condition.subquery.get());
+    filter_unit->set_left(filter_obj);
   } else {
+    // 左侧是常量值
     FilterObj filter_obj;
     filter_obj.init_value(condition.left_value);
     filter_unit->set_left(filter_obj);
@@ -136,6 +143,11 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     }
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
+    filter_unit->set_right(filter_obj);
+  } else if (condition.has_subquery && condition.subquery) {
+    // 右侧是子查询的情况（例如: attr = (SELECT ...)）
+    FilterObj filter_obj;
+    filter_obj.init_subquery(condition.subquery.get());
     filter_unit->set_right(filter_obj);
   } else {
     FilterObj filter_obj;

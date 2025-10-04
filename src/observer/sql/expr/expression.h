@@ -22,6 +22,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/chunk.h"
 
 class Tuple;
+struct SelectSqlNode;
+class Session;
 
 /**
  * @defgroup Expression
@@ -46,6 +48,7 @@ enum class ExprType
   CONJUNCTION,  ///< 多个表达式使用同一种关系(AND或OR)来联结
   ARITHMETIC,   ///< 算术运算
   AGGREGATION,  ///< 聚合运算
+  SUBQUERY,     ///< 子查询表达式
 };
 
 /**
@@ -581,4 +584,40 @@ public:
 private:
   Type                   aggregate_type_;
   unique_ptr<Expression> child_;
+};
+
+/**
+ * @brief 子查询表达式
+ * @ingroup Expression
+ * 用于处理标量子查询，如: SELECT * FROM t1 WHERE (SELECT id FROM t2) = t1.id
+ */
+class SubqueryExpr : public Expression
+{
+public:
+  SubqueryExpr(unique_ptr<SelectSqlNode> subquery);
+  virtual ~SubqueryExpr() = default;
+
+  unique_ptr<Expression> copy() const override;
+
+  ExprType type() const override { return ExprType::SUBQUERY; }
+  
+  // 子查询的值类型需要通过执行子查询或分析其SELECT列表来确定
+  // 对于标量子查询，返回第一个SELECT表达式的类型
+  AttrType value_type() const override;
+  int      value_length() const override;
+
+  RC get_value(const Tuple &tuple, Value &value) const override;
+  
+  // 设置会话上下文，用于执行子查询
+  void set_session_context_recursive(Session *session) override;
+  
+  const SelectSqlNode* subquery() const { return subquery_.get(); }
+
+private:
+  unique_ptr<SelectSqlNode> subquery_;
+  mutable Session *session_ = nullptr;
+  
+  // 用于缓存子查询的结果类型
+  mutable AttrType cached_value_type_ = AttrType::UNDEFINED;
+  mutable bool     type_cached_ = false;
 };

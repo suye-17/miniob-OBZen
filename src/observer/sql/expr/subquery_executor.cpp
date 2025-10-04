@@ -283,13 +283,133 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     // 检查WHERE条件
     bool condition_passed = true;
     for (const auto &condition : select_node->conditions) {
-      // 这里需要实现条件检查逻辑
-      // 暂时跳过条件检查，直接处理表达式
-      LOG_DEBUG("Skipping condition check for now");
-      (void)condition; // 避免未使用变量警告
+      // 实现条件检查逻辑
+      Value left_value;
+      Value right_value;
+      
+      // 获取左侧值
+      if (condition.left_is_attr) {
+        // 左边是属性
+        const char* field_name = condition.left_attr.attribute_name.c_str();
+        const char* table_name = condition.left_attr.relation_name.empty() ? main_table->name() : condition.left_attr.relation_name.c_str();
+        
+        // 先尝试通过字段名直接获取
+        RC field_rc = tuple->find_cell(TupleCellSpec(field_name), left_value);
+        if (field_rc != RC::SUCCESS) {
+          // 尝试使用完整表名
+          field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), left_value);
+          if (field_rc != RC::SUCCESS) {
+            // 尝试通过字段元数据获取
+            const TableMeta& table_meta = main_table->table_meta();
+            const FieldMeta* field_meta = table_meta.field(field_name);
+            if (field_meta != nullptr) {
+              // 通过字段索引获取（跳过前面的系统字段）
+              int cell_index = 0;
+              for (int i = 0; i < table_meta.field_num(); i++) {
+                const FieldMeta* fm = table_meta.field(i);
+                if (!fm->visible()) continue;  // 跳过不可见字段
+                if (strcmp(fm->name(), field_name) == 0) {
+                  field_rc = tuple->cell_at(cell_index, left_value);
+                  break;
+                }
+                cell_index++;
+              }
+            }
+            
+            if (field_rc != RC::SUCCESS) {
+              LOG_WARN("Failed to get left field value: %s from table %s", field_name, table_name);
+              condition_passed = false;
+              break;
+            }
+          }
+        }
+        LOG_DEBUG("Left field %s value: %s", field_name, left_value.to_string().c_str());
+      } else {
+        // 左边是常量值
+        left_value = condition.left_value;
+        LOG_DEBUG("Left constant value: %s", left_value.to_string().c_str());
+      }
+      
+      // 获取右侧值
+      if (condition.right_is_attr) {
+        // 右边是属性
+        const char* field_name = condition.right_attr.attribute_name.c_str();
+        const char* table_name = condition.right_attr.relation_name.empty() ? main_table->name() : condition.right_attr.relation_name.c_str();
+        
+        // 先尝试通过字段名直接获取
+        RC field_rc = tuple->find_cell(TupleCellSpec(field_name), right_value);
+        if (field_rc != RC::SUCCESS) {
+          // 尝试使用完整表名
+          field_rc = tuple->find_cell(TupleCellSpec(table_name, field_name), right_value);
+          if (field_rc != RC::SUCCESS) {
+            // 尝试通过字段元数据获取
+            const TableMeta& table_meta = main_table->table_meta();
+            const FieldMeta* field_meta = table_meta.field(field_name);
+            if (field_meta != nullptr) {
+              // 通过字段索引获取（跳过前面的系统字段）
+              int cell_index = 0;
+              for (int i = 0; i < table_meta.field_num(); i++) {
+                const FieldMeta* fm = table_meta.field(i);
+                if (!fm->visible()) continue;  // 跳过不可见字段
+                if (strcmp(fm->name(), field_name) == 0) {
+                  field_rc = tuple->cell_at(cell_index, right_value);
+                  break;
+                }
+                cell_index++;
+              }
+            }
+            
+            if (field_rc != RC::SUCCESS) {
+              LOG_WARN("Failed to get right field value: %s from table %s", field_name, table_name);
+              condition_passed = false;
+              break;
+            }
+          }
+        }
+        LOG_DEBUG("Right field %s value: %s", field_name, right_value.to_string().c_str());
+      } else {
+        // 右边是常量值
+        right_value = condition.right_value;
+        LOG_DEBUG("Right constant value: %s", right_value.to_string().c_str());
+      }
+      
+      // 执行比较操作
+      int cmp_result = left_value.compare(right_value);
+      bool condition_result = false;
+      
+      switch (condition.comp) {
+        case EQUAL_TO:
+          condition_result = (cmp_result == 0);
+          break;
+        case LESS_THAN:
+          condition_result = (cmp_result < 0);
+          break;
+        case GREAT_THAN:
+          condition_result = (cmp_result > 0);
+          break;
+        case LESS_EQUAL:
+          condition_result = (cmp_result <= 0);
+          break;
+        case GREAT_EQUAL:
+          condition_result = (cmp_result >= 0);
+          break;
+        case NOT_EQUAL:
+          condition_result = (cmp_result != 0);
+          break;
+        default:
+          break;
+      }
+      
+      LOG_DEBUG("Condition result: %s (cmp=%d, op=%d)", condition_result ? "true" : "false", cmp_result, condition.comp);
+      
+      if (!condition_result) {
+        condition_passed = false;
+        break;
+      }
     }
 
     if (!condition_passed) {
+      LOG_DEBUG("Row %d did not pass conditions, skipping", row_count);
       continue;
     }
 

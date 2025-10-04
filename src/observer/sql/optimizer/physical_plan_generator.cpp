@@ -31,6 +31,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/insert_physical_operator.h"
 #include "sql/operator/join_logical_operator.h"
 #include "sql/operator/nested_loop_join_physical_operator.h"
+#include "sql/operator/hash_join_physical_operator.h"
 #include "sql/operator/predicate_logical_operator.h"
 #include "sql/operator/predicate_physical_operator.h"
 #include "sql/operator/project_logical_operator.h"
@@ -339,7 +340,26 @@ RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr
     return RC::INTERNAL;
   }
   if (session->hash_join_on() && can_use_hash_join(join_oper)) {
-    // your code here
+    // 使用 Hash Join 算子
+    Expression *condition_copy = nullptr;
+    if (join_oper.condition() != nullptr) {
+      condition_copy = join_oper.condition()->copy().release();
+    }
+    
+    unique_ptr<PhysicalOperator> join_physical_oper(new HashJoinPhysicalOperator(condition_copy));
+    for (auto &child_oper : child_opers) {
+      unique_ptr<PhysicalOperator> child_physical_oper;
+      rc = create(*child_oper, child_physical_oper, session);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to create physical child oper. rc=%s", strrc(rc));
+        return rc;
+      }
+
+      join_physical_oper->add_child(std::move(child_physical_oper));
+    }
+
+    oper = std::move(join_physical_oper);
+    LOG_DEBUG("Created Hash Join physical operator");
   } else {
     // 创建带条件的嵌套循环JOIN物理算子
     Expression *condition_copy = nullptr;
@@ -366,8 +386,38 @@ RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr
 
 bool PhysicalPlanGenerator::can_use_hash_join(JoinLogicalOperator &join_oper)
 {
-  // your code here
-  return false;
+  // 检查是否有连接条件
+  Expression *condition = join_oper.condition();
+  if (condition == nullptr) {
+    LOG_DEBUG("No join condition, cannot use hash join");
+    return false;
+  }
+
+  // 检查连接条件是否是比较表达式
+  if (condition->type() != ExprType::COMPARISON) {
+    LOG_DEBUG("Join condition is not a comparison expression, cannot use hash join");
+    return false;
+  }
+
+  // 检查是否是等值比较
+  ComparisonExpr *comp_expr = static_cast<ComparisonExpr *>(condition);
+  if (comp_expr->comp() != EQUAL_TO) {
+    LOG_DEBUG("Join condition is not an equality comparison, cannot use hash join");
+    return false;
+  }
+
+  // 检查左右表达式是否都是字段表达式
+  const Expression *left = comp_expr->left().get();
+  const Expression *right = comp_expr->right().get();
+  
+  if (left == nullptr || right == nullptr) {
+    LOG_DEBUG("Join condition has null left or right expression");
+    return false;
+  }
+
+  // 可以使用 Hash Join
+  LOG_DEBUG("Can use hash join for this join operation");
+  return true;
 }
 
 RC PhysicalPlanGenerator::create_plan(CalcLogicalOperator &logical_oper, unique_ptr<PhysicalOperator> &oper, Session* session)

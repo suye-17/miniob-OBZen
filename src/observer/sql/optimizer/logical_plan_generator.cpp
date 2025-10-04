@@ -183,9 +183,19 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     const FilterObj &filter_obj_left  = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
 
-    unique_ptr<Expression> left(filter_obj_left.is_attr
-                                    ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
-                                    : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
+    // 处理左侧表达式（可能是属性、值或子查询）
+    unique_ptr<Expression> left;
+    if (filter_obj_left.has_subquery && filter_obj_left.subquery) {
+      // 左侧是子查询
+      auto subquery_copy = SelectSqlNode::create_copy(filter_obj_left.subquery.get());
+      left = make_unique<SubqueryExpr>(std::move(subquery_copy));
+    } else if (filter_obj_left.is_attr) {
+      // 左侧是属性
+      left = make_unique<FieldExpr>(filter_obj_left.field);
+    } else {
+      // 左侧是常量值
+      left = make_unique<ValueExpr>(filter_obj_left.value);
+    }
 
     // 处理IN/NOT IN操作的值列表或子查询
     if (filter_unit->comp() == IN_OP || filter_unit->comp() == NOT_IN_OP) {
@@ -207,11 +217,33 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       }
     }
 
-    unique_ptr<Expression> right(filter_obj_right.is_attr
-                                     ? static_cast<Expression *>(new FieldExpr(filter_obj_right.field))
-                                     : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));
+    // 处理右侧表达式（可能是属性、值或子查询）
+    unique_ptr<Expression> right;
+    if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
+      // 右侧是子查询
+      auto subquery_copy = SelectSqlNode::create_copy(filter_obj_right.subquery.get());
+      right = make_unique<SubqueryExpr>(std::move(subquery_copy));
+    } else if (filter_obj_right.is_attr) {
+      // 右侧是属性
+      right = make_unique<FieldExpr>(filter_obj_right.field);
+    } else {
+      // 右侧是常量值
+      right = make_unique<ValueExpr>(filter_obj_right.value);
+    }
 
-    if (left->value_type() != right->value_type()) {
+    // 如果左侧或右侧是子查询，且类型未确定(UNDEFINED)，跳过类型转换
+    // 子查询的实际类型会在运行时确定
+    bool skip_type_check = false;
+    if (left->type() == ExprType::SUBQUERY && left->value_type() == AttrType::UNDEFINED) {
+      skip_type_check = true;
+      LOG_DEBUG("Left side is subquery with undefined type, skipping type check");
+    }
+    if (right->type() == ExprType::SUBQUERY && right->value_type() == AttrType::UNDEFINED) {
+      skip_type_check = true;
+      LOG_DEBUG("Right side is subquery with undefined type, skipping type check");
+    }
+    
+    if (!skip_type_check && left->value_type() != right->value_type()) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
       auto right_to_left_cost = implicit_cast_cost(right->value_type(), left->value_type());
       if (left_to_right_cost <= right_to_left_cost && left_to_right_cost != INT32_MAX) {
@@ -268,6 +300,10 @@ int LogicalPlanGenerator::implicit_cast_cost(AttrType from, AttrType to)
 {
   if (from == to) {
     return 0;
+  }
+  // 如果from或to是UNDEFINED类型，说明类型尚未确定（可能是子查询），不支持转换
+  if (from == AttrType::UNDEFINED || to == AttrType::UNDEFINED) {
+    return INT32_MAX;
   }
   return DataType::type_instance(from)->cast_cost(to);
 }
