@@ -1,3 +1,25 @@
+### 0000-00-00 00:00:00.000
+aii### 2025-10-04 22:19:18.607
+### 0000-00-00 00:00:00.000
+INSERT INTO ssq_1 VALUES (44, 14, 36.82);
+### 2025-10-04 22:19:18.612
+INSERT INTO ssq_1 VALUES (44, 97, 58.82);
+### 2025-10-04 22:19:18.617
+INSERT INTO ssq_1 VALUES (89, 24, 33.47);
+### 2025-10-04 22:19:19.722
+INSERT INTO ssq_1 VALUES (101, 5, 30.00);
+### 2025-10-04 22:19:26.999
+INSERT INTO ssq_2 VALUES (2, 101, 33.47); -- 决定最小值的关键记录
+### 2025-10-04 22:19:28.545
+INSERT INTO ssq_2 VALUES (3, 102, 45.50);
+### 2025-10-04 22:22:12.409
+INSERT INTO ssq_1 VALUES (10, 11, 12.34); 
+### 2025-10-04 22:22:28.722
+SELECT * 
+### 2025-10-04 22:22:28.724
+FROM ssq_1 
+### 2025-10-04 22:22:41.624
+WHERE col1 IN (SELECT ssq_2.col2 FROM ssq_2);
 ### 2025-10-05 13:19:45.601
 show jtables;
 ### 2025-10-05 13:20:31.819
@@ -24,10 +46,6 @@ drop table ssq_1;
 srop table ssq_2;
 ### 2025-10-05 13:22:10.300
 drop table ssq_2;
-### 2025-10-05 13:22:19.512
-CREATE TABLE ssq_1(id int, col1 int, feat1 float);
-### 2025-10-05 13:22:21.066
-CREATE TABLE ssq_2(id int, col2 int, feat2 float);
 ### 2025-10-05 13:22:56.254
 INSERT INTO ssq_1 VALUES (30, 55, 21.04);  -- feat1 (21.04) >= 最小值 (20.00) -> 会被选中
 ### 2025-10-05 13:22:56.265
@@ -44,13 +62,31 @@ INSERT INTO ssq_2 VALUES (3, 102, 25.75);
 INSERT INTO ssq_3 VALUES (1, 2, 3.0);
 ### 2025-10-05 13:23:22.342
 INSERT INTO ssq_4 VALUES (1, 'test_data');
-### 2025-10-05 13:38:10.379
-show tables;
 ### 2025-10-05 13:38:15.599
 select * from ssq_1;
 ### 2025-10-05 13:38:20.460
 select * from ssq_2;
 ### 2025-10-05 13:38:34.036
 SELECT * FROM ssq_1 WHERE feat1 >= (SELECT min(ssq_2.feat2) FROM ssq_2);
-### 2025-10-05 13:39:07.149
+### 2025-10-05 14:01:25.226
+show tables;
+### 2025-10-05 14:03:04.294
+CREATE TABLE ssq_1(id int, col1 int, feat1 float);
+### 2025-10-05 14:03:05.264
+CREATE TABLE ssq_2(id int, col2 int, feat2 float);
+### 2025-10-05 14:03:27.533
+INSERT INTO ssq_1 VALUES (30, 58, 68.73);  -- feat1 (68.73) <= 最大值 (70.00) -> 会被选中
+### 2025-10-05 14:03:27.543
+INSERT INTO ssq_1 VALUES (91, 21, 38.74);  -- feat1 (38.74) <= 最大值 (70.00) -> 会被选中
+### 2025-10-05 14:03:28.970
+INSERT INTO ssq_1 VALUES (45, 67, 85.12);
+### 2025-10-05 14:03:39.688
+INSERT INTO ssq_2 VALUES (1, 100, 50.00);
+### 2025-10-05 14:03:39.698
+INSERT INTO ssq_2 VALUES (2, 101, 70.00);  -- 这是决定最大值的关键记录
+### 2025-10-05 14:03:41.177
+INSERT INTO ssq_2 VALUES (3, 102, 65.50);
+### 2025-10-05 14:03:50.661
+SELECT * FROM ssq_1 WHERE feat1 <= (SELECT max(ssq_2.feat2) FROM ssq_2);
+### 2025-10-05 14:04:55.134
 exit;
