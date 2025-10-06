@@ -77,6 +77,18 @@ unique_ptr<SelectSqlNode> SelectSqlNode::create_copy(const SelectSqlNode* origin
   return make_unique<SelectSqlNode>(*original);
 }
 
+// ConditionSqlNode 析构函数实现
+ConditionSqlNode::~ConditionSqlNode() {
+  if (left_expr) {
+    delete left_expr;
+    left_expr = nullptr;
+  }
+  if (right_expr) {
+    delete right_expr;
+    right_expr = nullptr;
+  }
+}
+
 // ConditionSqlNode 拷贝构造函数实现
 ConditionSqlNode::ConditionSqlNode(const ConditionSqlNode& other) {
   left_is_attr = other.left_is_attr;
@@ -95,11 +107,34 @@ ConditionSqlNode::ConditionSqlNode(const ConditionSqlNode& other) {
   } else {
     subquery = nullptr;
   }
+  
+  // 深拷贝表达式
+  if (other.left_expr) {
+    left_expr = other.left_expr->copy().release();
+  } else {
+    left_expr = nullptr;
+  }
+  
+  if (other.right_expr) {
+    right_expr = other.right_expr->copy().release();
+  } else {
+    right_expr = nullptr;
+  }
 }
 
 // ConditionSqlNode 拷贝赋值操作符实现
 ConditionSqlNode& ConditionSqlNode::operator=(const ConditionSqlNode& other) {
   if (this != &other) {
+    // 清理原有表达式
+    if (left_expr) {
+      delete left_expr;
+      left_expr = nullptr;
+    }
+    if (right_expr) {
+      delete right_expr;
+      right_expr = nullptr;
+    }
+    
     left_is_attr = other.left_is_attr;
     left_value = other.left_value;
     left_attr = other.left_attr;
@@ -115,6 +150,19 @@ ConditionSqlNode& ConditionSqlNode::operator=(const ConditionSqlNode& other) {
       subquery = SelectSqlNode::create_copy(other.subquery.get());
     } else {
       subquery = nullptr;
+    }
+    
+    // 深拷贝表达式
+    if (other.left_expr) {
+      left_expr = other.left_expr->copy().release();
+    } else {
+      left_expr = nullptr;
+    }
+    
+    if (other.right_expr) {
+      right_expr = other.right_expr->copy().release();
+    } else {
+      right_expr = nullptr;
     }
   }
   return *this;

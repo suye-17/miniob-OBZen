@@ -657,7 +657,14 @@ condition_list:
     }
     ;
 condition:
-    rel_attr comp_op value
+    expression comp_op expression
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_expr = $1;
+      $$->right_expr = $3;
+      $$->comp = $2;
+    }
+    | rel_attr comp_op value
     {
       $$ = new ConditionSqlNode;
       $$->left_is_attr = 1;

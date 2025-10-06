@@ -55,7 +55,7 @@ struct CalcSqlNode
   std::vector<Expression *> expressions;
 };
 ```
-
+MONTH-EDD9-2663-586D
 在 yacc_sql.y 文件中，我们增加一种新的语句类型 `calc_stmt`，与SELECT类似。它的类型也是`sql_node`：
 ```yacc
 %type <sql_node> calc_stmt

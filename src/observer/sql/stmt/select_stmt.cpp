@@ -32,8 +32,11 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
 {
   unique_ptr<Expression> left_expr;
   
-  // 处理左侧表达式
-  if (condition.left_is_attr) {
+  // 处理左侧表达式 - 优先使用表达式字段
+  if (condition.left_expr != nullptr) {
+    // 直接使用表达式（需要拷贝，因为解析器创建的表达式会被管理）
+    left_expr.reset(condition.left_expr->copy().release());
+  } else if (condition.left_is_attr) {
     const RelAttrSqlNode &attr = condition.left_attr;
     left_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
   } else {
@@ -63,7 +66,11 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   }
   
   unique_ptr<Expression> right_expr;
-  if (condition.right_is_attr) {
+  // 处理右侧表达式 - 优先使用表达式字段
+  if (condition.right_expr != nullptr) {
+    // 直接使用表达式（需要拷贝）
+    right_expr.reset(condition.right_expr->copy().release());
+  } else if (condition.right_is_attr) {
     const RelAttrSqlNode &attr = condition.right_attr;
     right_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
   } else {

@@ -18,6 +18,61 @@ See the Mulan PSL v2 for more details. */
 #include "common/sys/rc.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "sql/parser/expression_binder.h"
+#include "sql/expr/expression.h"
+
+// FilterObj 拷贝构造函数实现
+FilterObj::FilterObj(const FilterObj& other) 
+  : is_attr(other.is_attr), field(other.field), value(other.value),
+    value_list(other.value_list), has_value_list(other.has_value_list),
+    has_subquery(other.has_subquery)
+{
+  if (other.subquery) {
+    subquery = SelectSqlNode::create_copy(other.subquery.get());
+  }
+  if (other.expr) {
+    expr = other.expr->copy().release();
+  }
+}
+
+// FilterObj 拷贝赋值操作符实现
+FilterObj& FilterObj::operator=(const FilterObj& other)
+{
+  if (this != &other) {
+    // 清理原有表达式
+    if (expr) {
+      delete expr;
+      expr = nullptr;
+    }
+    
+    is_attr = other.is_attr;
+    field = other.field;
+    value = other.value;
+    value_list = other.value_list;
+    has_value_list = other.has_value_list;
+    has_subquery = other.has_subquery;
+    
+    if (other.subquery) {
+      subquery = SelectSqlNode::create_copy(other.subquery.get());
+    } else {
+      subquery = nullptr;
+    }
+    
+    if (other.expr) {
+      expr = other.expr->copy().release();
+    }
+  }
+  return *this;
+}
+
+// FilterObj 析构函数实现
+FilterObj::~FilterObj()
+{
+  if (expr) {
+    delete expr;
+    expr = nullptr;
+  }
+}
 
 FilterStmt::~FilterStmt()
 {
@@ -91,13 +146,61 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   filter_unit = new FilterUnit;
 
-  // 处理左侧表达式：可能是属性、值或子查询
-  if (condition.left_is_attr) {
+  // 创建绑定上下文，用于绑定表达式
+  BinderContext binder_context;
+  // 先添加所有tables map中的表
+  if (tables != nullptr) {
+    for (auto &pair : *tables) {
+      binder_context.add_table(pair.second);
+    }
+  }
+  // 如果default_table存在且不在tables map中，则添加它
+  if (default_table != nullptr) {
+    bool found = false;
+    if (tables != nullptr) {
+      for (auto &pair : *tables) {
+        if (pair.second == default_table) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      binder_context.add_table(default_table);
+    }
+  }
+  ExpressionBinder expression_binder(binder_context);
+
+  // 处理左侧表达式：可能是表达式、属性、值或子查询
+  if (condition.left_expr != nullptr) {
+    // 左侧是表达式（如算术表达式）
+    unique_ptr<Expression> left_expr(condition.left_expr->copy().release());
+    LOG_DEBUG("Left expression type before binding: %d, value_type: %d", 
+              static_cast<int>(left_expr->type()), static_cast<int>(left_expr->value_type()));
+    vector<unique_ptr<Expression>> bound_expressions;
+    rc = expression_binder.bind_expression(left_expr, bound_expressions);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to bind left expression");
+      delete filter_unit;
+      return rc;
+    }
+    if (bound_expressions.size() != 1) {
+      LOG_WARN("invalid bound expression size: %d", bound_expressions.size());
+      delete filter_unit;
+      return RC::INVALID_ARGUMENT;
+    }
+    LOG_DEBUG("Left expression type after binding: %d, value_type: %d", 
+              static_cast<int>(bound_expressions[0]->type()), static_cast<int>(bound_expressions[0]->value_type()));
+    FilterObj filter_obj;
+    filter_obj.init_expr(bound_expressions[0].release());
+    filter_unit->set_left(filter_obj);
+  } else if (condition.left_is_attr) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot find attr");
+      delete filter_unit;
       return rc;
     }
     FilterObj filter_obj;
@@ -132,6 +235,24 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
       delete filter_unit;
       return RC::INVALID_ARGUMENT;
     }
+  } else if (condition.right_expr != nullptr) {
+    // 右侧是表达式（如算术表达式）
+    unique_ptr<Expression> right_expr(condition.right_expr->copy().release());
+    vector<unique_ptr<Expression>> bound_expressions;
+    rc = expression_binder.bind_expression(right_expr, bound_expressions);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to bind right expression");
+      delete filter_unit;
+      return rc;
+    }
+    if (bound_expressions.size() != 1) {
+      LOG_WARN("invalid bound expression size: %d", bound_expressions.size());
+      delete filter_unit;
+      return RC::INVALID_ARGUMENT;
+    }
+    FilterObj filter_obj;
+    filter_obj.init_expr(bound_expressions[0].release());
+    filter_unit->set_right(filter_obj);
   } else if (condition.right_is_attr) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;

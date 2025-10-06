@@ -36,39 +36,20 @@ struct FilterObj
   bool has_subquery = false;  // 标记是否为子查询
   unique_ptr<SelectSqlNode> subquery = nullptr;  // 子查询节点
   
+  // 新增：表达式支持
+  Expression *expr = nullptr;  // 表达式（如算术表达式等）
+  
   // 默认构造函数
   FilterObj() = default;
   
-  // 拷贝构造函数
-  FilterObj(const FilterObj& other) 
-    : is_attr(other.is_attr), field(other.field), value(other.value),
-      value_list(other.value_list), has_value_list(other.has_value_list),
-      has_subquery(other.has_subquery)
-  {
-    if (other.subquery) {
-      subquery = SelectSqlNode::create_copy(other.subquery.get());
-    }
-  }
+  // 拷贝构造函数（实现在cpp文件中）
+  FilterObj(const FilterObj& other);
   
-  // 拷贝赋值操作符
-  FilterObj& operator=(const FilterObj& other)
-  {
-    if (this != &other) {
-      is_attr = other.is_attr;
-      field = other.field;
-      value = other.value;
-      value_list = other.value_list;
-      has_value_list = other.has_value_list;
-      has_subquery = other.has_subquery;
-      
-      if (other.subquery) {
-        subquery = SelectSqlNode::create_copy(other.subquery.get());
-      } else {
-        subquery = nullptr;
-      }
-    }
-    return *this;
-  }
+  // 拷贝赋值操作符（实现在cpp文件中）
+  FilterObj& operator=(const FilterObj& other);
+  
+  // 析构函数（实现在cpp文件中）
+  ~FilterObj();
 
   void init_attr(const Field &field)
   {
@@ -94,6 +75,12 @@ struct FilterObj
     is_attr = false;
     has_subquery = true;
     subquery = SelectSqlNode::create_copy(subquery_node);
+  }
+  
+  void init_expr(Expression *expression)
+  {
+    is_attr = false;
+    this->expr = expression;
   }
 };
 

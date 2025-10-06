@@ -183,9 +183,12 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     const FilterObj &filter_obj_left  = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
 
-    // 处理左侧表达式（可能是属性、值或子查询）
+    // 处理左侧表达式（可能是表达式、属性、值或子查询）
     unique_ptr<Expression> left;
-    if (filter_obj_left.has_subquery && filter_obj_left.subquery) {
+    if (filter_obj_left.expr != nullptr) {
+      // 左侧是表达式（已绑定）
+      left.reset(filter_obj_left.expr->copy().release());
+    } else if (filter_obj_left.has_subquery && filter_obj_left.subquery) {
       // 左侧是子查询
       auto subquery_copy = SelectSqlNode::create_copy(filter_obj_left.subquery.get());
       left = make_unique<SubqueryExpr>(std::move(subquery_copy));
@@ -217,9 +220,12 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       }
     }
 
-    // 处理右侧表达式（可能是属性、值或子查询）
+    // 处理右侧表达式（可能是表达式、属性、值或子查询）
     unique_ptr<Expression> right;
-    if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
+    if (filter_obj_right.expr != nullptr) {
+      // 右侧是表达式（已绑定）
+      right.reset(filter_obj_right.expr->copy().release());
+    } else if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
       // 右侧是子查询
       auto subquery_copy = SelectSqlNode::create_copy(filter_obj_right.subquery.get());
       right = make_unique<SubqueryExpr>(std::move(subquery_copy));

@@ -102,8 +102,15 @@ struct ConditionSqlNode
   bool                     has_subquery;    ///< TRUE if right side is a subquery
   unique_ptr<SelectSqlNode> subquery;       ///< 子查询节点，用于IN/NOT IN操作
   
+  // 新增：表达式支持
+  Expression              *left_expr;       ///< 左侧表达式（如果不为nullptr，则使用表达式而非left_is_attr）
+  Expression              *right_expr;      ///< 右侧表达式（如果不为nullptr，则使用表达式）
+  
   // 构造函数，初始化新字段
-  ConditionSqlNode() : left_is_attr(0), comp(NO_OP), right_is_attr(0), has_subquery(false), subquery(nullptr) {}
+  ConditionSqlNode() : left_is_attr(0), comp(NO_OP), right_is_attr(0), has_subquery(false), subquery(nullptr), left_expr(nullptr), right_expr(nullptr) {}
+  
+  // 析构函数
+  ~ConditionSqlNode();
   
   // 拷贝构造函数
   ConditionSqlNode(const ConditionSqlNode& other);
