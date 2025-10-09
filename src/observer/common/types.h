@@ -75,3 +75,12 @@ enum class ExecutionMode
 
 /// page的CRC校验和
 using CheckSum = unsigned int;
+
+/// TEXT字段相关常量定义 - 精确MySQL兼容（65535字节）
+constexpr int TEXT_MAX_LENGTH = 65535;                           ///< TEXT最大长度
+constexpr int INLINE_TEXT_CAPACITY = 768;                        ///< 内联存储容量（字节）
+constexpr int OVERFLOW_PAGE_DATA_SIZE = 8164;                    ///< 溢出页面数据容量（字节）
+                                                                  // = BP_PAGE_DATA_SIZE - CommonPageHeader - OverflowPageHeader
+                                                                  // = 8180 - 8 - 8 = 8164
+constexpr int MAX_OVERFLOW_PAGES = (TEXT_MAX_LENGTH - INLINE_TEXT_CAPACITY + OVERFLOW_PAGE_DATA_SIZE - 1) 
+                                 / OVERFLOW_PAGE_DATA_SIZE;       ///< 最大溢出页面数（计算得出=8页）

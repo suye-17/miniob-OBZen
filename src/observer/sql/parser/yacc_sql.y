@@ -103,7 +103,8 @@ DistanceFunctionExpr *create_distance_function_expression(DistanceFunctionExpr::
         STRING_T
         FLOAT_T
         DATE_T
-        VECTOR_T     
+        VECTOR_T 
+        TEXT_T    
         HELP
         EXIT
         DOT //QUOTE
@@ -388,7 +389,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = 4;
+      if ($$->type == AttrType::TEXTS) {
+        $$->length = 788;    // TEXT字段在记录中占用: 20字节指针 + 768字节内联数据
+      } else {
+        $$->length = 4;
+      }
     }
     ;
 number:
@@ -400,6 +405,7 @@ type:
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
     | DATE_T { $$ = static_cast<int>(AttrType::DATES); }
     | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
+    | TEXT_T { $$ = static_cast<int>(AttrType::TEXTS); }
     ;
 primary_key:
     /* empty */

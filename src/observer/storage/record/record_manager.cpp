@@ -13,9 +13,333 @@ See the Mulan PSL v2 for more details. */
 //
 #include "storage/record/record_manager.h"
 #include "common/log/log.h"
+#include "storage/buffer/frame.h"
+#include "storage/buffer/page.h"
 #include "storage/common/condition_filter.h"
 #include "storage/trx/trx.h"
 #include "storage/clog/log_handler.h"
+#include "storage/buffer/page_type.h"
+#include "common/types.h"
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+
+namespace {
+  inline OverflowPageHeader *hdr(Frame *frame) {
+    return reinterpret_cast<OverflowPageHeader *>(frame->data());
+  }
+
+  inline uint32_t ov_cap() {
+    return BP_PAGE_DATA_SIZE - sizeof(OverflowPageHeader);
+  }
+
+  RC ov_write(Frame *frame, const char* buf, uint32_t len)
+  {
+    if (frame == nullptr || buf == nullptr) {
+      return RC::INVALID_ARGUMENT;
+    }
+
+    OverflowPageHeader *h = hdr(frame);
+    if (h == nullptr || h->page_type != PageType::TEXT_OVERFLOW) {
+      LOG_ERROR("Invalid overflow page header. page_num %d:%d.", frame->page_num(), frame->page_num());
+      return RC::INVALID_ARGUMENT;
+    }
+
+    const uint32_t cap = ov_cap();
+    if (len > cap) {
+      return RC::INVALID_ARGUMENT;
+    }
+    if (len == 0) {
+      h->data_length = 0;
+      frame->mark_dirty();
+      return RC::SUCCESS;
+    }
+
+    char *payload = frame->data() + sizeof(OverflowPageHeader);
+    memcpy(payload, buf, len);
+
+    h->data_length = len;
+    frame->mark_dirty();    // 标记脏页
+
+    return RC::SUCCESS;
+  }
+
+   RC ov_read(Frame *frame, char* buf, uint32_t len) 
+  {
+    if (frame == nullptr || buf == nullptr) {
+      return RC::INVALID_ARGUMENT;
+    }
+
+    const OverflowPageHeader *h = hdr(frame);
+    if (h == nullptr || h->page_type != PageType::TEXT_OVERFLOW) {
+      LOG_ERROR("Invalid overflow page header. page_num %d:%d.", frame->page_num(), frame->page_num());
+      return RC::INVALID_ARGUMENT;
+    }
+
+    if (len > h->data_length) {
+      return RC::INVALID_ARGUMENT;
+    }
+    if (len == 0) {
+      return RC::SUCCESS; 
+    }
+
+    const char *payload = frame->data() + sizeof(OverflowPageHeader);
+    memcpy(buf, payload, len);
+
+    return RC::SUCCESS;
+  } 
+
+  /* RC ov_set_next(Frame *frame, PageNum next)
+  {
+    if (frame == nullptr) return RC::INVALID_ARGUMENT;
+
+    OverflowPageHeader *h = hdr(frame);
+    if (h == nullptr || h->page_type != PageType::TEXT_OVERFLOW) {
+      LOG_ERROR("Invalid overflow page header. page_num %d:%d.", frame->page_num(), frame->page_num());
+      return RC::INVALID_ARGUMENT;
+    }
+
+    h->next_page = next;
+    frame->mark_dirty();
+    return RC::SUCCESS;
+  }
+
+  PageNum ov_get_next(Frame *frame)
+  {
+    if (frame == nullptr) return BP_INVALID_PAGE_NUM;
+
+    const OverflowPageHeader *h = hdr(frame);
+    if (h == nullptr || h->page_type != PageType::TEXT_OVERFLOW) {
+      LOG_ERROR("Invalid overflow page header. page_num %d:%d.", frame->page_num(), frame->page_num());
+      return BP_INVALID_PAGE_NUM;
+    }
+
+    return h->next_page;
+  } */
+
+  bool is_overflow_pointer(const char* field_data, uint32_t field_len, uint32_t expected_table_id)
+  {
+    if (field_data == nullptr || field_len < 20) {
+      return false;
+    }
+
+    uint32_t table_id = *reinterpret_cast<const uint32_t*>(field_data);
+    if (table_id != expected_table_id) {
+      return false;
+    }
+
+    uint32_t page_num = *reinterpret_cast<const uint32_t*>(field_data + 4);
+    if (page_num == 0 || page_num == static_cast<uint32_t>(BP_INVALID_PAGE_NUM)) {
+        return false;
+    }
+
+    uint32_t offset = *reinterpret_cast<const uint32_t*>(field_data + 8);
+    if (offset != sizeof(OverflowPageHeader)) {
+        return false;
+    }
+
+    uint64_t length = *reinterpret_cast<const uint64_t*>(field_data + 12);
+    if (length == 0 || length > TEXT_MAX_LENGTH) {
+        return false;
+    }
+
+    return true;
+  }
+
+}  // end anonymous namespace
+
+// TEXT字段溢出处理函数（放在common命名空间以供外部调用）
+namespace common {
+
+RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_pool, const Record &raw_record, Record &output_record) 
+  {
+    LOG_ERROR("==== 开始处理TEXT字段读取 ====");
+    LOG_ERROR("raw_record: len=%d, data=%p", raw_record.len(), raw_record.data());
+    
+    const char *raw_data = raw_record.data();
+    int raw_len = raw_record.len();
+    uint32_t table_id = table_meta->table_id();
+    
+    // 安全检查：记录长度必须匹配表的记录大小
+    int expected_len = table_meta->record_size();
+    if (raw_len != expected_len) {
+        LOG_WARN("Record length mismatch: got %d, expected %d. This record doesn't belong to this table.", 
+                raw_len, expected_len);
+        // 返回错误，让调用者处理
+        return RC::RECORD_INVALID_RID;
+    }
+    
+    // 第1步：快速检查是否有TEXT溢出字段
+    bool has_overflow = false;
+    for (int i = 0; i < table_meta->field_num(); i++) {
+        const FieldMeta *field = table_meta->field(i);
+        
+        if (field->type() != AttrType::TEXTS) {
+            continue;
+        }
+        
+        const char *field_data = raw_data + field->offset();
+        if (is_overflow_pointer(field_data, field->len(), table_id)) {
+            has_overflow = true;
+            break;
+        }
+    }
+    
+    // 第2步：没有溢出，直接复制
+    if (!has_overflow) {
+        LOG_DEBUG("没有溢出字段，直接复制数据");
+        output_record.copy_data(raw_data, raw_len);
+        return RC::SUCCESS;
+    }
+    
+    LOG_DEBUG("发现溢出字段，开始展开");
+    
+    // 第3步：有溢出，需要展开数据（但保持记录长度不变）
+    auto new_data = std::make_unique<char[]>(raw_len);
+    memcpy(new_data.get(), raw_data, raw_len);  // 先复制原始数据
+    
+    // 第4步：逐个处理TEXT字段，将溢出数据展开到字段空间中
+    for (int i = 0; i < table_meta->field_num(); i++) {
+        const FieldMeta *field = table_meta->field(i);
+        if (field->type() != AttrType::TEXTS) {
+            continue;
+        }
+        
+        char *field_ptr = new_data.get() + field->offset();
+        
+        // 确保TEXT字段以\0结尾（对于非溢出的TEXT也很重要）
+        if (!is_overflow_pointer(field_ptr, field->len(), table_id)) {
+            // 非溢出TEXT：确保在字段末尾有\0
+            // 注意：field_ptr可能不是以\0结尾的，需要找到实际长度
+            size_t text_len = 0;
+            for (size_t j = 0; j < static_cast<size_t>(field->len()); j++) {
+                if (field_ptr[j] == '\0') {
+                    text_len = j;
+                    break;
+                }
+            }
+            if (text_len == 0 && field_ptr[0] != '\0') {
+                text_len = field->len() - 1;  // 整个字段都是数据
+                field_ptr[text_len] = '\0';
+            }
+            LOG_DEBUG("Non-overflow TEXT field %s: %zu bytes", field->name(), text_len);
+            continue;
+        }
+        
+        // 溢出TEXT：需要读取溢出页并展开
+        {
+            uint32_t first_page_num = *reinterpret_cast<const uint32_t*>(field_ptr + 4);
+            uint64_t total_length = *reinterpret_cast<const uint64_t*>(field_ptr + 12);
+            
+            uint32_t inline_len = std::min(static_cast<uint32_t>(INLINE_TEXT_CAPACITY),
+                                         static_cast<uint32_t>(field->len() - 20));
+            uint32_t overflow_length = total_length > inline_len ? total_length - inline_len : 0;
+            
+            auto overflow_buffer = std::make_unique<char[]>(overflow_length);
+            uint32_t buffer_offset = 0;  
+            
+            // 步骤1：循环读取所有溢出页
+            PageNum current_page = first_page_num;
+            int page_count = 0;
+            
+            while (current_page != BP_INVALID_PAGE_NUM && buffer_offset < overflow_length) {
+                Frame *frame = nullptr;
+                RC rc = buffer_pool->get_this_page(current_page, &frame);
+                if (rc != RC::SUCCESS) {
+                    LOG_ERROR("Failed to get overflow page %d for field %s", current_page, field->name());
+                    return rc;
+                }
+                
+                frame->read_latch();
+                
+                const OverflowPageHeader *header = hdr(frame);
+                if (header->page_type != PageType::TEXT_OVERFLOW) {
+                    frame->read_unlatch();
+                    frame->unpin();
+                    LOG_ERROR("Page %d is not overflow page for field %s", current_page, field->name());
+                    return RC::INVALID_ARGUMENT;
+                }
+                
+                uint32_t copy_size = std::min(header->data_length, overflow_length - buffer_offset);
+                rc = ov_read(frame, overflow_buffer.get() + buffer_offset, copy_size);
+                
+                PageNum next_page = header->next_page;
+                
+                frame->read_unlatch();
+                frame->unpin();
+                
+                if (rc != RC::SUCCESS) {
+                    LOG_ERROR("Failed to read overflow data from page %d for field %s", current_page, field->name());
+                    return rc;
+                }
+
+                buffer_offset += copy_size;
+                current_page = next_page; 
+                page_count++;
+                
+                LOG_DEBUG("Read overflow page %d: %u bytes, next_page=%d", 
+                         page_count, copy_size, next_page);
+            }
+            
+            // 验证读取长度
+            if (buffer_offset != overflow_length) {
+                LOG_WARN("TEXT field %s: read %u bytes, expected %u bytes", 
+                        field->name(), buffer_offset, overflow_length);
+            }
+            
+            LOG_DEBUG("Read %d overflow pages, %u bytes total for field %s", 
+                    page_count, buffer_offset, field->name());
+            
+            // 步骤2：重组TEXT字段数据（内联部分 + 溢出部分）
+            // 将完整TEXT展开到固定的field->len()空间中
+            uint32_t full_text_len = inline_len + buffer_offset;
+            auto full_text = std::make_unique<char[]>(full_text_len + 1);
+            
+            // 复制内联部分
+            memcpy(full_text.get(), field_ptr + 20, inline_len);
+            // 复制溢出部分
+            memcpy(full_text.get() + inline_len, overflow_buffer.get(), buffer_offset);
+            full_text[full_text_len] = '\0';
+            
+            // 将完整TEXT写入字段空间（最多field->len()字节）
+            // 注意：数据库字段是定长的，不需要为\0预留空间
+            uint32_t write_len = std::min(full_text_len, static_cast<uint32_t>(field->len()));
+            memcpy(field_ptr, full_text.get(), write_len);
+            
+            // 清空剩余空间
+            if (write_len < static_cast<uint32_t>(field->len())) {
+                memset(field_ptr + write_len, 0, field->len() - write_len);
+            }
+            
+            if (full_text_len > write_len) {
+                LOG_WARN("TEXT field %s truncated: %d -> %d bytes", field->name(), full_text_len, write_len);
+            }
+            
+            LOG_DEBUG("TEXT字段 %s 展开完成: %d字节 (内联%d + 溢出%d)", 
+                     field->name(), write_len, inline_len, buffer_offset);
+        }
+    }
+    
+    // 第5步：设置输出记录
+    RC rc = output_record.copy_data(new_data.get(), raw_len);
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to copy data to output record");
+        return rc;
+    }
+    
+    LOG_ERROR("==== process_text_fields_on_read完成 ====");
+    LOG_ERROR("output_record: len=%d, data=%p", output_record.len(), output_record.data());
+    
+    // 验证输出数据
+    if (output_record.data() == nullptr) {
+        LOG_ERROR("ERROR: output_record.data() is NULL!");
+        return RC::INTERNAL;
+    }
+    
+    return RC::SUCCESS;
+  }
+
+}  // end namespace common
 
 using namespace common;
 
@@ -523,6 +847,20 @@ RC RecordFileHandler::init_free_pages()
 
   while (bp_iterator.has_next()) {
     current_page_num = bp_iterator.next();
+    
+    // 检查是否是TEXT溢出页（通过读取页面的第一个字段）
+    Frame *check_frame = nullptr;
+    if (disk_buffer_pool_->get_this_page(current_page_num, &check_frame) == RC::SUCCESS) {
+      uint32_t first_field = *reinterpret_cast<uint32_t*>(check_frame->data());
+      disk_buffer_pool_->unpin_page(check_frame);
+      
+      if (first_field == static_cast<uint32_t>(PageType::TEXT_OVERFLOW)) {
+        // 这是TEXT溢出页，记录并跳过
+        overflow_pages_.insert(current_page_num);
+        LOG_TRACE("Identified TEXT overflow page %d during initialization", current_page_num);
+        continue;
+      }
+    }
 
     rc = record_page_handler->init(*disk_buffer_pool_, *log_handler_, current_page_num, ReadWriteMode::READ_ONLY);
     if (rc != RC::SUCCESS) {
@@ -535,7 +873,8 @@ RC RecordFileHandler::init_free_pages()
     }
     record_page_handler->cleanup();
   }
-  LOG_INFO("record file handler init free pages done. free page num=%d, rc=%s", free_pages_.size(), strrc(rc));
+  LOG_INFO("record file handler init free pages done. free page num=%d, overflow page num=%d, rc=%s", 
+           free_pages_.size(), overflow_pages_.size(), strrc(rc));
   return rc;
 }
 
@@ -546,6 +885,185 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
   unique_ptr<RecordPageHandler> record_page_handler(RecordPageHandler::create(storage_format_));
   bool                          page_found       = false;
   PageNum                       current_page_num = 0;
+
+  auto new_data = make_unique<char[]>(record_size);
+  memcpy(new_data.get(), data, record_size);
+  bool rewritten = false;   // 标记是否修改了数据
+
+  // 检查每个字段，处理TEXT类型
+  for (int i = 0; i < table_meta_->field_num(); i++) {
+    const FieldMeta *field = table_meta_->field(i);
+    
+    if (field->type() != AttrType::TEXTS) {
+      continue;
+    }
+    
+    const char *field_data = new_data.get() + field->offset();
+    
+    int actual_len = strnlen(field_data, field->len());
+    
+    LOG_ERROR("📏 TEXT字段 '%s' 实际长度: %d, 字段最大长度: %d", 
+              field->name(), actual_len, field->len());
+    
+    int inline_len = std::min(actual_len, INLINE_TEXT_CAPACITY);  // INLINE_TEXT_CAPACITY = 768
+    int remain = actual_len - inline_len;
+    
+    // 🔧 修复内存重叠：提前保存内联数据
+    auto inline_data_backup = make_unique<char[]>(inline_len);
+    memcpy(inline_data_backup.get(), field_data, inline_len);
+    
+    LOG_ERROR("存储分析: 总长度=%d, 内联长度=%d, 溢出长度=%d", 
+              actual_len, inline_len, remain);
+    
+    if (remain == 0) {
+      LOG_ERROR("纯内联存储：无需溢出页");
+    } else if (static_cast<uint32_t>(remain) <= ov_cap()) {
+      LOG_ERROR("单页溢出存储：需要1个溢出页 (容量=%d)", ov_cap());
+
+      // 1. 分配溢出页
+      Frame *frame = nullptr;
+      if ((ret = disk_buffer_pool_->allocate_page(&frame)) != RC::SUCCESS) {
+        LOG_ERROR("Failed to allocate page while inserting record. ret:%d", ret);
+        return ret;
+      }
+      
+      // 标记为溢出页，以便scanner跳过
+      mark_overflow_page(frame->page_num());
+
+      // 2. 接下来要初始化溢出页头部
+      frame->write_latch();
+      OverflowPageHeader *header = hdr(frame);
+      header->page_type = PageType::TEXT_OVERFLOW;
+      header->next_page = BP_INVALID_PAGE_NUM;
+      header->data_length = 0;  
+      header->total_length = actual_len;
+
+      // 3. 然后写入溢出数据
+      ret = ov_write(frame, field_data + inline_len, remain);
+      if (ret != RC::SUCCESS) {
+        frame->write_unlatch();
+        frame->unpin();
+        LOG_ERROR("write overflow data failed: %s", strrc(ret));
+        return ret;
+      }
+
+      PageNum overflow_page_num = frame->page_num();
+      LOG_ERROR("成功写入 %d 字节溢出数据到页面 %d", remain, overflow_page_num);
+      frame->write_unlatch();
+      frame->unpin();
+
+      // 4. 最后重写主记录的TEXT字段
+      char *field_ptr = new_data.get() + field->offset();
+      *reinterpret_cast<uint32_t*>(field_ptr + 0) = table_meta_->table_id();    // 表ID
+      *reinterpret_cast<uint32_t*>(field_ptr + 4) = overflow_page_num;          // 页号
+      *reinterpret_cast<uint32_t*>(field_ptr + 8) = sizeof(OverflowPageHeader); // 偏移
+      *reinterpret_cast<uint64_t*>(field_ptr + 12) = actual_len;                // 长度
+
+      // 5. 保留内联数据（前768字节）
+      memcpy(field_ptr + 20, inline_data_backup.get(), inline_len);
+      
+      // 6. 清空字段剩余空间
+      if (field->len() > 20 + inline_len) {
+        memset(field_ptr + 20 + inline_len, 0, field->len() - 20 - inline_len);
+      }
+
+      rewritten = true;  // 标记数据被修改了
+      LOG_ERROR("成功创建TEXT溢出指针：表ID=%d, 页号=%d, 偏移=%d, 总长度=%d", 
+                table_meta_->table_id(), overflow_page_num, sizeof(OverflowPageHeader), actual_len);
+    } else {
+      LOG_INFO("Multi-page overflow: total=%d bytes, overflow=%d bytes", actual_len, remain);
+      
+      const uint32_t PAGE_CAPACITY = ov_cap(); 
+      int num_pages = (remain + PAGE_CAPACITY - 1) / PAGE_CAPACITY;  
+      
+      LOG_INFO("需要分配 %d 个溢出页来存储 %d 字节的溢出数据", num_pages, remain);
+      
+      // 步骤2：准备循环分配溢出页
+      PageNum first_page_num = BP_INVALID_PAGE_NUM;  // 记录第一页的页号
+      Frame *prev_frame = nullptr;                    // 记录前一页的Frame指针
+      uint32_t data_offset = inline_len;              // 当前在field_data中的偏移
+      
+      // 步骤3：循环分配每一个溢出页
+      for (int i = 0; i < num_pages; i++) {
+        // 3.1 分配新的溢出页
+        Frame *frame = nullptr;
+        if ((ret = disk_buffer_pool_->allocate_page(&frame)) != RC::SUCCESS) {
+          LOG_ERROR("Failed to allocate overflow page %d/%d", i+1, num_pages);
+          // TODO: 这里应该清理已分配的页面（步骤4会完善）
+          return ret;
+        }
+        
+        // 标记为溢出页，以便scanner跳过
+        mark_overflow_page(frame->page_num());
+        
+        frame->write_latch();  // 加写锁
+        
+        // 3.2 初始化溢出页头部
+        OverflowPageHeader *header = hdr(frame);
+        header->page_type = PageType::TEXT_OVERFLOW;
+        header->next_page = BP_INVALID_PAGE_NUM;  // 先设为结束，后面可能会被前一页更新
+        
+        uint32_t remaining_data = actual_len - data_offset;  
+        uint32_t write_size = std::min(PAGE_CAPACITY, remaining_data);
+        header->data_length = write_size;
+        
+        if (i == 0) {
+          header->total_length = actual_len;
+          first_page_num = frame->page_num();  
+        } else {
+          header->total_length = 0;
+        }
+        
+        ret = ov_write(frame, field_data + data_offset, write_size);
+        if (ret != RC::SUCCESS) {
+          frame->write_unlatch();
+          frame->unpin();
+          LOG_ERROR("Failed to write data to overflow page %d", i+1);
+          return ret;
+        }
+        
+        if (prev_frame != nullptr) {
+          OverflowPageHeader *prev_header = hdr(prev_frame);
+          prev_header->next_page = frame->page_num();  
+          prev_frame->mark_dirty();
+          
+          prev_frame->write_unlatch();
+          prev_frame->unpin();
+        }
+        
+        frame->mark_dirty();
+        prev_frame = frame;  
+        data_offset += write_size;  
+        
+        LOG_DEBUG("溢出页 %d/%d: page_num=%d, size=%u bytes", 
+                 i+1, num_pages, frame->page_num(), write_size);
+      }
+      
+      if (prev_frame != nullptr) {
+        prev_frame->write_unlatch();
+        prev_frame->unpin();
+      }
+      
+      // 步骤4：在记录中写入溢出指针
+      char *field_ptr = new_data.get() + field->offset();
+      *reinterpret_cast<uint32_t*>(field_ptr + 0) = table_meta_->table_id();
+      *reinterpret_cast<uint32_t*>(field_ptr + 4) = first_page_num;  // 指向第一个溢出页
+      *reinterpret_cast<uint32_t*>(field_ptr + 8) = sizeof(OverflowPageHeader);
+      *reinterpret_cast<uint64_t*>(field_ptr + 12) = actual_len;
+      
+      // 内联数据
+      memcpy(field_ptr + 20, inline_data_backup.get(), inline_len);
+      
+      // 清空剩余空间
+      if (field->len() > 20 + inline_len) {
+        memset(field_ptr + 20 + inline_len, 0, field->len() - 20 - inline_len);
+      }
+      
+      rewritten = true;
+      LOG_INFO("Multi-page overflow created: first_page=%d, %d pages, %d bytes total", 
+              first_page_num, num_pages, actual_len);
+    }
+  } 
 
   // 当前要访问free_pages对象，所以需要加锁。在非并发编译模式下，不需要考虑这个锁
   lock_.lock();
@@ -602,7 +1120,11 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
   }
 
   // 找到空闲位置
-  return record_page_handler->insert_record(data, rid);
+  if (rewritten) {
+    return record_page_handler->insert_record(new_data.get(), rid);
+  } else {
+    return record_page_handler->insert_record(data, rid);
+  }
 }
 
 RC RecordFileHandler::recover_insert_record(const char *data, int record_size, const RID &rid)
@@ -620,6 +1142,86 @@ RC RecordFileHandler::recover_insert_record(const char *data, int record_size, c
   return record_page_handler->recover_insert_record(data, rid);
 }
 
+RC RecordFileHandler::free_text_overflow_pages(const Record &record)
+{
+  RC rc = RC::SUCCESS;
+  
+  // 遍历所有TEXT字段
+  for (int i = 0; i < table_meta_->field_num(); i++) {
+    const FieldMeta *field = table_meta_->field(i);
+    if (field->type() != AttrType::TEXTS) {
+      continue;
+    }
+    
+    const char *field_ptr = record.data() + field->offset();
+    
+    // 检查是否是溢出指针
+    if (!is_overflow_pointer(field_ptr, field->len(), table_meta_->table_id())) {
+      continue;  // 不是溢出指针，跳过
+    }
+    
+    // 读取溢出指针
+    PageNum page_num = *reinterpret_cast<const PageNum*>(field_ptr + 4);
+    
+    // 沿着溢出页链释放所有页面
+    PageNum current_page = page_num;
+    int freed_count = 0;
+    
+    while (current_page != BP_INVALID_PAGE_NUM) {
+      Frame *frame = nullptr;
+      rc = disk_buffer_pool_->get_this_page(current_page, &frame);
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to get overflow page %d for freeing", current_page);
+        return rc;
+      }
+      
+      // 读取下一页页号
+      OverflowPageHeader *header = hdr(frame);
+      PageNum next_page = header->next_page;
+      
+      disk_buffer_pool_->unpin_page(frame);
+      
+      // 释放当前页面
+      rc = disk_buffer_pool_->dispose_page(current_page);
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to dispose overflow page %d", current_page);
+        return rc;
+      }
+      
+      // 从溢出页集合中移除
+      overflow_pages_.erase(current_page);
+      freed_count++;
+      
+      current_page = next_page;
+    }
+    
+    LOG_DEBUG("Freed %d overflow pages for TEXT field %s", freed_count, field->name());
+  }
+  
+  return RC::SUCCESS;
+}
+
+uint32_t RecordFileHandler::get_overflow_page_capacity() const
+{
+  // 溢出页的容量 = 页面大小 - 溢出页头部大小
+  return BP_PAGE_DATA_SIZE - sizeof(OverflowPageHeader);
+}
+
+RC RecordFileHandler::allocate_overflow_page(Frame **frame)
+{
+  RC rc = disk_buffer_pool_->allocate_page(frame);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to allocate overflow page");
+    return rc;
+  }
+  
+  // 标记为溢出页
+  mark_overflow_page((*frame)->page_num());
+  
+  LOG_DEBUG("Allocated overflow page: %d", (*frame)->page_num());
+  return RC::SUCCESS;
+}
+
 RC RecordFileHandler::delete_record(const RID *rid)
 {
   RC rc = RC::SUCCESS;
@@ -630,6 +1232,18 @@ RC RecordFileHandler::delete_record(const RID *rid)
   if (OB_FAIL(rc)) {
     LOG_ERROR("Failed to init record page handler.page number=%d. rc=%s", rid->page_num, strrc(rc));
     return rc;
+  }
+
+  // 在删除记录之前，先获取记录数据以释放TEXT溢出页
+  Record record;
+  rc = record_page_handler->get_record(*rid, record);
+  if (OB_SUCC(rc)) {
+    // 释放TEXT字段关联的所有溢出页
+    rc = free_text_overflow_pages(record);
+    if (OB_FAIL(rc)) {
+      LOG_WARN("Failed to free TEXT overflow pages before delete, rc=%s", strrc(rc));
+      // 继续删除主记录，即使溢出页释放失败
+    }
   }
 
   rc = record_page_handler->delete_record(rid);
@@ -650,6 +1264,8 @@ RC RecordFileHandler::delete_record(const RID *rid)
 
 RC RecordFileHandler::get_record(const RID &rid, Record &record)
 {
+  LOG_ERROR("RecordFileHandler::get_record 被调用，RID: %s", rid.to_string().c_str());
+  
   unique_ptr<RecordPageHandler> page_handler(RecordPageHandler::create(storage_format_));
 
   RC rc = page_handler->init(*disk_buffer_pool_, *log_handler_, rid.page_num, ReadWriteMode::READ_WRITE);
@@ -665,8 +1281,23 @@ RC RecordFileHandler::get_record(const RID &rid, Record &record)
     return rc;
   }
 
-  record.copy_data(inplace_record.data(), inplace_record.len());
+  LOG_ERROR("准备调用 process_text_fields_on_read");
+  rc = process_text_fields_on_read(table_meta_, disk_buffer_pool_, inplace_record, record);
+  if (OB_FAIL(rc)) {
+    LOG_ERROR("Failed to process TEXT overflow fields. rid=%s", rid.to_string().c_str());
+    return rc;
+  }
+  LOG_ERROR("process_text_fields_on_read 调用完成");
   record.set_rid(rid);
+  
+  LOG_ERROR("get_record 返回前检查: record.len=%d, record.data=%p", 
+           record.len(), record.data());
+  
+  if (record.data() == nullptr) {
+      LOG_ERROR("ERROR: record.data() is NULL before return!");
+      return RC::INTERNAL;
+  }
+  
   return rc;
 }
 
@@ -767,3 +1398,6 @@ RC ChunkFileScanner::next_chunk(Chunk &chunk)
   record_page_handler_->cleanup();
   return RC::RECORD_EOF;
 }
+
+
+

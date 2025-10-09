@@ -37,6 +37,7 @@ public:
   friend class BooleanType;
   friend class CharType;
   friend class VectorType;
+  friend class TextType;
 
   Value() = default;
 
@@ -93,7 +94,6 @@ public:
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);
   void set_boolean(bool val);
-  void set_vector(const vector<float> &val);
   
   string to_string() const;
 
@@ -122,6 +122,9 @@ public:
   void set_float(float val);
   void set_date(int val);
   void set_string(const char *s, int len = 0);
+  void set_vector(const vector<float> &val);
+  void set_text(const char *s, int len = 65535);
+
   void set_string_from_other(const Value &other);
 
 private:

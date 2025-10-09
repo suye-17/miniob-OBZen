@@ -151,7 +151,7 @@ TEST(RecordScanner, test_record_file_iterator)
   std::vector<RID> rids;
   {
     HeapRecordScanner file_scanner(
-        nullptr /*table*/, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+        nullptr /*table*/, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
     rc = file_scanner.open_scan();
     ASSERT_EQ(rc, RC::SUCCESS);
 
@@ -174,7 +174,7 @@ TEST(RecordScanner, test_record_file_iterator)
 
   {
     HeapRecordScanner file_scanner(
-        nullptr /*table*/, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+        nullptr /*table*/, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
     rc = file_scanner.open_scan();
     ASSERT_EQ(rc, RC::SUCCESS);
     count = 0;
@@ -194,7 +194,7 @@ TEST(RecordScanner, test_record_file_iterator)
 
   {
     HeapRecordScanner file_scanner(
-        nullptr /*table*/, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+        nullptr /*table*/, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
     rc = file_scanner.open_scan();
     ASSERT_EQ(rc, RC::SUCCESS);
 

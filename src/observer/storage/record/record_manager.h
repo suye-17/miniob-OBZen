@@ -401,6 +401,26 @@ public:
 
   RC visit_record(const RID &rid, function<bool(Record &)> updater);
 
+  /**
+   * @brief 释放TEXT字段关联的所有溢出页
+   * @param record 要检查的记录
+   * @return RC::SUCCESS 成功释放或无需释放
+   */
+  RC free_text_overflow_pages(const Record &record);
+
+  /**
+   * @brief 获取溢出页的数据容量
+   * @return 溢出页可以存储的数据字节数
+   */
+  uint32_t get_overflow_page_capacity() const;
+
+  /**
+   * @brief 分配一个溢出页并标记它
+   * @param frame 输出参数，返回分配的frame
+   * @return RC::SUCCESS 成功分配
+   */
+  RC allocate_overflow_page(Frame **frame);
+
 private:
   /**
    * @brief 初始化当前没有填满记录的页面，初始化free_pages_成员
@@ -411,9 +431,21 @@ private:
   DiskBufferPool        *disk_buffer_pool_ = nullptr;
   LogHandler            *log_handler_      = nullptr;  ///< 记录日志的处理器
   unordered_set<PageNum> free_pages_;                  ///< 没有填充满的页面集合
+  unordered_set<PageNum> overflow_pages_;              ///< TEXT溢出页集合（用于scanner跳过）
   common::Mutex          lock_;  ///< 当编译时增加-DCONCURRENCY=ON 选项时，才会真正的支持并发
   StorageFormat          storage_format_;
   TableMeta             *table_meta_;
+  
+public:
+  /// 检查某个页号是否是溢出页
+  bool is_overflow_page(PageNum page_num) const { 
+    return overflow_pages_.find(page_num) != overflow_pages_.end(); 
+  }
+  
+  /// 记录新分配的溢出页
+  void mark_overflow_page(PageNum page_num) {
+    overflow_pages_.insert(page_num);
+  }
 };
 
 /**

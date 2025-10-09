@@ -25,7 +25,7 @@ See the Mulan PSL v2 for more details. */
  * @brief 表元数据
  *
  */
-class TableMeta : public common::Serializable
+class  TableMeta : public common::Serializable
 {
 public:
   TableMeta()          = default;

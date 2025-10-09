@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/sstream.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "common/type/attr_type.h"
 
 Value::Value(int val) { set_int(val); }
 
@@ -46,6 +47,10 @@ Value::Value(const Value &other)
         this->value_.vector_value_ = nullptr;
         this->own_data_ = false;
       }
+    } break;
+
+    case AttrType::TEXTS: {
+      set_string_from_other(other);
     } break;
 
     default: {
@@ -88,6 +93,10 @@ Value &Value::operator=(const Value &other)
       }
     } break;
 
+    case AttrType::TEXTS: {
+      set_string_from_other(other);
+    } break;
+
     default: {
       this->value_ = other.value_;
     } break;
@@ -125,6 +134,13 @@ void Value::reset()
         value_.vector_value_ = nullptr;
       }
       break;
+    case AttrType::TEXTS: {
+      if (own_data_ && value_.pointer_value_ != nullptr) {
+        delete[] value_.pointer_value_;
+        value_.pointer_value_ = nullptr;
+      }
+      break;
+    }
     default: break;
   }
 
@@ -138,6 +154,9 @@ void Value::set_data(char *data, int length)
   switch (attr_type_) {
     case AttrType::CHARS: {
       set_string(data, length);
+    } break;
+    case AttrType::TEXTS: {
+      set_text(data, length);
     } break;
     case AttrType::INTS: {
       value_.int_value_ = *(int *)data;
@@ -264,6 +283,26 @@ void Value::set_vector(const vector<float> &val)
   length_              = val.size() * sizeof(float);
 }
 
+void Value::set_text(const char *s, int len /*= 65535*/)
+{
+  reset();
+  attr_type_ = AttrType::TEXTS;
+  if (s == nullptr) {
+    value_.pointer_value_ = nullptr;
+    length_               = 0;
+  } else {
+    own_data_ = true;
+    if (len > 0) {
+      len = strnlen(s, len);
+    } else {
+      len = strlen(s);
+    }
+    value_.pointer_value_ = new char[len + 1];
+    length_               = len;
+    memcpy(value_.pointer_value_, s, len);
+    value_.pointer_value_[len] = '\0';
+  }
+}
 
 void Value::set_value(const Value &value)
 {
@@ -286,6 +325,9 @@ void Value::set_value(const Value &value)
     case AttrType::VECTORS: {
       set_vector(value.get_vector());
     } break;
+    case AttrType::TEXTS: {
+      set_text(value.get_string().c_str());
+    } break;
     default: {
       ASSERT(false, "got an invalid value type");
     } break;
@@ -294,7 +336,8 @@ void Value::set_value(const Value &value)
 
 void Value::set_string_from_other(const Value &other)
 {
-  ASSERT(attr_type_ == AttrType::CHARS, "attr type is not CHARS");
+  ASSERT(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::TEXTS, 
+    "attr type is not CHARS or TEXTS");
   if (own_data_ && other.value_.pointer_value_ != nullptr && length_ != 0) {
     this->value_.pointer_value_ = new char[this->length_ + 1];
     memcpy(this->value_.pointer_value_, other.value_.pointer_value_, this->length_);
@@ -313,6 +356,9 @@ const char *Value::data() const
         return (const char *)value_.vector_value_->data();
       }
       return nullptr;
+    } break;
+    case AttrType::TEXTS: {
+      return value_.pointer_value_;
     } break;
     default: {
       return (const char *)&value_;
@@ -337,6 +383,14 @@ int Value::get_int() const
 {
   switch (attr_type_) {
     case AttrType::CHARS: {
+      try {
+        return (int)(stol(value_.pointer_value_));
+      } catch (exception const &ex) {
+        LOG_TRACE("failed to convert string to number. s=%s, ex=%s", value_.pointer_value_, ex.what());
+        return 0;
+      }
+    }
+    case AttrType::TEXTS: {
       try {
         return (int)(stol(value_.pointer_value_));
       } catch (exception const &ex) {

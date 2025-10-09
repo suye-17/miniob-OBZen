@@ -80,11 +80,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
   // 第五步：批量更新所有收集到的记录
   for (Record &record : records_) {
-    // 创建新记录的副本，只更新指定字段，其他字段保持不变
-    Record new_record = record;
-    int offset = field_meta->offset();  // 字段在记录中的偏移量
-    int len = field_meta->len();        // 字段的长度
-    
     // 为当前记录创建元组，用于表达式计算
     RowTuple row_tuple;
     row_tuple.set_record(&record);
@@ -98,12 +93,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
                table_->name(), record.rid().to_string().c_str(), strrc(rc));
       return rc;
     }
-    
-    // 根据字段类型进行相应的类型转换和内存拷贝
-    // 提前声明变量，避免作用域问题
-    int int_val;
-    float float_val;
-    std::string string_val;
     
     // 检查表达式结果类型是否与字段类型兼容，如需要则进行类型转换
     Value converted_value;
@@ -120,6 +109,36 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       converted_value = expression_value;
     }
     
+    // 提前声明变量，避免作用域问题
+    int int_val;
+    float float_val;
+    std::string string_val;
+    
+    int offset = field_meta->offset();  // 字段在记录中的偏移量
+    int len = field_meta->len();        // 字段的长度
+    
+    // 对于TEXT字段，计算实际需要的空间（可能超过788字节）
+    size_t actual_record_size = record.len();
+    if (field_meta->type() == AttrType::TEXTS) {
+      string_val = converted_value.get_string();
+      // TEXT字段可能需要更多空间来存储完整的文本
+      // 如果TEXT超过field长度，需要分配额外空间存储完整文本
+      if (string_val.length() > static_cast<size_t>(len)) {
+        // 额外空间 = 完整TEXT长度（存放在record末尾）
+        actual_record_size = record.len() + string_val.length();
+      }
+    }
+    
+    // 创建新记录的副本，确保有独立且足够的内存空间
+    Record new_record;
+    new_record.set_data_owner((char*)malloc(actual_record_size), actual_record_size);
+    memcpy(new_record.data(), record.data(), record.len());
+    // 如果分配了额外空间，初始化为0
+    if (actual_record_size > static_cast<size_t>(record.len())) {
+      memset(new_record.data() + record.len(), 0, actual_record_size - record.len());
+    }
+    new_record.set_rid(record.rid());  // 保持RID不变
+    
     switch (field_meta->type()) {
       case AttrType::INTS: {
         // 处理整型字段
@@ -132,16 +151,39 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         memcpy(new_record.data() + offset, &float_val, len);
       } break;
       case AttrType::CHARS: {
-        // 处理字符型字段，确保内存安全
+        // 处理字符型字段
         string_val = converted_value.get_string();
-        
-        // 先清零字段内存区域
         memset(new_record.data() + offset, 0, len);
-        
-        // 计算实际复制长度，避免缓冲区溢出
         size_t copy_len = std::min(static_cast<size_t>(len), string_val.length());
         if (copy_len > 0) {
           memcpy(new_record.data() + offset, string_val.c_str(), copy_len);
+        }
+      } break;
+      case AttrType::TEXTS: {
+        // 处理TEXT字段：
+        // 1. 如果TEXT数据小于field长度，直接复制到offset位置
+        // 2. 如果TEXT数据大于field长度，在offset位置写入特殊标记+长度+数据偏移，完整数据放在record末尾
+        string_val = converted_value.get_string();
+        
+        if (string_val.length() <= static_cast<size_t>(len)) {
+          // 短TEXT：直接复制
+          memset(new_record.data() + offset, 0, len);
+          memcpy(new_record.data() + offset, string_val.c_str(), string_val.length());
+        } else {
+          // 长TEXT：使用特殊布局
+          // 在offset位置写入标记: [0xFF][0xFF][0xFF][0xFF][text_length(8bytes)][data_offset_in_record(4bytes)]
+          memset(new_record.data() + offset, 0, len);
+          uint32_t *marker = reinterpret_cast<uint32_t*>(new_record.data() + offset);
+          *marker = 0xFFFFFFFF;  // 特殊标记，不同于table_id
+          
+          uint64_t *text_length_ptr = reinterpret_cast<uint64_t*>(new_record.data() + offset + 4);
+          *text_length_ptr = string_val.length();
+          
+          uint32_t *data_offset_ptr = reinterpret_cast<uint32_t*>(new_record.data() + offset + 12);
+          *data_offset_ptr = record.len();  // 数据在原record大小之后
+          
+          // 将完整TEXT数据复制到record末尾
+          memcpy(new_record.data() + record.len(), string_val.c_str(), string_val.length());
         }
       } break;
       default:

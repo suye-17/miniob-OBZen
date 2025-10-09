@@ -3,6 +3,9 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include "types.h"
+#include "common/log/log.h"
+
 
 bool check_date(int y, int m, int d)
 {
@@ -87,6 +90,29 @@ RC parse_vector_literal(const char* str, std::vector<float> &result)
         
         result.push_back(value);
     }
+    
+    return RC::SUCCESS;
+}
+
+RC validate_text_storage(size_t data_length, size_t &inline_length, int &overflow_pages)
+{
+    if (data_length > TEXT_MAX_LENGTH) {
+        LOG_WARN("TEXT data length %zu exceeds maximum %d bytes", data_length, TEXT_MAX_LENGTH);
+        return RC::INVALID_ARGUMENT;
+    }
+
+    if (data_length <= INLINE_TEXT_CAPACITY) {
+        inline_length = data_length;
+        overflow_pages = 0;
+    } else {
+        inline_length = INLINE_TEXT_CAPACITY;
+        overflow_pages = (data_length - INLINE_TEXT_CAPACITY + OVERFLOW_PAGE_DATA_SIZE - 1) / OVERFLOW_PAGE_DATA_SIZE;
+    }
+
+    if (overflow_pages > MAX_OVERFLOW_PAGES) {
+        LOG_WARN("TEXT data requires %d overflow pages, exceeds maximum %d pages", overflow_pages, MAX_OVERFLOW_PAGES);
+        return RC::INVALID_ARGUMENT;
+    } 
     
     return RC::SUCCESS;
 }
