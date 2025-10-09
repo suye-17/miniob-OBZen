@@ -130,70 +130,114 @@ RC PhysicalPlanGenerator::create_vec(LogicalOperator &logical_operator, unique_p
 RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, unique_ptr<PhysicalOperator> &oper, Session* session)
 {
   vector<unique_ptr<Expression>> &predicates = table_get_oper.predicates();
-  // 看看是否有可以用于索引查找的表达式
   Table *table = table_get_oper.table();
 
-  Index     *index      = nullptr;
-  ValueExpr *value_expr = nullptr;
+  map<string, Value> equal_conditions;
+  vector<unique_ptr<Expression>> remaining_predicates;
+  
   for (auto &expr : predicates) {
     if (expr->type() == ExprType::COMPARISON) {
       auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
-      // 简单处理，就找等值查询
       if (comparison_expr->comp() != EQUAL_TO) {
+        remaining_predicates.push_back(std::move(expr));
         continue;
       }
 
       unique_ptr<Expression> &left_expr  = comparison_expr->left();
       unique_ptr<Expression> &right_expr = comparison_expr->right();
-      // 左右比较的一边最少是一个值
+      
       if (left_expr->type() != ExprType::VALUE && right_expr->type() != ExprType::VALUE) {
+        remaining_predicates.push_back(std::move(expr));
         continue;
       }
 
       FieldExpr *field_expr = nullptr;
-      if (left_expr->type() == ExprType::FIELD) {
-        ASSERT(right_expr->type() == ExprType::VALUE, "right expr should be a value expr while left is field expr");
+      ValueExpr *value_expr = nullptr;
+      
+      if (left_expr->type() == ExprType::FIELD && right_expr->type() == ExprType::VALUE) {
         field_expr = static_cast<FieldExpr *>(left_expr.get());
         value_expr = static_cast<ValueExpr *>(right_expr.get());
-      } else if (right_expr->type() == ExprType::FIELD) {
-        ASSERT(left_expr->type() == ExprType::VALUE, "left expr should be a value expr while right is a field expr");
+      } else if (right_expr->type() == ExprType::FIELD && left_expr->type() == ExprType::VALUE) {
         field_expr = static_cast<FieldExpr *>(right_expr.get());
         value_expr = static_cast<ValueExpr *>(left_expr.get());
       }
 
-      if (field_expr == nullptr) {
-        continue;
+      if (field_expr != nullptr && value_expr != nullptr) {
+        equal_conditions[field_expr->field().field_name()] = value_expr->get_value();
+      } else {
+        remaining_predicates.push_back(std::move(expr));
       }
+    } else {
+      remaining_predicates.push_back(std::move(expr));
+    }
+  }
 
-      const Field &field = field_expr->field();
-      index              = table->find_index_by_field(field.field_name());
-      if (nullptr != index) {
+  if (equal_conditions.empty()) {
+    auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
+    table_scan_oper->set_predicates(std::move(remaining_predicates));
+    oper = unique_ptr<PhysicalOperator>(table_scan_oper);
+    LOG_TRACE("use table scan (no equal conditions)");
+    return RC::SUCCESS;
+  }
+
+  const IndexMeta *best_index_meta = nullptr;
+  int max_matched_fields = 0;
+  
+  for (int i = 0; i < table->table_meta().index_num(); i++) {
+    const IndexMeta *index_meta = table->table_meta().index(i);
+    const vector<string> &index_fields = index_meta->fields();
+    
+    int matched = 0;
+    for (const string &field_name : index_fields) {
+      if (equal_conditions.find(field_name) != equal_conditions.end()) {
+        matched++;
+      } else {
         break;
+      }
+    }
+    
+    if (matched > max_matched_fields) {
+      max_matched_fields = matched;
+      best_index_meta = index_meta;
+    } else if (matched == max_matched_fields && matched > 0) {
+      if (index_meta->is_unique() && !best_index_meta->is_unique()) {
+        best_index_meta = index_meta;
       }
     }
   }
 
-  if (index != nullptr) {
-    ASSERT(value_expr != nullptr, "got an index but value expr is null ?");
-
-    const Value               &value           = value_expr->get_value();
-    IndexScanPhysicalOperator *index_scan_oper = new IndexScanPhysicalOperator(table,
-        index,
-        table_get_oper.read_write_mode(),
-        &value,
-        true /*left_inclusive*/,
-        &value,
-        true /*right_inclusive*/);
-
-    index_scan_oper->set_predicates(std::move(predicates));
-    oper = unique_ptr<PhysicalOperator>(index_scan_oper);
-    LOG_TRACE("use index scan");
-  } else {
+  if (best_index_meta == nullptr || max_matched_fields == 0) {
     auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
     table_scan_oper->set_predicates(std::move(predicates));
     oper = unique_ptr<PhysicalOperator>(table_scan_oper);
-    LOG_TRACE("use table scan");
+    LOG_TRACE("use table scan (no suitable index)");
+    return RC::SUCCESS;
   }
+
+  vector<Value> key_values;
+  const vector<string> &index_fields = best_index_meta->fields();
+  for (int i = 0; i < max_matched_fields; i++) {
+    key_values.push_back(equal_conditions.at(index_fields[i]));
+  }
+
+  Index *index = table->find_index(best_index_meta->name());
+  IndexScanPhysicalOperator *index_scan_oper = nullptr;
+  
+  if (best_index_meta->field_count() > 1) {
+    index_scan_oper = new IndexScanPhysicalOperator(
+        table, index, table_get_oper.read_write_mode(),
+        key_values, true, key_values, true);
+    LOG_INFO("use index scan with composite key. index=%s, matched_fields=%d/%zu", 
+             best_index_meta->name(), max_matched_fields, best_index_meta->field_count());
+  } else {
+    index_scan_oper = new IndexScanPhysicalOperator(
+        table, index, table_get_oper.read_write_mode(),
+        &key_values[0], true, &key_values[0], true);
+    LOG_TRACE("use index scan with single field. index=%s", best_index_meta->name());
+  }
+
+  index_scan_oper->set_predicates(std::move(remaining_predicates));
+  oper = unique_ptr<PhysicalOperator>(index_scan_oper);
 
   return RC::SUCCESS;
 }

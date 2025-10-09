@@ -28,6 +28,9 @@ public:
   IndexScanPhysicalOperator(Table *table, Index *index, ReadWriteMode mode, const Value *left_value,
       bool left_inclusive, const Value *right_value, bool right_inclusive);
 
+  IndexScanPhysicalOperator(Table *table, Index *index, ReadWriteMode mode, const vector<Value> &left_values,
+      bool left_inclusive, const vector<Value> &right_values, bool right_inclusive);
+
   virtual ~IndexScanPhysicalOperator() = default;
 
   PhysicalOperatorType type() const override { return PhysicalOperatorType::INDEX_SCAN; }
@@ -43,8 +46,8 @@ public:
   void set_predicates(vector<unique_ptr<Expression>> &&exprs);
 
 private:
-  // 与TableScanPhysicalOperator代码相同，可以优化
   RC filter(RowTuple &tuple, bool &result);
+  RC build_composite_key(const vector<Value> &values, char *&key, int &key_len, bool is_left_key);
 
 private:
   Trx          *trx_           = nullptr;
@@ -56,8 +59,11 @@ private:
   Record   current_record_;
   RowTuple tuple_;
 
+  bool use_composite_key_ = false;
   Value left_value_;
   Value right_value_;
+  vector<Value> left_values_;
+  vector<Value> right_values_;
   bool  left_inclusive_  = false;
   bool  right_inclusive_ = false;
 
