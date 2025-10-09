@@ -55,11 +55,16 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
   // 检查缓存
   if (cache_enabled_) {
     std::string cache_key = generate_cache_key(select_node);
+    LOG_INFO("SubqueryExecutor: cache_key = %s", cache_key.c_str());
     if (get_from_cache(cache_key, results)) {
       cache_hits_++;
-      LOG_DEBUG("Subquery cache hit, returned %zu values", results.size());
+      LOG_INFO("Subquery cache hit, returned %zu values (cache_key=%s)", results.size(), cache_key.c_str());
+      if (!results.empty()) {
+        LOG_INFO("  Cached value[0]: %s (type=%d)", results[0].to_string().c_str(), static_cast<int>(results[0].attr_type()));
+      }
       return RC::SUCCESS;
     }
+    LOG_INFO("Subquery cache miss, executing subquery (cache_key=%s)", cache_key.c_str());
     cache_misses_++;
   }
 
@@ -333,6 +338,13 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
   
   // 6. 收集结果
   int row_count = 0;
+  // 使用 select_node 的表达式数量，而不是 select_stmt 的 query_expressions
+  // 因为对于聚合查询，select_stmt 的 query_expressions 可能为空或不完整
+  int expected_cell_num = select_node->expressions.size();  // SELECT子句中的表达式数量
+  
+  LOG_DEBUG("Subquery expects %d cells per row (from %zu expressions in SELECT)", 
+           expected_cell_num, select_node->expressions.size());
+  
   while (RC::SUCCESS == (rc = physical_oper->next())) {
     Tuple *tuple = physical_oper->current_tuple();
     if (tuple == nullptr) {
@@ -340,14 +352,23 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     }
     
     row_count++;
+    int tuple_cell_num = tuple->cell_num();
+    LOG_DEBUG("Processing row %d, tuple has %d cells (expected %d)", 
+             row_count, tuple_cell_num, expected_cell_num);
     
-    // 获取tuple中的所有值
-    for (int i = 0; i < tuple->cell_num(); i++) {
+    // 收集tuple中的所有值
+    // 对于聚合查询，tuple通常只有一个cell（聚合结果）
+    // 对于普通查询，tuple有多个cell（各个列的值）
+    int cells_to_collect = tuple_cell_num;  // 收集tuple中所有可用的cell
+    
+    for (int i = 0; i < cells_to_collect; i++) {
       Value value;
       rc = tuple->cell_at(i, value);
       if (rc == RC::SUCCESS) {
         results.push_back(value);
-        LOG_DEBUG("Complex subquery result[%d]: %s", i, value.to_string().c_str());
+        LOG_DEBUG("Complex subquery result[row=%d, cell=%d/%d]: %s (type=%d)", 
+                 row_count, i, cells_to_collect, value.to_string().c_str(), 
+                 static_cast<int>(value.attr_type()));
       } else {
         LOG_WARN("Failed to get cell %d from tuple, rc=%d", i, rc);
       }
@@ -357,6 +378,7 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
   physical_oper->close();
   
   if (rc == RC::RECORD_EOF) {
+    
     rc = RC::SUCCESS;
     LOG_INFO("Complex subquery executed successfully, returned %zu values from %d rows", 
              results.size(), row_count);
@@ -376,9 +398,22 @@ std::string SubqueryExecutor::generate_cache_key(const SelectSqlNode *select_nod
     oss << relation << ",";
   }
   
-  for (const auto &expr : select_node->expressions) {
-    oss << expr->name() << ",";
+  // 为每个表达式生成唯一的标识符
+  for (size_t i = 0; i < select_node->expressions.size(); i++) {
+    const auto &expr = select_node->expressions[i];
+    // 使用表达式类型和名称来生成更精确的缓存键
+    oss << "expr_" << i << "_type_" << static_cast<int>(expr->type()) << "_name_" << expr->name() << ",";
+    
+    // 对于聚合函数，需要特别处理以区分不同的聚合类型
+    if (expr->type() == ExprType::UNBOUND_AGGREGATION || expr->type() == ExprType::AGGREGATION) {
+      // 使用表达式的完整字符串表示来确保唯一性
+      oss << "aggr_" << reinterpret_cast<uintptr_t>(expr.get()) << ",";
+    }
   }
+  
+  // 添加条件和JOIN信息，确保缓存键的完整性
+  oss << "conds_" << select_node->conditions.size() << ",";
+  oss << "joins_" << select_node->joins.size() << ",";
   
   return oss.str();
 }

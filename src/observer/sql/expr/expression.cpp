@@ -174,8 +174,16 @@ ComparisonExpr::~ComparisonExpr() {}
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC  rc         = RC::SUCCESS;
+  
+  // 添加详细的比较日志
+  LOG_INFO("compare_value: left=%s (type=%d), right=%s (type=%d)", 
+           left.to_string().c_str(), static_cast<int>(left.attr_type()),
+           right.to_string().c_str(), static_cast<int>(right.attr_type()));
+  
   int cmp_result = left.compare(right);
   result         = false;
+  
+  LOG_INFO("compare_value: cmp_result=%d", cmp_result);
   
   // 检查比较是否成功（INT32_MAX表示类型不匹配或比较失败）
   if (cmp_result == INT32_MAX) {
@@ -187,6 +195,7 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
+      LOG_INFO("EQUAL_TO comparison: cmp_result=%d, result=%s", cmp_result, result ? "TRUE" : "FALSE");
     } break;
     case LESS_EQUAL: {
       result = (cmp_result <= 0);
@@ -349,6 +358,16 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
         
         // 获取子查询值（第一个）
         Value subquery_value = subquery_results[0];
+        LOG_INFO("Scalar subquery returned value: %s (type=%d)", 
+                 subquery_value.to_string().c_str(), static_cast<int>(subquery_value.attr_type()));
+        
+        // 检查 subquery_results 的详细内容
+        LOG_INFO("Subquery returned %zu results:", subquery_results.size());
+        for (size_t i = 0; i < subquery_results.size(); i++) {
+          LOG_INFO("  Result[%zu]: %s (type=%d)", i, 
+                   subquery_results[i].to_string().c_str(), 
+                   static_cast<int>(subquery_results[i].attr_type()));
+        }
         
         // 判断子查询在左边还是右边
         if (left_) {
@@ -359,7 +378,12 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
             LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
             return rc;
           }
+          LOG_INFO("Comparing: left_value=%s (type=%d) comp_op=%d subquery_value=%s (type=%d)", 
+                   left_value.to_string().c_str(), static_cast<int>(left_value.attr_type()),
+                   static_cast<int>(comp_), 
+                   subquery_value.to_string().c_str(), static_cast<int>(subquery_value.attr_type()));
           rc = compare_value(left_value, subquery_value, bool_value);
+          LOG_INFO("Comparison result: %s", bool_value ? "TRUE" : "FALSE");
         } else if (right_) {
           // 子查询在左边，right_ 是要比较的值
           Value right_value;
@@ -368,7 +392,12 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
             LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
             return rc;
           }
+          LOG_INFO("Comparing: subquery_value=%s (type=%d) comp_op=%d right_value=%s (type=%d)", 
+                   subquery_value.to_string().c_str(), static_cast<int>(subquery_value.attr_type()),
+                   static_cast<int>(comp_), 
+                   right_value.to_string().c_str(), static_cast<int>(right_value.attr_type()));
           rc = compare_value(subquery_value, right_value, bool_value);
+          LOG_INFO("Comparison result: %s", bool_value ? "TRUE" : "FALSE");
         } else {
           LOG_ERROR("标量子查询：左右表达式都为空");
           return RC::INTERNAL;
@@ -406,6 +435,10 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   
   if (rc == RC::SUCCESS) {
     value.set_boolean(bool_value);
+    LOG_INFO("ComparisonExpr final result: bool_value=%s, value=%s", 
+             bool_value ? "TRUE" : "FALSE", value.to_string().c_str());
+  } else {
+    LOG_WARN("ComparisonExpr failed with rc=%d", rc);
   }
   return rc;
 }
@@ -512,9 +545,15 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
   // 检查缓存是否有效
   if (cache_valid_) {
     results = subquery_cache_;
-    LOG_DEBUG("Using cached subquery results, returned %zu values", results.size());
+    LOG_INFO("Using cached subquery results, returned %zu values", results.size());
+    if (!results.empty()) {
+      LOG_INFO("Cached subquery first value: %s (type=%d)", 
+               results[0].to_string().c_str(), static_cast<int>(results[0].attr_type()));
+    }
     return RC::SUCCESS;
   }
+  
+  LOG_INFO("Executing subquery (no cache available)");
   
   const SelectSqlNode *select_node = subquery_.get();
   LOG_DEBUG("Executing subquery with %zu relations, %zu expressions", 

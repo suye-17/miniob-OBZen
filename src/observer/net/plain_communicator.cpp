@@ -273,10 +273,15 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
 {
   RC rc = RC::SUCCESS;
   Tuple *tuple = nullptr;
+  LOG_INFO("write_tuple_result: starting to collect tuples");
+  int tuple_count = 0;
   while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
     assert(tuple != nullptr);
+    tuple_count++;
+    LOG_INFO("write_tuple_result: got tuple #%d: %s", tuple_count, tuple->to_string().c_str());
 
     int cell_num = tuple->cell_num();
+    LOG_INFO("write_tuple_result: tuple has %d cells", cell_num);
     for (int i = 0; i < cell_num; i++) {
       if (i != 0) {
         const char *delim = " | ";
@@ -298,6 +303,7 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
       }
 
       string cell_str = value.to_string();
+      LOG_INFO("write_tuple_result: cell[%d] = '%s'", i, cell_str.c_str());
 
       rc = writer_->writen(cell_str.data(), cell_str.size());
       if (OB_FAIL(rc)) {
@@ -316,6 +322,9 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
       return rc;
     }
   }
+
+  LOG_INFO("write_tuple_result: loop ended, collected %d tuples, final rc=%d (%s)", 
+           tuple_count, rc, rc == RC::RECORD_EOF ? "EOF" : (rc == RC::SUCCESS ? "SUCCESS" : "ERROR"));
 
   if (rc == RC::RECORD_EOF) {
     rc = RC::SUCCESS;
