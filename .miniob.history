@@ -1,244 +1,46 @@
-### 2025-10-08 11:40:58.287
-CREATE TABLE ssq_1 (id int, col1 int, feat1 float);
-### 2025-10-08 11:40:59.646
-CREATE TABLE ssq_2 (id int, col2 int, feat2 float);
-### 2025-10-08 11:41:07.121
-INSERT INTO ssq_1 VALUES (28, 45, 71.96); -- 这行会被查询出来
-### 2025-10-08 11:41:08.132
-INSERT INTO ssq_1 VALUES (97, 45, 71.6);  -- 这行会被查询出来INSERT INTO ssq_1 VALUES (7, 94, 47.94);
-### 2025-10-08 11:41:33.630
-INSERT INTO ssq_1 VALUES (7, 94, 47.94); 
-### 2025-10-08 11:41:39.110
-INSERT INTO ssq_2 VALUES (101, 45, 80.0);
-### 2025-10-08 11:43:12.087
-SELECT * FROM ssq_1 WHERE col1 IN (SELECT ssq_2.col2 FROM ssq_2);
-### 2025-10-08 12:11:36.111
-INSERT INTO ssq_2 VALUES (102, 50, 60);
-### 2025-10-08 12:11:43.643
-INSERT INTO ssq_2 VALUES (103, 60, 90);
-### 2025-10-08 12:11:48.859
-INSERT INTO ssq_2 VALUES (104, 70, 60);
-### 2025-10-08 12:13:58.117
-DELETE FROM ssq_1;
-### 2025-10-08 12:14:25.028
-INSERT INTO ssq_1 VALUES (2, 20, 25.0); -- feat1 = 25INSERT INTO ssq_1 VALUES (3, 30, 50.0); -- feat1 = 50INSERT INTO ssq_1 VALUES (4, 40, 75.0); -- feat1 = 75
-### 2025-10-08 12:14:30.228
-INSERT INTO ssq_1 VALUES (5, 50, 100.0);-- feat1 = 100
-### 2025-10-08 12:14:44.266
-INSERT INTO ssq_1 VALUES (3, 30, 50.0);
-### 2025-10-08 12:14:50.080
-INSERT INTO ssq_1 VALUES (4, 40, 75.0);
-### 2025-10-08 12:15:07.659
-DELETE FROM ssq_2;
-### 2025-10-08 12:15:21.535
-INSERT INTO ssq_2 VALUES (101, 10, 20.0);
-### 2025-10-08 12:15:22.848
-INSERT INTO ssq_2 VALUES (102, 20, 30.0);
-### 2025-10-08 13:07:04.663
-INSERT INTO ssq_1 VALUES (1, 10, 10.0); -- feat1 = 10
-### 2025-10-08 13:07:04.667
-INSERT INTO ssq_1 VALUES (2, 20, 25.0); -- feat1 = 25
-### 2025-10-08 13:07:04.673
-INSERT INTO ssq_1 VALUES (3, 30, 50.0); -- feat1 = 50
-### 2025-10-08 13:07:04.678
-INSERT INTO ssq_1 VALUES (4, 40, 75.0); -- feat1 = 75
-### 2025-10-08 13:07:05.979
-INSERT INTO ssq_1 VALUES (5, 50, 100.0);-- feat1 = 100 
-### 2025-10-08 13:07:37.470
-INSERT INTO ssq_2 VALUES (101, 10, 20.0); -- feat2 = 20
-### 2025-10-08 13:07:37.475
-INSERT INTO ssq_2 VALUES (102, 20, 30.0); -- feat2 = 30
-### 2025-10-08 13:07:39.259
-INSERT INTO ssq_2 VALUES (103, 30, 50.0);
-### 2025-10-08 13:11:34.861
--- 诊断子查询问题的测试脚本
-### 2025-10-08 13:11:34.863
--- 首先查看数据
-### 2025-10-08 13:11:34.865
--- 测试不同的比较操作符
-### 2025-10-08 13:11:34.868
--- 退出
-### 2025-10-09 13:00:21.589
-SELECT * FROM ssq_1 WHERE feat1 >= (SELECT COUNT(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:00:32.979
-SELECT * FROM ssq_1 WHERE feat1 < (SELECT COUNT(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:00:41.541
-SELECT * FROM ssq_1 WHERE feat1 <= (SELECT COUNT(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:02:11.227
-SELECT * FROM ssq_1 WHERE feat1 >= (SELECT AVG(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:03:42.505
-SELECT * FROM ssq_1 WHERE feat1 = (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:11:34.958
--- 测试子查询比较逻辑
-### 2025-10-09 13:11:34.960
--- 准备测试数据
-### 2025-10-09 13:11:34.960
+### 2025-10-09 14:44:04.885
 CREATE TABLE ssq_1(id int, col1 int, feat1 float);
-### 2025-10-09 13:11:34.960
-CREATE TABLE ssq_2(id int, col2 int, feat2 float);
-### 2025-10-09 13:11:34.961
-INSERT INTO ssq_1 VALUES (1, 10, 10);
-### 2025-10-09 13:11:34.963
-INSERT INTO ssq_1 VALUES (2, 20, 25);
-### 2025-10-09 13:11:34.963
-INSERT INTO ssq_1 VALUES (3, 30, 50);
-### 2025-10-09 13:11:34.964
-INSERT INTO ssq_1 VALUES (4, 40, 75);
-### 2025-10-09 13:11:34.964
-INSERT INTO ssq_1 VALUES (5, 50, 100);
-### 2025-10-09 13:11:34.965
-INSERT INTO ssq_2 VALUES (101, 10, 20);
-### 2025-10-09 13:11:34.965
-INSERT INTO ssq_2 VALUES (102, 20, 30);
-### 2025-10-09 13:11:34.966
-INSERT INTO ssq_2 VALUES (103, 30, 50);
-### 2025-10-09 13:11:34.969
--- 测试：MIN(feat2) = 20，所以 feat1 > 20 应该返回 id=2,3,4,5
-### 2025-10-09 13:11:34.973
--- 清理
-### 2025-10-09 13:18:51.383
--- 详细测试子查询比较
-### 2025-10-09 13:18:51.387
--- 首先测试子查询本身是否返回正确值
-### 2025-10-09 13:18:51.392
--- 然后测试完整的WHERE条件
-### 2025-10-09 13:18:51.392
-SELECT * FROM ssq_1 WHERE feat1 > 20;
-### 2025-10-09 13:18:51.393
--- 最后测试带子查询的WHERE条件
-### 2025-10-09 13:25:43.298
--- 测试当前的子查询功能
-### 2025-10-09 13:25:43.305
--- 测试子查询本身
-### 2025-10-09 13:26:25.975
-SELECT * FROM ssq_1 WHERE feat1 != (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:27:26.395
-SELECT * FROM ssq_1 WHERE feat1 >= (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:27:39.795
-SELECT * FROM ssq_1 WHERE feat1 < (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:27:50.887
-SELECT * FROM ssq_1 WHERE feat1 <= (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:31:05.762
--- 简单测试子查询
-### 2025-10-09 13:31:05.765
--- 测试单独的子查询
-### 2025-10-09 13:31:05.768
--- 测试带子查询的比较
-### 2025-10-09 13:33:19.963
--- 验证测试
-### 2025-10-09 13:33:19.970
--- 测试MAX子查询
-### 2025-10-09 13:33:19.971
--- 测试带等号的子查询
-### 2025-10-09 13:45:28.962
--- 调试比较问题
-### 2025-10-09 13:45:28.964
--- 测试MAX子查询单独执行
-### 2025-10-09 13:45:28.967
--- 测试有问题的查询
-### 2025-10-09 13:46:15.489
--- 查看执行计划
-### 2025-10-09 13:46:15.495
-EXPLAIN SELECT * FROM ssq_1 WHERE feat1 = (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:50:44.301
--- 只测试有问题的查询
-### 2025-10-09 13:53:43.711
-SELECT * FROM ssq_1 WHERE feat1 != (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:53:49.615
-SELECT * FROM ssq_1 WHERE feat1 > (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:54:11.954
-SELECT * FROM ssq_1 WHERE feat1 < (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:54:24.194
-SELECT * FROM ssq_1 WHERE feat1 <= (SELECT MAX(ssq_2.feat2) FROM ssq_2);  
-### 2025-10-09 13:56:57.593
-SELECT * FROM ssq_1 WHERE feat1 >= (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:58:08.656
-miniob > select * from ssq_1;
-### 2025-10-09 13:58:08.660
-1 | 10 | 10
-### 2025-10-09 13:58:08.661
-2 | 20 | 25
-### 2025-10-09 13:58:08.662
-4 | 40 | 75
-### 2025-10-09 13:58:08.665
-5 | 50 | 100
-### 2025-10-09 13:58:08.670
-miniob > select * from ssq_2;
-### 2025-10-09 13:58:08.671
-id | col2 | feat2
-### 2025-10-09 13:58:08.671
-101 | 10 | 20
-### 2025-10-09 13:58:08.676
-102 | 20 | 30
-### 2025-10-09 13:58:08.676
-103 | 30 | 50
-### 2025-10-09 13:58:08.688
-miniob > SELECT * FROM ssq_1 WHERE feat1 = (SELECT SUM(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 13:58:08.694
-id | col1 | feat1
-### 2025-10-09 13:58:08.694
-3 | 30 | 50
-### 2025-10-09 13:58:08.694
-write result return SUCCESS
-### 2025-10-09 13:59:01.364
--- 测试 SUM 聚合函数
-### 2025-10-09 13:59:01.366
--- 单独测试 SUM
-### 2025-10-09 13:59:01.368
--- 测试其他值
-### 2025-10-09 13:59:01.370
--- 测试 WHERE 条件
-### 2025-10-09 14:01:40.597
-miniob > 
-### 2025-10-09 14:05:39.976
--- 全面测试子查询功能
-### 2025-10-09 14:05:39.982
--- 查看数据
-### 2025-10-09 14:05:39.982
-SELECT * FROM ssq_1;
-### 2025-10-09 14:05:39.985
-SELECT * FROM ssq_2;
-### 2025-10-09 14:05:39.987
--- 测试各种聚合函数
-### 2025-10-09 14:05:39.987
-SELECT MIN(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:05:39.989
-SELECT MAX(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:05:39.991
-SELECT SUM(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:05:39.992
-SELECT AVG(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:05:39.993
-SELECT COUNT(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:05:39.994
--- 测试带子查询的比较（各种操作符）
-### 2025-10-09 14:05:39.997
-SELECT * FROM ssq_1 WHERE feat1 > (SELECT MIN(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 14:05:39.999
-SELECT * FROM ssq_1 WHERE feat1 <= (SELECT AVG(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 14:08:50.612
--- 测试缓存问题
-### 2025-10-09 14:08:50.615
--- 先执行 MAX 查询
-### 2025-10-09 14:08:50.615
-SELECT * FROM ssq_1 WHERE feat1 = (SELECT MAX(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 14:08:50.621
--- 再执行 SUM 查询
-### 2025-10-09 14:08:50.621
-SELECT * FROM ssq_1 WHERE feat1 = (SELECT SUM(ssq_2.feat2) FROM ssq_2);
-### 2025-10-09 14:08:50.626
-EXIT;
-### 2025-10-09 14:12:29.507
+### 2025-10-09 14:44:05.686
+CREATE TABLE ssq_2(id int, col2 int, feat2 float);CREATE TABLE ssq_3(id int, col3 int, feat3 float);CREATE TABLE ssq_4(id int, col4 char(20));
+### 2025-10-09 14:44:31.774
+INSERT INTO ssq_2 VALUES (101, 73, 10.5);   -- col2 = 73，用于匹配 ssq_1 的第一条记录
+### 2025-10-09 14:44:33.375
+INSERT INTO ssq_2 VALUES (102, 48, 20.1);   -- col2 = 48，用于匹配 ssq_1 的第二条记录INSERT INTO ssq_2 VALUES (103, 55, 30.0);
+### 2025-10-09 14:44:40.622
+ select * from ssq_2;
+### 2025-10-09 14:44:50.577
+INSERT INTO ssq_2 VALUES (103, 55, 30.0);
+### 2025-10-09 14:44:58.405
+INSERT INTO ssq_1 VALUES (49, 73, 26.37);
+### 2025-10-09 14:44:59.142
+INSERT INTO ssq_1 VALUES (73, 48, 61.97);
+### 2025-10-09 18:42:10.187
+create database test_fix;
+### 2025-10-09 18:42:10.215
+use test_fix;
+### 2025-10-09 18:42:10.215
+create table ssq_1(id int, col1 int, feat1 float);
+### 2025-10-09 18:42:10.238
+create table ssq_2(id int, col2 int, feat2 float);
+### 2025-10-09 18:42:10.270
+insert into ssq_1 values(49, 73, 26.37);
+### 2025-10-09 18:42:10.272
+insert into ssq_1 values(73, 48, 61.97);
+### 2025-10-09 18:42:10.290
+insert into ssq_2 values(101, 73, 10.5);
+### 2025-10-09 18:42:10.312
+insert into ssq_2 values(102, 48, 20.1);
+### 2025-10-09 18:42:10.329
+insert into ssq_2 values(103, 55, 30);
+### 2025-10-09 18:42:10.475
+exit
+### 2025-10-09 18:54:01.770
 show tables;
-### 2025-10-09 14:12:52.440
-SELECT * FROM ssq_1 WHERE feat1 = (SELECT SUM(ssq_2.feat2) FROM ssq_2;
-### 2025-10-09 14:21:31.507
-select *b from ssq_1;
-### 2025-10-09 14:21:38.035
+### 2025-10-09 18:54:06.898
 select * from ssq_1;
-### 2025-10-09 14:21:43.137
+### 2025-10-09 18:54:12.926
 select * from ssq_2;
-### 2025-10-09 14:22:13.969
+### 2025-10-09 18:54:23.065
 select * from ssq_1 where col1 in (select ssq_2.col2 from ssq_2);
-### 2025-10-09 14:23:48.862
+### 2025-10-09 18:55:04.350
 exit;

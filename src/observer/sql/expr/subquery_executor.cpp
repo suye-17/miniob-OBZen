@@ -55,16 +55,13 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
   // 检查缓存
   if (cache_enabled_) {
     std::string cache_key = generate_cache_key(select_node);
-    LOG_INFO("SubqueryExecutor: cache_key = %s", cache_key.c_str());
+    LOG_DEBUG("SubqueryExecutor: cache_key = %s", cache_key.c_str());
     if (get_from_cache(cache_key, results)) {
       cache_hits_++;
-      LOG_INFO("Subquery cache hit, returned %zu values (cache_key=%s)", results.size(), cache_key.c_str());
-      if (!results.empty()) {
-        LOG_INFO("  Cached value[0]: %s (type=%d)", results[0].to_string().c_str(), static_cast<int>(results[0].attr_type()));
-      }
+      LOG_DEBUG("Subquery cache hit, returned %zu values", results.size());
       return RC::SUCCESS;
     }
-    LOG_INFO("Subquery cache miss, executing subquery (cache_key=%s)", cache_key.c_str());
+    LOG_DEBUG("Subquery cache miss, executing subquery", cache_key.c_str());
     cache_misses_++;
   }
 
@@ -76,8 +73,8 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
   for (const auto &expr : select_node->expressions) {
     if (expr->type() == ExprType::AGGREGATION || expr->type() == ExprType::UNBOUND_AGGREGATION) {
       has_aggregate = true;
-      LOG_INFO("Subquery contains aggregate function (type=%d), using full query engine", 
-               static_cast<int>(expr->type()));
+      LOG_DEBUG("Subquery contains aggregate function (type=%d), using full query engine", 
+                static_cast<int>(expr->type()));
       break;
     }
   }
@@ -90,8 +87,8 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
     rc = execute_simple_subquery(select_node, session, results);
   } else {
     // 对于复杂子查询或包含聚合函数的查询，使用完整的查询执行引擎
-    LOG_INFO("Executing complex subquery with full query engine (aggregates: %d, relations: %zu, conditions: %zu, joins: %zu)",
-             has_aggregate, select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
+    LOG_DEBUG("Executing complex subquery with full query engine (aggregates: %d, relations: %zu, conditions: %zu, joins: %zu)",
+              has_aggregate, select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
     rc = execute_complex_subquery(select_node, session, results);
     
     // 如果复杂子查询失败，并且没有聚合函数，回退到简单实现
@@ -279,8 +276,8 @@ RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, S
 
 RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results)
 {
-  LOG_INFO("Executing complex subquery with %zu relations, %zu conditions, %zu joins", 
-           select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
+  LOG_DEBUG("Executing complex subquery with %zu relations, %zu conditions, %zu joins", 
+            select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
 
   // 获取数据库
   Db *db = session->get_current_db();
@@ -378,10 +375,9 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
   physical_oper->close();
   
   if (rc == RC::RECORD_EOF) {
-    
     rc = RC::SUCCESS;
-    LOG_INFO("Complex subquery executed successfully, returned %zu values from %d rows", 
-             results.size(), row_count);
+    LOG_DEBUG("Complex subquery executed successfully, returned %zu values from %d rows", 
+              results.size(), row_count);
   } else {
     LOG_WARN("Complex subquery execution ended with error, rc=%d", rc);
   }
@@ -442,13 +438,13 @@ void SubqueryExecutor::put_to_cache(const std::string &cache_key, const std::vec
 void SubqueryExecutor::clear_cache()
 {
   cache_.clear();
-  LOG_INFO("Subquery cache cleared");
+  LOG_DEBUG("Subquery cache cleared");
 }
 
 void SubqueryExecutor::set_cache_limit(size_t limit)
 {
   cache_limit_ = limit;
-  LOG_INFO("Subquery cache limit set to %zu", limit);
+  LOG_DEBUG("Subquery cache limit set to %zu", limit);
 }
 
 

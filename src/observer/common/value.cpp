@@ -214,10 +214,17 @@ void Value::set_value(const Value &value)
 void Value::set_string_from_other(const Value &other)
 {
   ASSERT(attr_type_ == AttrType::CHARS, "attr type is not CHARS");
-  if (own_data_ && other.value_.pointer_value_ != nullptr && length_ != 0) {
+  // 修复：无论 own_data_ 的值如何，只要 other 有有效的字符串数据，就进行深拷贝
+  // 这样可以避免多个 Value 对象共享同一块内存导致的 use-after-free 问题
+  if (other.value_.pointer_value_ != nullptr && length_ != 0) {
+    this->own_data_ = true;  // 拷贝后的对象总是拥有自己的数据
     this->value_.pointer_value_ = new char[this->length_ + 1];
     memcpy(this->value_.pointer_value_, other.value_.pointer_value_, this->length_);
     this->value_.pointer_value_[this->length_] = '\0';
+  } else {
+    // 如果源对象没有数据，则目标对象也没有数据
+    this->value_.pointer_value_ = nullptr;
+    this->own_data_ = false;
   }
 }
 

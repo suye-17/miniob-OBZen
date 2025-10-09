@@ -45,7 +45,7 @@ RC TableScanPhysicalOperator::next()
 
     if (filter_result) {
       sql_debug("get a tuple: %s", tuple_.to_string().c_str());
-      LOG_INFO("TableScan: tuple passed filter, returning SUCCESS");
+      LOG_TRACE("TableScan: tuple passed filter, returning SUCCESS");
       break;
     } else {
       sql_debug("a tuple is filtered: %s", tuple_.to_string().c_str());
@@ -92,12 +92,11 @@ RC TableScanPhysicalOperator::filter(RowTuple &tuple, bool &result)
     }
 
     bool tmp_result = value.get_boolean();
-    LOG_INFO("Filter: value=%s (type=%d), get_boolean()=%s", 
-             value.to_string().c_str(), static_cast<int>(value.attr_type()), 
-             tmp_result ? "TRUE" : "FALSE");
+    LOG_TRACE("Filter: value type=%d, result=%s", 
+              static_cast<int>(value.attr_type()), tmp_result ? "TRUE" : "FALSE");
     if (!tmp_result) {
       result = false;
-      LOG_INFO("Filter result: FALSE (tuple filtered out)");
+      LOG_TRACE("Filter result: FALSE (tuple filtered out)");
       return rc;
     }
   }

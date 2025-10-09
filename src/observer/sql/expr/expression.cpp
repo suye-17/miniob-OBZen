@@ -435,8 +435,8 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   
   if (rc == RC::SUCCESS) {
     value.set_boolean(bool_value);
-    LOG_INFO("ComparisonExpr final result: bool_value=%s, value=%s", 
-             bool_value ? "TRUE" : "FALSE", value.to_string().c_str());
+    // 降低日志级别，避免在大数据量查询时产生过多日志
+    LOG_TRACE("ComparisonExpr final result: bool_value=%s", bool_value ? "TRUE" : "FALSE");
   } else {
     LOG_WARN("ComparisonExpr failed with rc=%d", rc);
   }
