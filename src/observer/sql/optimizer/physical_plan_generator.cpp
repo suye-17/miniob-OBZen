@@ -132,14 +132,14 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
   vector<unique_ptr<Expression>> &predicates = table_get_oper.predicates();
   Table *table = table_get_oper.table();
 
-  map<string, Value> equal_conditions;
-  vector<unique_ptr<Expression>> remaining_predicates;
+  map<string, pair<Value, unique_ptr<Expression>>> equal_conditions;
+  vector<unique_ptr<Expression>> other_predicates;
   
   for (auto &expr : predicates) {
     if (expr->type() == ExprType::COMPARISON) {
       auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
       if (comparison_expr->comp() != EQUAL_TO) {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
         continue;
       }
 
@@ -147,7 +147,7 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
       unique_ptr<Expression> &right_expr = comparison_expr->right();
       
       if (left_expr->type() != ExprType::VALUE && right_expr->type() != ExprType::VALUE) {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
         continue;
       }
 
@@ -163,18 +163,19 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
       }
 
       if (field_expr != nullptr && value_expr != nullptr) {
-        equal_conditions[field_expr->field().field_name()] = value_expr->get_value();
+        string field_name = field_expr->field().field_name();
+        equal_conditions[field_name] = make_pair(value_expr->get_value(), std::move(expr));
       } else {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
       }
     } else {
-      remaining_predicates.push_back(std::move(expr));
+      other_predicates.push_back(std::move(expr));
     }
   }
 
   if (equal_conditions.empty()) {
     auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
-    table_scan_oper->set_predicates(std::move(remaining_predicates));
+    table_scan_oper->set_predicates(std::move(other_predicates));
     oper = unique_ptr<PhysicalOperator>(table_scan_oper);
     LOG_TRACE("use table scan (no equal conditions)");
     return RC::SUCCESS;
@@ -208,7 +209,10 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
 
   if (best_index_meta == nullptr || max_matched_fields == 0) {
     auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
-    table_scan_oper->set_predicates(std::move(predicates));
+    for (auto &kv : equal_conditions) {
+      other_predicates.push_back(std::move(kv.second.second));
+    }
+    table_scan_oper->set_predicates(std::move(other_predicates));
     oper = unique_ptr<PhysicalOperator>(table_scan_oper);
     LOG_TRACE("use table scan (no suitable index)");
     return RC::SUCCESS;
@@ -217,7 +221,20 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
   vector<Value> key_values;
   const vector<string> &index_fields = best_index_meta->fields();
   for (int i = 0; i < max_matched_fields; i++) {
-    key_values.push_back(equal_conditions.at(index_fields[i]));
+    key_values.push_back(equal_conditions.at(index_fields[i]).first);
+  }
+
+  for (auto &kv : equal_conditions) {
+    bool used_in_index = false;
+    for (int i = 0; i < max_matched_fields; i++) {
+      if (kv.first == index_fields[i]) {
+        used_in_index = true;
+        break;
+      }
+    }
+    if (!used_in_index) {
+      other_predicates.push_back(std::move(kv.second.second));
+    }
   }
 
   Index *index = table->find_index(best_index_meta->name());
@@ -236,7 +253,7 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
     LOG_TRACE("use index scan with single field. index=%s", best_index_meta->name());
   }
 
-  index_scan_oper->set_predicates(std::move(remaining_predicates));
+  index_scan_oper->set_predicates(std::move(other_predicates));
   oper = unique_ptr<PhysicalOperator>(index_scan_oper);
 
   return RC::SUCCESS;

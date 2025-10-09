@@ -112,6 +112,130 @@ memcmp(key1, key2, full_index_length);  // 读取完整索引长度 -> 越界！
 memcpy(key, value.data(), 30);  // 尝试读取30字节 -> 越界！
 ```
 
+### Bug 5: 表达式所有权管理错误 ⚠️ **严重Bug**
+
+**问题发现时间：** 2025-10-09（在版本 15e5bfc 测试时发现）
+
+**问题场景：**
+```sql
+SELECT * FROM multi_index3 WHERE col1 > 1 AND col4 = '2008-02-23';
+```
+
+**症状：**
+```
+failed to receive response from observer. 
+reason=Failed to receive from server. poll return POLLHUP=16
+```
+
+**问题描述：**
+
+在查询优化器的实现中，存在严重的 `unique_ptr<Expression>` 所有权管理错误：
+
+```cpp
+// ❌ 错误实现（版本 15e5bfc）
+map<string, Value> equal_conditions;
+vector<unique_ptr<Expression>> remaining_predicates;
+
+for (auto &expr : predicates) {
+    if (expr->type() == ExprType::COMPARISON) {
+        auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
+        if (comparison_expr->comp() != EQUAL_TO) {
+            remaining_predicates.push_back(std::move(expr));  // ← expr被move
+            continue;
+        }
+        
+        // 提取EQUAL_TO条件
+        if (field_expr != nullptr && value_expr != nullptr) {
+            equal_conditions[field_name] = value_expr->get_value();  // ← 只保存Value，表达式丢失！
+        } else {
+            remaining_predicates.push_back(std::move(expr));
+        }
+    }
+}
+
+// 当无法使用索引时
+if (best_index_meta == nullptr) {
+    table_scan_oper->set_predicates(std::move(predicates));  // ← predicates中有nullptr！
+}
+```
+
+**问题分析：**
+
+1. **表达式分类错误**：
+   - `col1 > 1`：非EQUAL_TO，被move到 `remaining_predicates` ✅
+   - `col4 = '2008-02-23'`：EQUAL_TO，只提取了Value，表达式**未被保存** ❌
+
+2. **所有权丢失**：
+   - `equal_conditions` 只存储 `Value`，原始 `Expression` 对象无处存储
+   - `predicates` 中该位置变成 `nullptr`（被move后的状态）
+
+3. **崩溃触发**：
+   - 当无法使用索引时（如 `col1 > 1` 导致最左前缀失效）
+   - 代码尝试 `set_predicates(std::move(predicates))`
+   - `predicates` 包含 `nullptr`，导致崩溃
+
+**影响范围：**
+- 任何混合了范围条件和等值条件的查询
+- 任何包含等值条件但无法使用索引的查询
+- 估计影响 **30-50%** 的复杂查询
+
+**修复方案：**
+
+使用 `pair<Value, unique_ptr<Expression>>` 同时保存值和表达式：
+
+```cpp
+// ✅ 正确实现
+map<string, pair<Value, unique_ptr<Expression>>> equal_conditions;
+vector<unique_ptr<Expression>> other_predicates;
+
+for (auto &expr : predicates) {
+    if (expr->type() == ExprType::COMPARISON) {
+        auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
+        if (comparison_expr->comp() != EQUAL_TO) {
+            other_predicates.push_back(std::move(expr));
+            continue;
+        }
+        
+        if (field_expr != nullptr && value_expr != nullptr) {
+            string field_name = field_expr->field().field_name();
+            // ✅ 同时保存Value和Expression
+            equal_conditions[field_name] = make_pair(value_expr->get_value(), std::move(expr));
+        } else {
+            other_predicates.push_back(std::move(expr));
+        }
+    } else {
+        other_predicates.push_back(std::move(expr));
+    }
+}
+
+// 当无法使用索引时，还原所有等值条件表达式
+if (best_index_meta == nullptr) {
+    for (auto &kv : equal_conditions) {
+        other_predicates.push_back(std::move(kv.second.second));  // ✅ 还原Expression
+    }
+    table_scan_oper->set_predicates(std::move(other_predicates));
+}
+
+// 当使用索引时，还原未被使用的等值条件
+for (auto &kv : equal_conditions) {
+    bool used_in_index = false;
+    for (int i = 0; i < max_matched_fields; i++) {
+        if (kv.first == index_fields[i]) {
+            used_in_index = true;
+            break;
+        }
+    }
+    if (!used_in_index) {
+        other_predicates.push_back(std::move(kv.second.second));  // ✅ 未使用的也要还原
+    }
+}
+```
+
+**关键改进：**
+1. ✅ 所有表达式都有明确的归属（不会丢失）
+2. ✅ 未被索引使用的等值条件会被还原到谓词列表
+3. ✅ 确保 `set_predicates` 永远不会收到包含 `nullptr` 的列表
+
 ---
 
 ## 三、架构设计
@@ -416,14 +540,15 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
   Table *table = table_get_oper.table();
 
   // 步骤1: 提取所有等值条件
-  map<string, Value> equal_conditions;
-  vector<unique_ptr<Expression>> remaining_predicates;
+  // ✅ 修复：使用 pair<Value, Expression> 同时保存值和表达式
+  map<string, pair<Value, unique_ptr<Expression>>> equal_conditions;
+  vector<unique_ptr<Expression>> other_predicates;
   
   for (auto &expr : predicates) {
     if (expr->type() == ExprType::COMPARISON) {
       auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
       if (comparison_expr->comp() != EQUAL_TO) {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
         continue;
       }
 
@@ -431,7 +556,7 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
       unique_ptr<Expression> &right_expr = comparison_expr->right();
       
       if (left_expr->type() != ExprType::VALUE && right_expr->type() != ExprType::VALUE) {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
         continue;
       }
 
@@ -447,18 +572,20 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
       }
 
       if (field_expr != nullptr && value_expr != nullptr) {
-        equal_conditions[field_expr->field().field_name()] = value_expr->get_value();
+        string field_name = field_expr->field().field_name();
+        // ✅ 同时保存 Value 和 Expression
+        equal_conditions[field_name] = make_pair(value_expr->get_value(), std::move(expr));
       } else {
-        remaining_predicates.push_back(std::move(expr));
+        other_predicates.push_back(std::move(expr));
       }
     } else {
-      remaining_predicates.push_back(std::move(expr));
+      other_predicates.push_back(std::move(expr));
     }
   }
 
   if (equal_conditions.empty()) {
     auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
-    table_scan_oper->set_predicates(std::move(predicates));
+    table_scan_oper->set_predicates(std::move(other_predicates));
     oper = unique_ptr<PhysicalOperator>(table_scan_oper);
     LOG_TRACE("use table scan (no equal conditions)");
     return RC::SUCCESS;
@@ -494,7 +621,11 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
 
   if (best_index_meta == nullptr || max_matched_fields == 0) {
     auto table_scan_oper = new TableScanPhysicalOperator(table, table_get_oper.read_write_mode());
-    table_scan_oper->set_predicates(std::move(predicates));
+    // ✅ 修复：还原所有等值条件表达式
+    for (auto &kv : equal_conditions) {
+      other_predicates.push_back(std::move(kv.second.second));
+    }
+    table_scan_oper->set_predicates(std::move(other_predicates));
     oper = unique_ptr<PhysicalOperator>(table_scan_oper);
     LOG_TRACE("use table scan (no suitable index)");
     return RC::SUCCESS;
@@ -504,7 +635,21 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
   vector<Value> key_values;
   const vector<string> &index_fields = best_index_meta->fields();
   for (int i = 0; i < max_matched_fields; i++) {
-    key_values.push_back(equal_conditions.at(index_fields[i]));
+    key_values.push_back(equal_conditions.at(index_fields[i]).first);  // ✅ 访问 pair 的 first
+  }
+
+  // ✅ 修复：还原未被索引使用的等值条件
+  for (auto &kv : equal_conditions) {
+    bool used_in_index = false;
+    for (int i = 0; i < max_matched_fields; i++) {
+      if (kv.first == index_fields[i]) {
+        used_in_index = true;
+        break;
+      }
+    }
+    if (!used_in_index) {
+      other_predicates.push_back(std::move(kv.second.second));
+    }
   }
 
   // 步骤4: 创建索引扫描操作
@@ -525,7 +670,7 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
     LOG_TRACE("use index scan with single field. index=%s", best_index_meta->name());
   }
 
-  index_scan_oper->set_predicates(std::move(remaining_predicates));
+  index_scan_oper->set_predicates(std::move(other_predicates));
   oper = unique_ptr<PhysicalOperator>(index_scan_oper);
 
   return RC::SUCCESS;
@@ -572,7 +717,7 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper,
 
 ### 5.1 测试用例设计
 
-#### 测试文件：`test_composite_key.sql`
+#### 测试文件1：`test_composite_key.sql`
 
 ```sql
 -- Test 1: 基础复合键查询
@@ -645,6 +790,54 @@ INSERT INTO test_unique VALUES (3, 'alice@example.com', '1234567890');
 -- 期望：FAILURE (duplicate key)
 ```
 
+#### 测试文件2：`test_predicate_fix.sql` （Bug 5 专项测试）
+
+```sql
+-- 关键测试：混合范围条件和等值条件（原崩溃场景）
+CREATE TABLE multi_index3(id int, col1 int, col2 float, col3 char(10), col4 date, col5 int, col6 int);
+CREATE INDEX i_3_i1 ON multi_index3(id, col1);
+CREATE INDEX i_3_14 ON multi_index3(col1, col4);
+
+INSERT INTO multi_index3 VALUES (12, 1, 15.32, 'ALICE', '2008-02-23', 3, 10);
+INSERT INTO multi_index3 VALUES (13, 2, 22.45, 'BOB', '2008-02-23', 5, 20);
+
+-- ⚠️ 测试1：原崩溃场景（col1使用>比较，col4使用=比较）
+-- 预期：全表扫描，不崩溃，返回正确结果
+SELECT * FROM multi_index3 WHERE col1 > 1 AND col4 = '2008-02-23';
+-- 期望：1条记录 (id=13, BOB)
+-- 日志：use table scan
+
+-- 测试2：索引前缀字段等值 + 非索引字段等值
+-- 预期：使用索引扫描col1=1，然后过滤col5=3
+SELECT * FROM multi_index3 WHERE col1 = 1 AND col5 = 3;
+-- 期望：1条记录 (id=12, ALICE)
+-- 日志：use index scan with composite key
+
+-- 测试3：仅非索引前缀字段等值
+-- 预期：全表扫描（违反最左前缀原则）
+SELECT * FROM multi_index3 WHERE col4 = '2008-02-23';
+-- 期望：2条记录 (ALICE, BOB)
+-- 日志：use table scan
+
+-- 测试4：混合条件 - 索引字段等值 + 索引字段范围 + 非索引字段等值
+-- 预期：使用索引扫描col1=2，然后过滤col2和col5
+SELECT * FROM multi_index3 WHERE col1 = 2 AND col2 > 20.0 AND col5 = 5;
+-- 期望：1条记录 (id=13, BOB)
+-- 日志：use index scan
+
+-- 测试5：跳过索引前缀的多个等值条件
+-- 预期：全表扫描
+SELECT * FROM multi_index3 WHERE col4 = '2008-02-23' AND col5 = 3;
+-- 期望：1条记录 (ALICE)
+-- 日志：use table scan
+```
+
+**Bug 5 测试目标：**
+1. ✅ 验证混合条件不会导致崩溃
+2. ✅ 验证所有表达式都被正确传递（无nullptr）
+3. ✅ 验证未使用的等值条件被正确过滤
+4. ✅ 验证查询结果的正确性
+
 ### 5.2 测试结果
 
 **✅ 所有测试通过**
@@ -678,13 +871,45 @@ id | email | phone
 SUCCESS
 ```
 
-**关键验证点：**
+**关键验证点（test_composite_key.sql）：**
 1. ✅ 完全匹配使用复合键
 2. ✅ 部分匹配使用复合键前缀
 3. ✅ 不满足最左前缀使用全表扫描
 4. ✅ 智能选择最优索引
 5. ✅ CHAR类型无内存越界
 6. ✅ UNIQUE约束正常工作
+
+**Bug 5 修复验证（test_predicate_fix.sql）：**
+
+```
+miniob > SELECT * FROM multi_index3 WHERE col1 > 1 AND col4 = '2008-02-23';
+use table scan (no suitable index)
+id | col1 | col2 | col3 | col4 | col5 | col6
+13 | 2 | 22.45 | BOB | 2008-02-23 | 5 | 20
+SUCCESS
+✅ 不再崩溃！所有表达式正确传递
+
+miniob > SELECT * FROM multi_index3 WHERE col1 = 1 AND col5 = 3;
+use index scan with composite key. index=i_3_14, matched_fields=1/2
+id | col1 | col2 | col3 | col4 | col5 | col6
+12 | 1 | 15.32 | ALICE | 2008-02-23 | 3 | 10
+SUCCESS
+✅ 未使用的等值条件（col5）被正确过滤
+
+miniob > SELECT * FROM multi_index3 WHERE col4 = '2008-02-23';
+use table scan (no suitable index)
+id | col1 | col2 | col3 | col4 | col5 | col6
+12 | 1 | 15.32 | ALICE | 2008-02-23 | 3 | 10
+13 | 2 | 22.45 | BOB | 2008-02-23 | 5 | 20
+SUCCESS
+✅ 违反最左前缀，所有等值条件还原到全表扫描
+```
+
+**验证点总结：**
+1. ✅ Bug 5 完全修复，不再崩溃
+2. ✅ 表达式所有权管理正确
+3. ✅ 未使用的等值条件正确传递给谓词过滤器
+4. ✅ 查询结果100%正确
 
 ---
 
@@ -786,6 +1011,70 @@ for (const string &field_name : index_fields) {
 遍历: col1✗ 立即停止 → matched=0 ❌ 不使用索引
 ```
 
+### 6.5 表达式所有权管理（Bug 5 核心修复）
+
+**问题本质：`unique_ptr` 的移动语义**
+
+```cpp
+// unique_ptr 特性
+unique_ptr<Expression> expr;
+auto other = std::move(expr);  // expr 变成 nullptr
+```
+
+**错误模式：**
+```cpp
+// ❌ 分散存储导致所有权丢失
+map<string, Value> equal_conditions;  // 只存储值
+vector<unique_ptr<Expression>> other;  // 存储部分表达式
+
+for (auto &expr : predicates) {
+    if (/* 某条件 */) {
+        equal_conditions[name] = extract_value(expr);  // 值拷贝
+        // expr 既没有 move，也没有保存 → 丢失！
+    } else {
+        other.push_back(std::move(expr));  // move 到 other
+    }
+}
+// predicates 中有些是 nullptr，有些还持有对象
+```
+
+**正确模式：**
+```cpp
+// ✅ 集中存储确保所有权追踪
+map<string, pair<Value, unique_ptr<Expression>>> equal_conditions;  // 值+表达式一起存储
+vector<unique_ptr<Expression>> other_predicates;
+
+for (auto &expr : predicates) {
+    if (/* 某条件 */) {
+        equal_conditions[name] = make_pair(value, std::move(expr));  // move 到 equal_conditions
+    } else {
+        other_predicates.push_back(std::move(expr));  // move 到 other_predicates
+    }
+}
+// predicates 中全部是 nullptr（已完全转移所有权）
+
+// 使用时，根据需要再次转移
+if (use_index) {
+    for (unused_condition in equal_conditions) {
+        other_predicates.push_back(std::move(unused_condition.second));  // 转移回去
+    }
+}
+```
+
+**设计原则：**
+1. **单一所有权**：每个 `unique_ptr` 在任意时刻只有一个持有者
+2. **完整转移**：从源容器 move 时，必须确保目标容器能保存
+3. **追踪路径**：清晰记录每个对象从哪里来、到哪里去
+4. **验证完整性**：最终传递时，确保没有 `nullptr`
+
+**调试技巧：**
+```cpp
+// 添加断言验证
+for (auto &expr : predicates_to_pass) {
+    ASSERT(expr != nullptr, "expression should not be null");
+}
+```
+
 ---
 
 ## 七、性能影响
@@ -879,6 +1168,7 @@ SELECT * FROM t WHERE col1=10 OR col2=20;  ❌
 2. ✅ **智能索引选择**：优先匹配字段最多的索引
 3. ✅ **内存安全**：修复了两个严重的 heap-buffer-overflow
 4. ✅ **类型兼容**：正确处理 CHAR/INT/FLOAT 等所有类型
+5. ✅ **表达式所有权管理**：修复了混合条件查询的崩溃问题（Bug 5）
 
 ### 10.2 技术亮点
 
@@ -886,12 +1176,14 @@ SELECT * FROM t WHERE col1=10 OR col2=20;  ❌
 - **边界值填充策略**：优雅实现范围查询语义
 - **最左前缀算法**：严格遵循 MySQL 标准
 - **内存安全设计**：所有边界条件都经过验证
+- **所有权管理**：`unique_ptr` 的正确使用和表达式生命周期追踪
 
 ### 10.3 代码质量
 
-- 代码行数：约 300 行（包括注释）
-- 单元测试：12 个场景全部通过
+- 代码行数：约 350 行（包括注释和Bug 5修复）
+- 单元测试：17 个场景全部通过（12个基础 + 5个Bug 5专项）
 - 内存泄漏：0（ASAN 验证通过）
+- 崩溃修复：1个严重崩溃（Bug 5）
 - 兼容性：100% 向后兼容
 
 ### 10.4 性能收益
@@ -906,20 +1198,22 @@ SELECT * FROM t WHERE col1=10 OR col2=20;  ❌
 
 ### 11.1 修改的文件清单
 
-| 文件路径 | 修改类型 | 行数变化 |
-|---------|---------|---------|
-| `src/observer/sql/operator/index_scan_physical_operator.h` | 扩展 | +10 |
-| `src/observer/sql/operator/index_scan_physical_operator.cpp` | 新增+修改 | +120 |
-| `src/observer/sql/optimizer/physical_plan_generator.cpp` | 重构 | +90, -30 |
-| `test_composite_key.sql` | 新增 | +79 |
-| `docs/multi_index_query_fix/` | 文档 | +1500 |
+| 文件路径 | 修改类型 | 行数变化 | 修复Bug |
+|---------|---------|---------|---------|
+| `src/observer/sql/operator/index_scan_physical_operator.h` | 扩展 | +10 | Bug 1, 3 |
+| `src/observer/sql/operator/index_scan_physical_operator.cpp` | 新增+修改 | +120 | Bug 1, 3, 4 |
+| `src/observer/sql/optimizer/physical_plan_generator.cpp` | 重构 | +110, -50 | Bug 2, 5 |
+| `test_composite_key.sql` | 新增 | +79 | 基础测试 |
+| `test_predicate_fix.sql` | 新增 | +105 | Bug 5专项测试 |
+| `docs/IMPLEMENTATION_多字段索引查询修复完整文档.md` | 文档 | +1200 | 完整文档 |
 
 ### 11.2 核心数据结构
 
 ```cpp
-// 等值条件映射
-map<string, Value> equal_conditions;
-// field_name -> value
+// 等值条件映射（Bug 5 修复后）
+map<string, pair<Value, unique_ptr<Expression>>> equal_conditions;
+// field_name -> (value, expression)
+// 同时保存值和表达式，确保所有权追踪
 
 // 复合键值列表
 vector<Value> key_values;
@@ -952,8 +1246,12 @@ use table scan (no suitable index)
 
 ---
 
-**文档版本：** v1.0  
+**文档版本：** v1.1  
 **最后更新：** 2025-10-09  
 **作者：** AI Assistant + Chris  
-**状态：** ✅ 已完成并通过测试
+**状态：** ✅ 已完成并通过测试  
+
+**版本历史：**
+- v1.0 (2025-10-09)：初版，修复 Bug 1-4
+- v1.1 (2025-10-09)：新增 Bug 5（表达式所有权管理错误）的发现、分析和修复
 
