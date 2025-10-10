@@ -20,7 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 
-Value::Value(int val) { set_int(val); }
+Value::Value(int val) { set_int(val); }   
 
 Value::Value(float val) { set_float(val); }
 

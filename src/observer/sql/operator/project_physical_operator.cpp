@@ -43,16 +43,10 @@ RC ProjectPhysicalOperator::open(Trx *trx)
 RC ProjectPhysicalOperator::next()
 {
   if (children_.empty()) {
-    LOG_INFO("Project: no children, returning RECORD_EOF");
     return RC::RECORD_EOF;
   }
   RC rc = children_[0]->next();
-  LOG_INFO("Project: child->next() returned rc=%d (%s)", rc, 
-           rc == RC::SUCCESS ? "SUCCESS" : (rc == RC::RECORD_EOF ? "EOF" : "ERROR"));
-  if (rc == RC::SUCCESS) {
-    Tuple *tuple = children_[0]->current_tuple();
-    LOG_INFO("Project: received tuple: %s", tuple ? tuple->to_string().c_str() : "NULL");
-  }
+  LOG_DEBUG("Project: child->next() returned rc=%d", rc);
   return rc;
 }
 
