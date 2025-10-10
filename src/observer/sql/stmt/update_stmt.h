@@ -46,7 +46,7 @@ public:
    * @param expression 更新的表达式（支持复杂计算）
    * @param filter_stmt WHERE条件过滤器，可以为nullptr（表示无条件更新）
    */
-  UpdateStmt(Table *table, const std::string &field_name, Expression *expression, FilterStmt *filter_stmt);
+  UpdateStmt(Table *table, const std::vector<std::string> &field_names, std::vector<Expression*> &&expressions, FilterStmt *filter_stmt);
   
   /**
    * @brief 析构函数，释放FilterStmt资源
@@ -84,13 +84,13 @@ public:
    * @brief 获取要更新的字段名
    * @return 字段名字符串引用
    */
-  const std::string &field_name() const { return field_name_; }
+  const std::vector<std::string> &field_names() const { return field_names_; }
   
   /**
    * @brief 获取更新表达式
    * @return 表达式指针
    */
-  Expression *expression() const { return expression_; }
+  const std::vector<Expression*> &expressions() const { return expressions_; }
   
   /**
    * @brief 获取WHERE条件过滤器
@@ -100,7 +100,7 @@ public:
 
 private:
   Table        *table_       = nullptr;  ///< 目标表对象
-  std::string   field_name_;             ///< 要更新的字段名
-  Expression   *expression_  = nullptr;  ///< 更新的表达式，支持复杂计算
+  std::vector<std::string>   field_names_;  ///< 要更新的字段名
+  std::vector<Expression*>   expressions_;  ///< 更新的表达式，支持多个表达式
   FilterStmt   *filter_stmt_ = nullptr;  ///< WHERE条件过滤器，nullptr表示无条件更新
 };

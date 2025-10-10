@@ -147,11 +147,12 @@ union YYSTYPE
   vector<RelAttrSqlNode> *                   rel_attr_list;
   vector<string> *                           relation_list;
   vector<string> *                           key_list;
+  UpdateList *                               update_list;
   char *                                     cstring;
   int                                        number;
   float                                      floats;
 
-#line 155 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
+#line 156 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

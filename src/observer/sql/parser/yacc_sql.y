@@ -171,6 +171,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
   vector<RelAttrSqlNode> *                   rel_attr_list;
   vector<string> *                           relation_list;
   vector<string> *                           key_list;
+  UpdateList *                               update_list;
   char *                                     cstring;
   int                                        number;
   float                                      floats;
@@ -188,6 +189,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 // %destructor { delete $$; } <rel_attr_list>
 %destructor { delete $$; } <relation_list>
 %destructor { delete $$; } <key_list>
+%destructor { delete $$; } <update_list>
 
 %token <number> NUMBER
 %token <floats> FLOAT
@@ -218,6 +220,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
+%type <update_list>         update_list
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -573,16 +576,35 @@ delete_stmt:    /*  delete 语句的语法解析树*/
     }
     ;
 update_stmt:      /*  update 语句的语法解析树*/
-    UPDATE ID SET ID EQ expression where 
+    UPDATE ID SET update_list where 
     {
       $$ = new ParsedSqlNode(SCF_UPDATE);
       $$->update.relation_name = $2;
-      $$->update.attribute_name = $4;
-      $$->update.expression = $6;
-      if ($7 != nullptr) {
-        $$->update.conditions.swap(*$7);
-        delete $7;
+      $$->update.attribute_names.swap($4->attribute_names);
+      $$->update.expressions.swap($4->expressions);
+      if ($5 != nullptr) {
+        $$->update.conditions.swap(*$5);
+        delete $5;
       }
+      delete $4;
+      // 不需要 free($2)，sql_parse 会统一清理 allocated_strings
+    }
+    ;
+    
+update_list:
+    ID EQ expression
+    {
+      $$ = new UpdateList();
+      $$->attribute_names.push_back($1);
+      $$->expressions.push_back($3);
+      // 不需要 free($1)，sql_parse 会统一清理 allocated_strings
+    }
+    | update_list COMMA ID EQ expression
+    {
+      $$ = $1;
+      $$->attribute_names.push_back($3);
+      $$->expressions.push_back($5);
+      // 不需要 free($3)，sql_parse 会统一清理 allocated_strings
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/

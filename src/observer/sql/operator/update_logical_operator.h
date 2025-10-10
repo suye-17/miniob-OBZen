@@ -27,7 +27,7 @@ public:
    * @param field_name 要更新的字段名
    * @param new_value 字段的新值
    */
-  UpdateLogicalOperator(Table *table, const std::string &field_name, Expression *expression);
+  UpdateLogicalOperator(Table *table, const std::vector<std::string> &field_names, const std::vector<Expression*> &expressions);
   
   /**
    * @brief 虚析构函数
@@ -58,16 +58,16 @@ public:
    * @brief 获取要更新的字段名
    * @return 字段名字符串引用
    */
-  const std::string  &field_name() const { return field_name_; }
+  const std::vector<std::string> &field_names() const { return field_names_; }
   
   /**
    * @brief 获取更新表达式
    * @return 表达式指针
    */
-  Expression         *expression() const { return expression_; }
+  const std::vector<Expression*> &expressions() const { return expressions_; }
 
 private:
   Table       *table_;       ///< 目标表对象
-  std::string  field_name_;  ///< 要更新的字段名
-  Expression  *expression_;  ///< 更新的表达式，支持复杂计算
+  std::vector<std::string>  field_names_;  ///< 要更新的字段名集合
+  std::vector<Expression*>  expressions_;  ///< 更新的表达式集合，支持复杂计算
 };

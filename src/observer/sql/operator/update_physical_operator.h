@@ -35,8 +35,8 @@ public:
    * @param field_name 要更新的字段名
    * @param expression 更新表达式，支持复杂计算
    */
-  UpdatePhysicalOperator(Table *table, const std::string &field_name, Expression *expression) 
-    : table_(table), field_name_(field_name), expression_(expression) {}
+  UpdatePhysicalOperator(Table *table, const std::vector<std::string> &field_names, const std::vector<Expression*> &expressions) 
+    : table_(table), field_names_(field_names), expressions_(expressions) {}
 
   /**
    * @brief 虚析构函数
@@ -90,8 +90,8 @@ public:
 
 private:
   Table       *table_ = nullptr;     ///< 目标表对象
-  std::string  field_name_;          ///< 要更新的字段名
-  Expression  *expression_ = nullptr; ///< 更新表达式，支持复杂计算
+  std::vector<std::string>  field_names_;          ///< 要更新的字段名集合
+  std::vector<Expression*>  expressions_; ///< 更新表达式集合，支持复杂计算
   Trx         *trx_   = nullptr;     ///< 事务对象，用于事务控制
   std::vector<Record> records_;      ///< 收集的需要更新的记录列表
   int          update_count_ = 0;    ///< 更新的记录数量统计

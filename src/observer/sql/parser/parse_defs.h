@@ -23,6 +23,17 @@ See the Mulan PSL v2 for more details. */
 class Expression;
 
 /**
+ * @brief UPDATE语句解析的辅助结构
+ * @details 用于在yacc解析过程中临时存储多个字段赋值
+ */
+struct UpdateList {
+  vector<string> attribute_names;
+  vector<Expression*> expressions;
+  
+  ~UpdateList();  // 析构函数声明，实现在 parse.cpp 中
+};
+
+/**
  * @defgroup SQLParser SQL Parser
  */
 
@@ -140,9 +151,9 @@ struct DeleteSqlNode
  */
 struct UpdateSqlNode
 {
-  string                   relation_name;   ///< Relation to update
-  string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Expression              *expression;      ///< 更新的表达式，支持复杂计算
+  string                   relation_name;   ///< 表名
+  vector<string>           attribute_names;  ///< 更新的字段，支持多个字段
+  vector<Expression*>      expressions;      ///< 更新的表达式，支持多个表达式
   vector<ConditionSqlNode> conditions;
 };
 
