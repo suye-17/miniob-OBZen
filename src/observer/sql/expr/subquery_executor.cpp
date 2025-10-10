@@ -353,10 +353,11 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     LOG_DEBUG("Processing row %d, tuple has %d cells (expected %d)", 
              row_count, tuple_cell_num, expected_cell_num);
     
-    // 收集tuple中的所有值
-    // 对于聚合查询，tuple通常只有一个cell（聚合结果）
-    // 对于普通查询，tuple有多个cell（各个列的值）
-    int cells_to_collect = tuple_cell_num;  // 收集tuple中所有可用的cell
+    // 只收集SELECT子句中指定数量的列
+    // 对于 SELECT col2 FROM table，只收集1列（col2）
+    // 对于 SELECT MIN(col) FROM table，只收集1列（MIN结果）
+    // 对于 SELECT * FROM table，收集所有列
+    int cells_to_collect = std::min(expected_cell_num, tuple_cell_num);
     
     for (int i = 0; i < cells_to_collect; i++) {
       Value value;
