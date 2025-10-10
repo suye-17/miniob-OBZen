@@ -442,7 +442,11 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, uniq
         std::move(logical_oper.aggregate_expressions()));
   }
 
-  ASSERT(logical_oper.children().size() == 1, "group by operator should have 1 child");
+  // 检查子节点数量，使用错误处理而不是断言
+  if (logical_oper.children().size() != 1) {
+    LOG_WARN("group by operator should have 1 child, but has %zu children", logical_oper.children().size());
+    return RC::INTERNAL;
+  }
 
   LogicalOperator             &child_oper = *logical_oper.children().front();
   unique_ptr<PhysicalOperator> child_physical_oper;
@@ -482,7 +486,11 @@ RC PhysicalPlanGenerator::create_vec_plan(GroupByLogicalOperator &logical_oper, 
 
   }
 
-  ASSERT(logical_oper.children().size() == 1, "group by operator should have 1 child");
+  // 检查子节点数量，使用错误处理而不是断言  
+  if (logical_oper.children().size() != 1) {
+    LOG_WARN("group by vec operator should have 1 child, but has %zu children", logical_oper.children().size());
+    return RC::INTERNAL;
+  }
 
   LogicalOperator             &child_oper = *logical_oper.children().front();
   unique_ptr<PhysicalOperator> child_physical_oper;
