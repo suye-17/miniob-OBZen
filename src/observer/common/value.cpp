@@ -297,8 +297,9 @@ void Value::set_text(const char *s, int len /*= 65535*/)
     if (len <= 0) {
       len = strlen(s); // 只在len无效时才使用strlen
     }
-    // 限制最大长度为TEXT_MAX_LENGTH
+    // 限制最大长度为TEXT_MAX_LENGTH（符合MySQL非严格模式行为）
     if (len > TEXT_MAX_LENGTH) {
+      LOG_WARN("TEXT data truncated from %d bytes to %d bytes (TEXT_MAX_LENGTH)", len, TEXT_MAX_LENGTH);
       len = TEXT_MAX_LENGTH;
     }
     value_.pointer_value_ = new char[len + 1];

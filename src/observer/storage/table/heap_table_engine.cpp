@@ -289,7 +289,7 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
           uint32_t *magic_ptr = reinterpret_cast<uint32_t*>(overflow_ptr);
           uint32_t *page_num_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 4);
           uint32_t *offset_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 8);
-          uint64_t *total_len_ptr = reinterpret_cast<uint64_t*>(overflow_ptr + 12);
+          uint32_t *total_len_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 12);
           
           *magic_ptr = table_meta_->table_id();
           *offset_ptr = sizeof(OverflowPageHeader);

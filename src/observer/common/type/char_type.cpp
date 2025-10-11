@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/char_type.h"
 #include "common/value.h"
 #include "common/utils.h"
+#include "common/types.h"
 
 int CharType::compare(const Value &left, const Value &right) const
 {
@@ -53,6 +54,12 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
       result.set_vector(elements);
     } break;
     case AttrType::TEXTS: {
+      // 严格检查TEXT长度限制，超过则返回错误（符合MySQL严格模式）
+      if (val.length_ > TEXT_MAX_LENGTH) {
+        LOG_ERROR("TEXT data length %d exceeds maximum allowed length %d bytes", 
+                  val.length_, TEXT_MAX_LENGTH);
+        return RC::INVALID_ARGUMENT;
+      }
       result.set_text(val.value_.pointer_value_, val.length_);
     } break;
     default: return RC::UNIMPLEMENTED;

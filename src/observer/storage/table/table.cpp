@@ -288,9 +288,11 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
       
       // TEXT字段的inline容量是 field->len() - 20（去除overflow pointer header）
       size_t inline_capacity = field->len() - 20;
-      if (str_val.length() > inline_capacity) {
+      // 限制TEXT长度到TEXT_MAX_LENGTH
+      size_t safe_text_length = std::min(str_val.length(), static_cast<size_t>(TEXT_MAX_LENGTH));
+      if (safe_text_length > inline_capacity) {
         // 超长TEXT，需要在record后面附加完整数据
-        extra_text_size += str_val.length();
+        extra_text_size += safe_text_length;
       }
     }
   }
@@ -370,15 +372,17 @@ RC Table::set_value_to_record(char *record_data, int base_record_size, int &exte
       // Extended format: [marker][length][offset]
       char *field_data = record_data + field->offset();
       uint32_t marker = 0xFFFFFFFF;
-      uint32_t full_length = static_cast<uint32_t>(text_length);
+      // 确保不超过TEXT_MAX_LENGTH
+      uint32_t safe_length = std::min(static_cast<uint32_t>(text_length), 
+                                      static_cast<uint32_t>(TEXT_MAX_LENGTH));
       uint32_t data_offset_in_record = static_cast<uint32_t>(extended_text_offset);
       
       memcpy(field_data, &marker, sizeof(uint32_t));
-      memcpy(field_data + 4, &full_length, sizeof(uint32_t));
+      memcpy(field_data + 4, &safe_length, sizeof(uint32_t));
       memcpy(field_data + 8, &data_offset_in_record, sizeof(uint32_t));
       
-      memcpy(record_data + extended_text_offset, text_data, text_length);
-      extended_text_offset += text_length;
+      memcpy(record_data + extended_text_offset, text_data, safe_length);
+      extended_text_offset += safe_length;
     }
     return RC::SUCCESS;
   }

@@ -5,6 +5,7 @@
 #include "sql/expr/tuple.h"
 #include "common/type/data_type.h"
 #include "common/type/attr_type.h"
+#include "common/types.h"
 
 /**
  * @brief 开启UPDATE物理算子，执行完整的更新操作
@@ -175,15 +176,17 @@ RC UpdatePhysicalOperator::open(Trx *trx)
           memset(new_record.data() + offset, 0, len);
           
           uint32_t marker = 0xFFFFFFFF;
-          uint32_t text_length = static_cast<uint32_t>(string_val.length());
+          // 确保不超过TEXT_MAX_LENGTH
+          uint32_t safe_text_length = std::min(static_cast<uint32_t>(string_val.length()), 
+                                               static_cast<uint32_t>(TEXT_MAX_LENGTH));
           uint32_t data_offset = record.len();  // 数据在原record大小之后
           
           memcpy(new_record.data() + offset, &marker, sizeof(uint32_t));
-          memcpy(new_record.data() + offset + 4, &text_length, sizeof(uint32_t));
+          memcpy(new_record.data() + offset + 4, &safe_text_length, sizeof(uint32_t));
           memcpy(new_record.data() + offset + 8, &data_offset, sizeof(uint32_t));
           
-          // 将完整TEXT数据复制到record末尾
-          memcpy(new_record.data() + record.len(), string_val.c_str(), string_val.length());
+          // 将完整TEXT数据复制到record末尾（限制到safe_text_length）
+          memcpy(new_record.data() + record.len(), string_val.c_str(), safe_text_length);
         }
       } break;
       default:
