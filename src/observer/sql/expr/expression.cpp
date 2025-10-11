@@ -18,46 +18,6 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-// LIKE模式匹配实现：%匹配零个或多个字符，_匹配单个字符
-// 遇到%时递归尝试所有可能的匹配位置
-static bool match_like_pattern(const char *text, const char *pattern)
-{
-  const char *t = text;
-  const char *p = pattern;
-  
-  while (*p) {
-    if (*p == '%') {
-      p++;
-      if (*p == '\0') return true;
-      
-      while (*t) {
-        if (match_like_pattern(t, p)) return true;
-        t++;
-      }
-      return false;
-    } 
-    else if (*p == '_') {
-      if (*t == '\0') return false;
-      p++; t++;
-    } 
-    else {
-      if (*t != *p) return false;
-      p++; t++;
-    }
-  }
-  
-  return *t == '\0';
-}
-
-// LIKE匹配的安全入口函数
-static bool like_match(const char *text, const char *pattern)
-{
-  if (text == nullptr || pattern == nullptr) {
-    return false;
-  }
-  return match_like_pattern(text, pattern);
-}
-
 RC FieldExpr::get_value(const Tuple &tuple, Value &value) const
 {
   return tuple.find_cell(TupleCellSpec(table_name(), field_name()), value);
@@ -131,7 +91,7 @@ RC CastExpr::cast(const Value &value, Value &cast_value) const
 RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 {
   Value value;
-  RC rc = child_->get_value(tuple, value);
+  RC    rc = child_->get_value(tuple, value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -142,7 +102,7 @@ RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 RC CastExpr::try_get_value(Value &result) const
 {
   Value value;
-  RC rc = child_->try_get_value(value);
+  RC    rc = child_->try_get_value(value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -154,35 +114,22 @@ RC CastExpr::try_get_value(Value &result) const
 
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right)
     : comp_(comp), left_(std::move(left)), right_(std::move(right))
-{
-}
+{}
 
 ComparisonExpr::~ComparisonExpr() {}
 
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
-  RC rc = RC::SUCCESS;
-  result = false;
-  
-  // 处理LIKE操作
-  if (comp_ == LIKE_OP) {
-    if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
-      LOG_WARN("LIKE operation requires CHARS type values");
-      rc = RC::INTERNAL;
-      return rc;
-    }
-    
-    std::string text = left.get_string();
-    std::string pattern = right.get_string();
-    result = like_match(text.c_str(), pattern.c_str());
-    return rc;
-  }
-  
-  // 现有的比较操作逻辑
+  RC  rc         = RC::SUCCESS;
   int cmp_result = left.compare(right);
+  result         = false;
+  LOG_INFO("COMPARE: left=%s(%d), right=%s(%d), cmp_result=%d", 
+           left.to_string().c_str(), (int)left.attr_type(),
+           right.to_string().c_str(), (int)right.attr_type(), cmp_result);
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
+      LOG_INFO("EQUAL_TO result: %s", result ? "true" : "false");
     } break;
     case LESS_EQUAL: {
       result = (cmp_result <= 0);
@@ -199,6 +146,12 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case GREAT_THAN: {
       result = (cmp_result > 0);
     } break;
+    case IS_NULL: {
+      result = left.is_null();
+    } break;
+    case IS_NOT_NULL: {
+      result = !left.is_null();
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -210,23 +163,41 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
 
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
-  if (left_->type() == ExprType::VALUE && right_->type() == ExprType::VALUE) {
-    ValueExpr *  left_value_expr  = static_cast<ValueExpr *>(left_.get());
-    ValueExpr *  right_value_expr = static_cast<ValueExpr *>(right_.get());
-    const Value &left_cell        = left_value_expr->get_value();
-    const Value &right_cell       = right_value_expr->get_value();
+  // 尝试计算常量表达式的值
+  Value left_value, right_value;
 
-    bool value = false;
-    RC   rc    = compare_value(left_cell, right_cell, value);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
-    } else {
-      cell.set_boolean(value);
-    }
-    return rc;
+  RC rc = left_->try_get_value(left_value);
+  if (rc != RC::SUCCESS) {
+    return RC::INVALID_ARGUMENT;
   }
 
-  return RC::INVALID_ARGUMENT;
+  // IS NULL 和 IS NOT NULL 是一元操作，不需要右操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    cell.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
+  }
+
+  // 对于其他比较操作，需要右操作数
+  rc = right_->try_get_value(right_value);
+  if (rc != RC::SUCCESS) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    cell.set_null();
+    return RC::SUCCESS;
+  }
+
+  bool value = false;
+  rc         = compare_value(left_value, right_value, value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
+  } else {
+    cell.set_boolean(value);
+  }
+  return rc;
 }
 
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
@@ -239,10 +210,25 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+
+  // IS NULL 和 IS NOT NULL 处理 - 只需要左操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    value.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
+  }
+
+  // 对于其他比较操作，需要获取右操作数
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
     return rc;
+  }
+
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
   }
 
   bool bool_value = false;
@@ -256,45 +242,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 
 RC ComparisonExpr::eval(Chunk &chunk, vector<uint8_t> &select)
 {
-  RC rc = RC::SUCCESS;
-  
-  // 处理LIKE操作的向量化执行
-  if (comp_ == LIKE_OP) {
-    Column left_column;
-    Column right_column;
-    
-    rc = left_->get_column(chunk, left_column);
-    if (rc != RC::SUCCESS) {
-      return rc;
-    }
-    
-    rc = right_->get_column(chunk, right_column);
-    if (rc != RC::SUCCESS) {
-      return rc;
-    }
-    
-    // 确保都是字符串类型
-    if (left_column.attr_type() != AttrType::CHARS || right_column.attr_type() != AttrType::CHARS) {
-      LOG_WARN("LIKE operation requires CHARS type columns");
-      std::fill(select.begin(), select.end(), 0);
-      return RC::SUCCESS;
-    }
-    
-    // 逐行进行LIKE匹配
-    for (int i = 0; i < chunk.rows(); i++) {
-      Value left_value = left_column.get_value(i);
-      Value right_value = right_column.get_value(i);
-      
-      std::string text = left_value.get_string();
-      std::string pattern = right_value.get_string();
-      
-      select[i] = like_match(text.c_str(), pattern.c_str()) ? 1 : 0;
-    }
-    
-    return RC::SUCCESS;
-  }
-  
-  // 现有的比较操作逻辑
+  RC     rc = RC::SUCCESS;
   Column left_column;
   Column right_column;
 
@@ -414,8 +362,25 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 {
   RC rc = RC::SUCCESS;
 
+  // NULL值传播：任何NULL参与的运算都返回NULL
+  if (left_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
+  // 对于二元运算，检查右操作数
+  if (arithmetic_type_ != Type::NEGATIVE && right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
   const AttrType target_type = value_type();
   value.set_type(target_type);
+
+  LOG_INFO("ARITHMETIC calc_value: left=%s(%d), right=%s(%d), target_type=%d, op_type=%d",
+           left_value.to_string().c_str(), (int)left_value.attr_type(),
+           right_value.to_string().c_str(), (int)right_value.attr_type(),
+           (int)target_type, (int)arithmetic_type_);
 
   switch (arithmetic_type_) {
     case Type::ADD: {
@@ -526,6 +491,19 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+
+  // 处理一元运算符（如负号）
+  if (arithmetic_type_ == Type::NEGATIVE) {
+    // 对于负号运算，right_是nullptr，直接对left_value取负
+    return calc_value(left_value, Value(), value);
+  }
+
+  // 处理二元运算符
+  if (right_ == nullptr) {
+    LOG_WARN("right operand is null for binary arithmetic operation");
+    return RC::INVALID_ARGUMENT;
+  }
+
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
@@ -588,19 +566,31 @@ RC ArithmeticExpr::try_get_value(Value &value) const
   Value left_value;
   Value right_value;
 
+// 减少冗余日志输出 - 只在需要时输出
+#ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value: type=%d", (int)arithmetic_type_);
+#endif
+
   rc = left_->try_get_value(left_value);
   if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+    // try_get_value失败是正常的（表达式包含字段时），不需要警告
     return rc;
   }
 
   if (right_) {
     rc = right_->try_get_value(right_value);
     if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+      // try_get_value失败是正常的（表达式包含字段时），不需要警告
       return rc;
     }
   }
+
+#ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value calling calc_value: left=%s, right=%s, op=%d",
+           left_value.to_string().c_str(), 
+           right_value.to_string().c_str(), 
+           (int)arithmetic_type_);
+#endif
 
   return calc_value(left_value, right_value, value);
 }
@@ -613,6 +603,10 @@ UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, Expressio
 
 UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, unique_ptr<Expression> child)
     : aggregate_name_(aggregate_name), child_(std::move(child))
+{}
+
+UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, vector<unique_ptr<Expression>> children)
+    : aggregate_name_(aggregate_name), children_(std::move(children))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -648,8 +642,24 @@ unique_ptr<Aggregator> AggregateExpr::create_aggregator() const
 {
   unique_ptr<Aggregator> aggregator;
   switch (aggregate_type_) {
+    case Type::COUNT: {
+      aggregator = make_unique<CountAggregator>();
+      break;
+    }
     case Type::SUM: {
       aggregator = make_unique<SumAggregator>();
+      break;
+    }
+    case Type::AVG: {
+      aggregator = make_unique<AvgAggregator>();
+      break;
+    }
+    case Type::MAX: {
+      aggregator = make_unique<MaxAggregator>();
+      break;
+    }
+    case Type::MIN: {
+      aggregator = make_unique<MinAggregator>();
       break;
     }
     default: {

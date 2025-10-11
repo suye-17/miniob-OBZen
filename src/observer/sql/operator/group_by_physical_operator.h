@@ -17,6 +17,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/tuple.h"
 #include "sql/operator/physical_operator.h"
 #include "sql/expr/composite_tuple.h"
+#include "sql/stmt/filter_stmt.h"
+
+class FilterStmt;  // 前向声明
 
 /**
  * @brief Group By 物理算子基类
@@ -25,7 +28,7 @@ See the Mulan PSL v2 for more details. */
 class GroupByPhysicalOperator : public PhysicalOperator
 {
 public:
-  GroupByPhysicalOperator(vector<Expression *> &&expressions);
+  GroupByPhysicalOperator(vector<Expression *> &&expressions, FilterStmt *having_filter_stmt = nullptr);
   virtual ~GroupByPhysicalOperator() = default;
 
 protected:
@@ -52,7 +55,17 @@ protected:
   /// @brief 所有tuple聚合结束后，运算最终结果
   RC evaluate(GroupValueType &group_value);
 
+  /// @brief 检查分组是否满足HAVING条件
+  /// @param group_value 已经聚合完成的分组数据
+  /// @return true 如果满足HAVING条件，false 否则
+  bool check_having_condition(const GroupValueType &group_value);
+
+private:
+  bool get_filter_value(const FilterObj &filter_obj, const CompositeTuple &composite_tuple, Value &result_value);
+  bool evaluate_comparison(const Value &left_value, const Value &right_value, CompOp comp_op);
+
 protected:
   vector<Expression *> aggregate_expressions_;  /// 聚合表达式
   vector<Expression *> value_expressions_;      /// 计算聚合时的表达式
+  FilterStmt          *having_filter_stmt_;     /// having过滤条件
 };

@@ -52,6 +52,12 @@ RC PredicatePhysicalOperator::next()
       return rc;
     }
 
+    // 检查NULL值：如果WHERE条件计算结果为NULL，直接跳过该记录
+    // 符合SQL标准：NULL条件不匹配任何记录
+    if (value.is_null()) {
+      continue;  // 跳过这条记录，继续处理下一条
+    }
+
     if (value.get_boolean()) {
       return rc;
     }
@@ -67,7 +73,4 @@ RC PredicatePhysicalOperator::close()
 
 Tuple *PredicatePhysicalOperator::current_tuple() { return children_[0]->current_tuple(); }
 
-RC PredicatePhysicalOperator::tuple_schema(TupleSchema &schema) const
-{
-  return children_[0]->tuple_schema(schema);
-}
+RC PredicatePhysicalOperator::tuple_schema(TupleSchema &schema) const { return children_[0]->tuple_schema(schema); }

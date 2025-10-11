@@ -56,12 +56,12 @@ public:
   int field_num() const;  // sys field included
   int sys_field_num() const;
 
-  const IndexMeta *index(const char *name) const;
-  const IndexMeta *find_index_by_field(const char *field) const;
-  const IndexMeta *index(int i) const;
-  int              index_num() const;
-
-  const vector<string> &primary_keys() const { return primary_keys_; }
+  const IndexMeta         *index(const char *name) const;
+  const IndexMeta         *find_index_by_field(const char *field) const;
+  const IndexMeta         *index(int i) const;
+  int                      index_num() const;
+  const vector<IndexMeta> *index_metas() const { return &indexes_; }
+  const vector<string>    &primary_keys() const { return primary_keys_; }
 
   int record_size() const;
 

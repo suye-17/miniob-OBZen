@@ -16,12 +16,13 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/scalar_group_by_physical_operator.h"
 #include "sql/expr/expression_tuple.h"
 #include "sql/expr/composite_tuple.h"
-
+#include "sql/stmt/filter_stmt.h"
 using namespace std;
 using namespace common;
 
-ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions)
-    : GroupByPhysicalOperator(std::move(expressions))
+ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(
+    vector<Expression *> &&expressions, FilterStmt *having_filter_stmt)
+    : GroupByPhysicalOperator(std::move(expressions), having_filter_stmt)
 {}
 
 RC ScalarGroupByPhysicalOperator::open(Trx *trx)
@@ -65,7 +66,7 @@ RC ScalarGroupByPhysicalOperator::open(Trx *trx)
       composite_tuple.add_tuple(make_unique<ValueListTuple>(std::move(child_tuple_to_value)));
       group_value_ = make_unique<GroupValueType>(std::move(aggregator_list), std::move(composite_tuple));
     }
-    
+
     rc = aggregate(get<0>(*group_value_), group_value_expression_tuple);
     if (OB_FAIL(rc)) {
       LOG_WARN("failed to aggregate values. rc=%s", strrc(rc));
@@ -80,6 +81,17 @@ RC ScalarGroupByPhysicalOperator::open(Trx *trx)
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to get next tuple. rc=%s", strrc(rc));
     return rc;
+  }
+
+  // 双重保障：如果没有输入行，确保为聚合函数创建默认值
+  // 正常情况下，PhysicalPlanGenerator的EmptyPhysicalOperator已经处理了这种情况
+  // 这里作为额外的安全检查，确保count(*)返回0，其他聚合函数返回NULL
+  if (group_value_ == nullptr) {
+    AggregatorList aggregator_list;
+    create_aggregator_list(aggregator_list);
+
+    CompositeTuple composite_tuple;
+    group_value_ = make_unique<GroupValueType>(std::move(aggregator_list), std::move(composite_tuple));
   }
 
   // 得到最终聚合后的值
@@ -97,8 +109,13 @@ RC ScalarGroupByPhysicalOperator::next()
     return RC::RECORD_EOF;
   }
 
-  emitted_ = true;
+  // 检查
+  if (!check_having_condition(*group_value_)) {
+    emitted_ = true;
+    return RC::RECORD_EOF;
+  }
 
+  emitted_ = true;
   return RC::SUCCESS;
 }
 

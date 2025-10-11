@@ -16,20 +16,25 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/operator/logical_operator.h"
 
+class FilterStmt;
+
 class GroupByLogicalOperator : public LogicalOperator
 {
 public:
-  GroupByLogicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions);
+  GroupByLogicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions,
+      FilterStmt *having_filter_stmt);
 
   virtual ~GroupByLogicalOperator() = default;
 
   LogicalOperatorType type() const override { return LogicalOperatorType::GROUP_BY; }
   OpType              get_op_type() const override { return OpType::LOGICALGROUPBY; }
 
-  auto &group_by_expressions() { return group_by_expressions_; }
-  auto &aggregate_expressions() { return aggregate_expressions_; }
+  auto       &group_by_expressions() { return group_by_expressions_; }
+  auto       &aggregate_expressions() { return aggregate_expressions_; }
+  FilterStmt *having_filter_stmt() { return having_filter_stmt_; }
 
 private:
   vector<unique_ptr<Expression>> group_by_expressions_;
   vector<Expression *>           aggregate_expressions_;  ///< 输出的表达式，可能包含聚合函数
+  FilterStmt                    *having_filter_stmt_;
 };

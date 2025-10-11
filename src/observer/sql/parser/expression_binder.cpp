@@ -334,20 +334,23 @@ RC ExpressionBinder::bind_arithmetic_expression(
     left_expr.reset(left.release());
   }
 
-  child_bound_expressions.clear();
-  rc = bind_expression(right_expr, child_bound_expressions);
-  if (OB_FAIL(rc)) {
-    return rc;
-  }
+  // 处理一元运算符（如NEGATIVE），右操作数为nullptr
+  if (right_expr != nullptr) {
+    child_bound_expressions.clear();
+    rc = bind_expression(right_expr, child_bound_expressions);
+    if (OB_FAIL(rc)) {
+      return rc;
+    }
 
-  if (child_bound_expressions.size() != 1) {
-    LOG_WARN("invalid right children number of comparison expression: %d", child_bound_expressions.size());
-    return RC::INVALID_ARGUMENT;
-  }
+    if (child_bound_expressions.size() != 1) {
+      LOG_WARN("invalid right children number of comparison expression: %d", child_bound_expressions.size());
+      return RC::INVALID_ARGUMENT;
+    }
 
-  unique_ptr<Expression> &right = child_bound_expressions[0];
-  if (right.get() != right_expr.get()) {
-    right_expr.reset(right.release());
+    unique_ptr<Expression> &right = child_bound_expressions[0];
+    if (right.get() != right_expr.get()) {
+      right_expr.reset(right.release());
+    }
   }
 
   bound_expressions.emplace_back(std::move(expr));
@@ -368,29 +371,28 @@ RC check_aggregate_expression(AggregateExpr &expression)
   AttrType            child_value_type = child_expression->value_type();
   switch (aggregate_type) {
     case AggregateExpr::Type::SUM:
-    case AggregateExpr::Type::AVG: {
-      // 仅支持数值类型
-      if (child_value_type != AttrType::INTS && child_value_type != AttrType::FLOATS) {
+    case AggregateExpr::Type::AVG:  // 支持数值类型和NULL值（UNDEFINED类型代表NULL常量）
+      if (child_value_type != AttrType::INTS && child_value_type != AttrType::FLOATS &&
+          child_value_type != AttrType::UNDEFINED) {
         LOG_WARN("invalid child value type for aggregate expression: %d", static_cast<int>(child_value_type));
         return RC::INVALID_ARGUMENT;
       }
-    } break;
+      break;
 
     case AggregateExpr::Type::COUNT:
     case AggregateExpr::Type::MAX:
-    case AggregateExpr::Type::MIN: {
-      // 任何类型都支持
-    } break;
+    case AggregateExpr::Type::MIN:
+      // 任何类型都支持，包括NULL
+      break;
   }
 
   // 子表达式中不能再包含聚合表达式
-  function<RC(unique_ptr<Expression>&)> check_aggregate_expr = [&](unique_ptr<Expression> &expr) -> RC {
+  function<RC(unique_ptr<Expression> &)> check_aggregate_expr = [](unique_ptr<Expression> &expr) -> RC {
     RC rc = RC::SUCCESS;
     if (expr->type() == ExprType::AGGREGATION) {
       LOG_WARN("aggregate expression cannot be nested");
       return RC::INVALID_ARGUMENT;
     }
-    rc = ExpressionIterator::iterate_child_expr(*expr, check_aggregate_expr);
     return rc;
   };
 
@@ -407,9 +409,16 @@ RC ExpressionBinder::bind_aggregate_expression(
   }
 
   auto unbound_aggregate_expr = static_cast<UnboundAggregateExpr *>(expr.get());
-  const char *aggregate_name = unbound_aggregate_expr->aggregate_name();
+
+  // 新增：检测多参数聚合函数并返回错误
+  if (unbound_aggregate_expr->is_multi_param()) {
+    LOG_WARN("Aggregate functions do not support multiple parameters");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  const char         *aggregate_name = unbound_aggregate_expr->aggregate_name();
   AggregateExpr::Type aggregate_type;
-  RC rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
+  RC                  rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
   if (OB_FAIL(rc)) {
     LOG_WARN("invalid aggregate name: %s", aggregate_name);
     return rc;

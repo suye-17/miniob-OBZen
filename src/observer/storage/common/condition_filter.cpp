@@ -129,28 +129,32 @@ static bool match_like_pattern(const char *text, const char *pattern)
 {
   const char *t = text;
   const char *p = pattern;
-  
+
   while (*p) {
     if (*p == '%') {
       p++;
-      if (*p == '\0') return true;
-      
+      if (*p == '\0')
+        return true;
+
       while (*t) {
-        if (match_like_pattern(t, p)) return true;
+        if (match_like_pattern(t, p))
+          return true;
         t++;
       }
       return false;
-    } 
-    else if (*p == '_') {
-      if (*t == '\0') return false;
-      p++; t++;
-    } 
-    else {
-      if (*t != *p) return false;
-      p++; t++;
+    } else if (*p == '_') {
+      if (*t == '\0')
+        return false;
+      p++;
+      t++;
+    } else {
+      if (*t != *p)
+        return false;
+      p++;
+      t++;
     }
   }
-  
+
   return *t == '\0';
 }
 
@@ -190,18 +194,18 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       LOG_WARN("LIKE operation only supports CHARS type, got: %d", attr_type_);
       return false;
     }
-    
+
     // 获取字符串值
-    std::string text = left_value.get_string();
+    std::string text    = left_value.get_string();
     std::string pattern = right_value.get_string();
-    
+
     // 执行LIKE匹配
     return do_like_match(text.c_str(), pattern.c_str());
   }
 
   // 现有的比较操作逻辑
   int cmp_result = left_value.compare(right_value);
-  
+
   switch (comp_op_) {
     case EQUAL_TO: return 0 == cmp_result;
     case LESS_EQUAL: return cmp_result <= 0;
@@ -209,10 +213,8 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     case LESS_THAN: return cmp_result < 0;
     case GREAT_EQUAL: return cmp_result >= 0;
     case GREAT_THAN: return cmp_result > 0;
-    
-    default:
-      LOG_WARN("Unknown comparison operator: %d", comp_op_);
-      return false;
+
+    default: LOG_WARN("Unknown comparison operator: %d", comp_op_); return false;
   }
 }
 
@@ -274,5 +276,3 @@ bool CompositeConditionFilter::filter(const Record &rec) const
   }
   return true;
 }
-
- 

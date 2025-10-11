@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "common/lang/memory.h"
+#include "common/lang/vector.h"
 #include "common/sys/rc.h"
 #include "common/type/attr_type.h"
 
@@ -27,6 +28,7 @@ class DeleteStmt;
 class UpdateStmt;
 class ExplainStmt;
 class LogicalOperator;
+class Table;
 
 class LogicalPlanGenerator
 {
@@ -39,7 +41,7 @@ public:
 private:
   RC create_plan(CalcStmt *calc_stmt, unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(SelectStmt *select_stmt, unique_ptr<LogicalOperator> &logical_operator);
-  RC create_plan(FilterStmt *filter_stmt, unique_ptr<LogicalOperator> &logical_operator);
+  RC create_plan(FilterStmt *filter_stmt, const vector<Table *> &tables, unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(InsertStmt *insert_stmt, unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(DeleteStmt *delete_stmt, unique_ptr<LogicalOperator> &logical_operator);
   RC create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator);

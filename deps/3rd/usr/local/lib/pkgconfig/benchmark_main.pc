@@ -1,0 +1,7 @@
+libdir=/home/chris/OBZen-zhanghao-2024/deps/3rd/usr/local/lib
+
+Name: benchmark
+Description: Google microbenchmark framework (with main() function)
+Version: 1.9.4.39
+Requires: benchmark
+Libs: -L${libdir} -lbenchmark_main

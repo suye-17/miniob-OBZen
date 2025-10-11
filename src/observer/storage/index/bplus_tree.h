@@ -66,7 +66,12 @@ public:
 
   int operator()(const char *v1, const char *v2) const
   {
-    // TODO: optimized the comparison
+    // CHARS 类型使用 memcmp，避免 strncmp 遇到 \0 停止（多字段索引需要）
+    if (attr_type_ == AttrType::CHARS) {
+      int result = memcmp(v1, v2, attr_length_);
+      return (result < 0) ? -1 : ((result > 0) ? 1 : 0);
+    }
+
     Value left;
     left.set_type(attr_type_);
     left.set_data(v1, attr_length_);
@@ -184,12 +189,9 @@ struct IndexFileHeader
   {
     stringstream ss;
 
-    ss << "attr_length:" << attr_length << ","
-       << "key_length:" << key_length << ","
-       << "attr_type:" << attr_type_to_string(attr_type) << ","
-       << "root_page:" << root_page << ","
-       << "internal_max_size:" << internal_max_size << ","
-       << "leaf_max_size:" << leaf_max_size << ";";
+    ss << "attr_length:" << attr_length << "," << "key_length:" << key_length << ","
+       << "attr_type:" << attr_type_to_string(attr_type) << "," << "root_page:" << root_page << ","
+       << "internal_max_size:" << internal_max_size << "," << "leaf_max_size:" << leaf_max_size << ";";
 
     return ss.str();
   }
