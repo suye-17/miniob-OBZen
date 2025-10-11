@@ -200,6 +200,20 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       left = make_unique<ValueExpr>(filter_obj_left.value);
     }
 
+    // 处理 EXISTS/NOT EXISTS 操作（只需要子查询）
+    if (filter_unit->comp() == EXISTS_OP || filter_unit->comp() == NOT_EXISTS_OP) {
+      if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
+        // EXISTS 只需要子查询，不需要左侧表达式
+        auto subquery_copy = SelectSqlNode::create_copy(filter_obj_right.subquery.get());
+        ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(subquery_copy));
+        cmp_exprs.emplace_back(cmp_expr);
+        continue;
+      } else {
+        LOG_WARN("EXISTS/NOT EXISTS operation requires subquery");
+        return RC::INVALID_ARGUMENT;
+      }
+    }
+    
     // 处理IN/NOT IN操作的值列表或子查询
     if (filter_unit->comp() == IN_OP || filter_unit->comp() == NOT_IN_OP) {
       if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
@@ -226,9 +240,13 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       // 右侧是表达式（已绑定）
       right.reset(filter_obj_right.expr->copy().release());
     } else if (filter_obj_right.has_subquery && filter_obj_right.subquery) {
-      // 右侧是子查询
+      // 右侧是子查询 - 对于标量子查询，直接创建 ComparisonExpr
+      // 注意：这里不创建 SubqueryExpr，因为该类不存在
+      // 标量子查询会在下面创建 ComparisonExpr 时处理
       auto subquery_copy = SelectSqlNode::create_copy(filter_obj_right.subquery.get());
-      right = make_unique<SubqueryExpr>(std::move(subquery_copy));
+      ComparisonExpr *cmp_expr = new ComparisonExpr(filter_unit->comp(), std::move(left), std::move(subquery_copy));
+      cmp_exprs.emplace_back(cmp_expr);
+      continue;  // 已经创建了表达式，跳过后续处理
     } else if (filter_obj_right.is_attr) {
       // 右侧是属性
       right = make_unique<FieldExpr>(filter_obj_right.field);

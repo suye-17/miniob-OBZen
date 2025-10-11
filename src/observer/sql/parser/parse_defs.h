@@ -63,6 +63,8 @@ enum CompOp
   NOT_LIKE_OP,  ///< "NOT LIKE"
   IN_OP,        ///< "IN"
   NOT_IN_OP,    ///< "NOT IN"
+  EXISTS_OP,    ///< "EXISTS"
+  NOT_EXISTS_OP,///< "NOT EXISTS"
   NO_OP
 };
 

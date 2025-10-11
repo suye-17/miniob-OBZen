@@ -118,6 +118,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         LIKE
         NOT
         IN
+        EXISTS
         INNER
         JOIN
 
@@ -785,6 +786,28 @@ condition:
 
       delete $1;
       delete $5;
+    }
+    | EXISTS LBRACE select_stmt RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      $$->comp = EXISTS_OP;
+      $$->has_subquery = true;
+      $$->subquery = SelectSqlNode::create_copy(&($3->selection));
+
+      delete $3;
+    }
+    | NOT EXISTS LBRACE select_stmt RBRACE
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      $$->comp = NOT_EXISTS_OP;
+      $$->has_subquery = true;
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
+
+      delete $4;
     }
     | LBRACE select_stmt RBRACE comp_op rel_attr
     {

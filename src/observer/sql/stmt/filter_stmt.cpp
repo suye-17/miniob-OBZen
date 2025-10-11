@@ -218,6 +218,22 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     filter_unit->set_left(filter_obj);
   }
 
+  // 处理 EXISTS/NOT EXISTS 操作（只需要子查询）
+  if (comp == EXISTS_OP || comp == NOT_EXISTS_OP) {
+    if (condition.has_subquery && condition.subquery) {
+      // EXISTS 将子查询作为右侧对象
+      FilterObj filter_obj;
+      filter_obj.init_subquery(condition.subquery.get());
+      filter_unit->set_right(filter_obj);
+      filter_unit->set_comp(comp);
+      return RC::SUCCESS;
+    } else {
+      LOG_WARN("EXISTS/NOT EXISTS operation requires subquery");
+      delete filter_unit;
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+  
   // 处理IN/NOT IN操作的值列表或子查询
   if (comp == IN_OP || comp == NOT_IN_OP) {
     if (condition.has_subquery && condition.subquery) {

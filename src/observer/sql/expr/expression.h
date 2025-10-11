@@ -318,6 +318,8 @@ public:
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values);
   // 新增：支持子查询的构造函数
   ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<SelectSqlNode> subquery);
+  // 新增：支持 EXISTS 的构造函数（不需要左侧表达式）
+  ComparisonExpr(CompOp comp, unique_ptr<SelectSqlNode> subquery);
   virtual ~ComparisonExpr();
 
   ExprType type() const override { return ExprType::COMPARISON; }
@@ -330,7 +332,15 @@ public:
     if (has_subquery_) {
       // 需要深拷贝子查询节点
       auto subquery_copy = make_unique<SelectSqlNode>(*subquery_);
-      return make_unique<ComparisonExpr>(comp_, left_->copy(), std::move(subquery_copy));
+      // EXISTS/NOT_EXISTS 不需要左侧表达式
+      if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+        return make_unique<ComparisonExpr>(comp_, std::move(subquery_copy));
+      } else if (left_) {
+        return make_unique<ComparisonExpr>(comp_, left_->copy(), std::move(subquery_copy));
+      } else {
+        LOG_WARN("Subquery comparison without left expression (comp=%d)", comp_);
+        return nullptr;
+      }
     } else if (has_value_list_) {
       return make_unique<ComparisonExpr>(comp_, left_->copy(), right_values_);
     } else if (right_) {

@@ -169,6 +169,14 @@ ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_
 {
 }
 
+// 新增：支持 EXISTS 的构造函数（不需要左侧表达式）
+ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<SelectSqlNode> subquery)
+    : comp_(comp), left_(nullptr), right_(nullptr), right_values_(), has_value_list_(false), subquery_(std::move(subquery)), has_subquery_(true)
+{
+  // EXISTS 和 NOT EXISTS 不需要左侧表达式
+  assert(comp == EXISTS_OP || comp == NOT_EXISTS_OP);
+}
+
 ComparisonExpr::~ComparisonExpr() {}
 
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
@@ -241,6 +249,11 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
       LOG_WARN("IN/NOT IN should use compare_with_value_list method");
       rc = RC::INTERNAL;
     } break;
+    case EXISTS_OP:
+    case NOT_EXISTS_OP: {
+      LOG_WARN("EXISTS/NOT EXISTS should be handled in get_value with subquery");
+      rc = RC::INTERNAL;
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -283,8 +296,13 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
 
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
+  // EXISTS/NOT EXISTS 不支持 try_get_value（需要执行子查询）
+  if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+    return RC::INVALID_ARGUMENT;
+  }
+
   // 处理IN/NOT IN操作
-  if (has_value_list_ && left_->type() == ExprType::VALUE) {
+  if (has_value_list_ && left_ && left_->type() == ExprType::VALUE) {
     ValueExpr *left_value_expr = static_cast<ValueExpr *>(left_.get());
     const Value &left_cell = left_value_expr->get_value();
     
@@ -299,7 +317,7 @@ RC ComparisonExpr::try_get_value(Value &cell) const
   }
   
   // 处理普通比较操作
-  if (left_->type() == ExprType::VALUE && right_ && right_->type() == ExprType::VALUE) {
+  if (left_ && left_->type() == ExprType::VALUE && right_ && right_->type() == ExprType::VALUE) {
     ValueExpr *  left_value_expr  = static_cast<ValueExpr *>(left_.get());
     ValueExpr *  right_value_expr = static_cast<ValueExpr *>(right_.get());
     const Value &left_cell        = left_value_expr->get_value();
@@ -334,7 +352,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       return subquery_rc;
     }
     
-    // 区分 IN/NOT_IN 和标量子查询
+    // 区分 IN/NOT_IN、EXISTS/NOT_EXISTS 和标量子查询
     if (comp_ == IN_OP || comp_ == NOT_IN_OP) {
       // IN/NOT_IN 子查询：使用值列表比较
       Value left_value;
@@ -344,6 +362,14 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
         return rc;
       }
       rc = compare_with_value_list(left_value, subquery_results, bool_value);
+    } else if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+      // EXISTS/NOT_EXISTS 子查询：只检查结果集是否为空
+      LOG_DEBUG("Processing EXISTS/NOT_EXISTS subquery, result count=%zu", subquery_results.size());
+      bool exists = !subquery_results.empty();
+      bool_value = (comp_ == EXISTS_OP) ? exists : !exists;
+      LOG_DEBUG("EXISTS result: exists=%s, final_result=%s", 
+               exists ? "TRUE" : "FALSE", bool_value ? "TRUE" : "FALSE");
+      rc = RC::SUCCESS;
     } else {
       // 标量子查询：只能返回一个值
       if (subquery_results.empty()) {

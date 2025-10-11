@@ -121,8 +121,21 @@ RC PredicatePushdownRewriter::get_exprs_can_pushdown(
     // 如果是比较操作，并且比较的左边或右边是表某个列值，那么就下推下去
     auto   comparison_expr = static_cast<ComparisonExpr *>(expr.get());
 
+    // EXISTS/NOT EXISTS 操作不能下推（不涉及具体字段比较）
+    if (comparison_expr->comp() == EXISTS_OP || comparison_expr->comp() == NOT_EXISTS_OP) {
+      pushdown_exprs.emplace_back(std::move(expr));
+      return rc;
+    }
+
     unique_ptr<Expression> &left_expr  = comparison_expr->left();
     unique_ptr<Expression> &right_expr = comparison_expr->right();
+    
+    // 检查指针是否为空（EXISTS 没有左侧表达式）
+    if (!left_expr || !right_expr) {
+      // 如果left或right为空，不能下推
+      return rc;
+    }
+    
     // 比较操作的左右两边只要有一个是取列字段值的并且另一边也是取字段值或常量，就pushdown
     if (left_expr->type() != ExprType::FIELD && right_expr->type() != ExprType::FIELD) {
       return rc;

@@ -161,6 +161,24 @@ RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, S
       Value value;
       RC expr_rc = RC::SUCCESS;
       
+      // 特殊处理：如果是 SELECT *，直接收集 tuple 的所有 cell
+      if (expr->type() == ExprType::STAR) {
+        LOG_DEBUG("SELECT * detected, collecting all tuple cells");
+        for (int cell_idx = 0; cell_idx < tuple->cell_num(); cell_idx++) {
+          Value cell_value;
+          RC cell_rc = tuple->cell_at(cell_idx, cell_value);
+          if (cell_rc == RC::SUCCESS) {
+            results.push_back(cell_value);
+            LOG_DEBUG("Added cell[%d]: %s (type: %d)", cell_idx, 
+                     cell_value.to_string().c_str(), static_cast<int>(cell_value.attr_type()));
+          } else {
+            LOG_WARN("Failed to get cell %d from tuple, rc=%d", cell_idx, cell_rc);
+          }
+        }
+        // SELECT * 已处理完，不需要继续处理其他表达式
+        continue;
+      }
+      
       // 处理不同类型的表达式
       if (expr->type() == ExprType::UNBOUND_FIELD) {
         // 处理未绑定的字段表达式
@@ -335,12 +353,19 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
   
   // 6. 收集结果
   int row_count = 0;
-  // 使用 select_node 的表达式数量，而不是 select_stmt 的 query_expressions
-  // 因为对于聚合查询，select_stmt 的 query_expressions 可能为空或不完整
-  int expected_cell_num = select_node->expressions.size();  // SELECT子句中的表达式数量
   
-  LOG_DEBUG("Subquery expects %d cells per row (from %zu expressions in SELECT)", 
-           expected_cell_num, select_node->expressions.size());
+  // 确定每行应该收集多少个cell
+  // 优先使用 select_stmt 的 query_expressions，因为它包含了绑定后的完整表达式列表
+  int expected_cell_num = 0;
+  if (!select_stmt->query_expressions().empty()) {
+    expected_cell_num = select_stmt->query_expressions().size();
+    LOG_DEBUG("Using query_expressions count: %d", expected_cell_num);
+  } else {
+    expected_cell_num = select_node->expressions.size();
+    LOG_DEBUG("Using select_node expressions count: %d", expected_cell_num);
+  }
+  
+  LOG_DEBUG("Subquery expects %d cells per row", expected_cell_num);
   
   while (RC::SUCCESS == (rc = physical_oper->next())) {
     Tuple *tuple = physical_oper->current_tuple();
@@ -353,11 +378,17 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     LOG_DEBUG("Processing row %d, tuple has %d cells (expected %d)", 
              row_count, tuple_cell_num, expected_cell_num);
     
-    // 只收集SELECT子句中指定数量的列
-    // 对于 SELECT col2 FROM table，只收集1列（col2）
-    // 对于 SELECT MIN(col) FROM table，只收集1列（MIN结果）
-    // 对于 SELECT * FROM table，收集所有列
-    int cells_to_collect = std::min(expected_cell_num, tuple_cell_num);
+    // 确定要收集的cell数量
+    int cells_to_collect;
+    if (expected_cell_num == 0 || expected_cell_num > tuple_cell_num) {
+      // SELECT * 或者expected超出实际数量，收集所有可用的cell
+      cells_to_collect = tuple_cell_num;
+      LOG_DEBUG("Collecting all %d cells (expected=%d)", tuple_cell_num, expected_cell_num);
+    } else {
+      // 明确指定列的情况，只收集指定数量
+      cells_to_collect = expected_cell_num;
+      LOG_DEBUG("Collecting %d cells as specified", cells_to_collect);
+    }
     
     for (int i = 0; i < cells_to_collect; i++) {
       Value value;
