@@ -1,0 +1,18 @@
+-- echo initialization
+CREATE TABLE ssq_1(id int, col1 int, feat1 float);
+CREATE TABLE ssq_2(id int, col2 int, feat2 float);
+CREATE TABLE ssq_3(id int, col3 int, feat3 float);
+CREATE TABLE ssq_4(id int, col4 char(20));
+
+INSERT INTO ssq_1 VALUES (47, 64, 44.89);
+INSERT INTO ssq_1 VALUES (90, 89, 87.05);
+INSERT INTO ssq_1 VALUES (21, 35, 22.10);
+INSERT INTO ssq_1 VALUES (55, 72, 55.55);
+
+INSERT INTO ssq_2 VALUES (10, 89, 15.20);
+INSERT INTO ssq_2 VALUES (20, 45, 30.50);
+INSERT INTO ssq_2 VALUES (30, 89, 45.75);
+
+-- echo Test IN subquery
+select * from ssq_1 where col1 in (select ssq_2.col2 from ssq_2);
+
