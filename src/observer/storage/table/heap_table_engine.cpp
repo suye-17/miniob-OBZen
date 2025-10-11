@@ -11,6 +11,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/heap_table_engine.h"
 #include "storage/record/heap_record_scanner.h"
 #include "common/log/log.h"
+#include "common/types.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/common/meta_util.h"
 #include "storage/db/db.h"
@@ -77,7 +78,9 @@ RC HeapTableEngine::insert_record(Record &record)
         }
       } else {
         // 长TEXT：写入inline + 创建overflow pages
-        size_t remaining = full_length;
+        // 确保不会读取超过TEXT_MAX_LENGTH的数据
+        uint32_t safe_length = std::min(full_length, static_cast<uint32_t>(TEXT_MAX_LENGTH));
+        size_t remaining = safe_length;
         const char *src_ptr = actual_text_data;
         
         memcpy(final_record_data + field_meta.offset(), src_ptr, inline_capacity);
@@ -141,7 +144,7 @@ RC HeapTableEngine::insert_record(Record &record)
         memcpy(overflow_ptr, &table_id, sizeof(uint32_t));
         memcpy(overflow_ptr + 4, &first_page_num, sizeof(PageNum));
         memcpy(overflow_ptr + 8, &offset, sizeof(uint32_t));
-        memcpy(overflow_ptr + 12, &full_length, sizeof(uint32_t));
+        memcpy(overflow_ptr + 12, &safe_length, sizeof(uint32_t));
       }
     }
   }
@@ -261,7 +264,8 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
         if (is_extended_text) {
           uint32_t full_length = *reinterpret_cast<const uint32_t*>(new_field_ptr + 4);
           uint32_t data_offset_in_record = *reinterpret_cast<const uint32_t*>(new_field_ptr + 8);
-          text_len = full_length;
+          // 确保不超过TEXT_MAX_LENGTH
+          text_len = std::min(full_length, static_cast<uint32_t>(TEXT_MAX_LENGTH));
           actual_text_data = new_record.data() + data_offset_in_record;
         } else {
           uint32_t field_offset = field->offset();
