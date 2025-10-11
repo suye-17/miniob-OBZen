@@ -1,0 +1,76 @@
+### 2025-09-10 13:45:40.878
+show tables
+### 2025-09-10 13:46:06.884
+use Tables_in_SYS
+### 2025-09-10 13:48:41.169
+CREATE TABLE table_1;
+### 2025-09-10 13:49:56.743
+find /home/simpur/OceanBase_MiniOB_2025/miniob-OBZen/src -name "*.h" -o -name "*.cpp" | grep -E "(executor|stmt)" | head -20
+### 2025-09-10 13:50:06.181
+ls -la /home/simpur/OceanBase_MiniOB_2025/miniob-OBZen/src/observer/sql/stmt/
+### 2025-09-10 13:50:12.684
+ls -la /home/simpur/OceanBase_MiniOB_2025/miniob-OBZen/src/observer/sql/executor/
+### 2025-09-10 13:50:20.710
+exit
+### 2025-09-10 14:29:57.527
+create table table_1;
+### 2025-09-10 14:30:34.382
+show talbes;
+### 2025-09-10 14:30:43.297
+show table;
+### 2025-09-10 14:31:06.684
+drop table Tables_in_SYS;
+### 2025-09-10 14:38:41.796
+CREATE TABLE users (    id INT PRIMARY KEY AUTO_INCREMENT,  -- 主键，自动增长    username VARCHAR(50) NOT NULL UNIQUE,  -- 用户名，非空且唯一    age INT,  -- 年龄，可空    email VARCHAR(100) UNIQUE,  -- 邮箱，唯一    created_at DATE  -- 创建日期);
+### 2025-09-10 14:39:13.856
+CREATE TABLE users (    id INT PRIMARY KEY,    username VARCHAR(50) NOT NULL,    age INT,    email VARCHAR(100));
+### 2025-09-10 14:42:01.625
+CREATE TABLE users (    id INT,    username CHAR(50),    age INT,    email CHAR(100),    PRIMARY KEY (id));
+### 2025-09-10 14:42:18.786
+drop table users;
+### 2025-09-15 09:25:42.064
+cd /home/simpur/OceanBase_MiniOB_2025/miniob-OBZen && ./build/bin/observer -f etc/observer.ini -P cli
+### 2025-09-15 09:28:10.921
+show tables;
+### 2025-09-15 09:28:26.282
+drop table if exists test_table;
+### 2025-09-15 09:29:12.598
+drop table test_table;
+### 2025-09-15 09:31:34.044
+CREATE TABLE IF NOT EXISTS test_like (    id INT PRIMARY KEY AUTO_INCREMENT PRIMARY KEY,    username VARCHAR(50) NOT NULL,    email VARCHAR(100) NOT NULL,    address VARCHAR(200),    phone VARCHAR(20),    password VARCHAR(50));
+### 2025-09-15 09:31:41.987
+CREATE TABLE IF NOT EXISTS test_like (
+### 2025-09-15 09:31:41.992
+    id INT PRIMARY KEY AUTO_INCREMENT PRIMARY KEY,
+### 2025-09-15 09:31:41.997
+    username VARCHAR(50) NOT NULL,
+### 2025-09-15 09:31:42.002
+    email VARCHAR(100) NOT NULL,
+### 2025-09-15 09:31:42.003
+    address VARCHAR(200),
+### 2025-09-15 09:31:42.007
+    phone VARCHAR(20),
+### 2025-09-15 09:31:42.007
+    password VARCHAR(50)
+### 2025-09-15 09:32:19.068
+CREATE TABLE IF NOT EXISTS test_like(
+### 2025-09-15 09:33:55.590
+CREATE TABLE IF NOT EXISTS test_like (id INT PRIMARY KEY AUTO_INCREMENT PRIMARY KEY,username VARCHAR(50) NOT NULL,email VARCHAR(100) NOT NULL,address VARCHAR(200),phone VARCHAR(20),password VARCHAR(50));
+### 2025-09-15 09:36:23.600
+CREATE TABLE test_like(  id int,  username char(50),  email char(100),  address char(200),  phone char(20),  password char(50));
+### 2025-09-15 09:36:42.446
+INSERT INTO test_like (username, email, address, phone, password) VALUES('张三', 'zhang3@example.com', '北京市朝阳区', '13812345678', 'pass123'),('张三丰', 'zhang3feng@test.com', '上海市浦东新区', '13987654321', 'pass%456'),('李四', 'lisi@example.com', '广州市天河区', '13887654321', 'pass_789'),('李四五', 'li45@test.cn', '北京市海淀区', '13712345678', '567pass'),('王五', 'wang5@example.com', '深圳市南山区', '13687654321', '890pass'),('王小五', 'wang55@test.com', '杭州市西湖区', '13898765432', 'pass%000'),('赵六', 'zhao6@example.org', '南京市玄武区', '13512345678', 'pass_111'),('赵六六', 'zhao66@test.net', '武汉市洪山区', '13856789012', '222pass');
+### 2025-09-15 09:38:08.638
+drop table test_like;
+### 2025-09-15 09:38:15.413
+CREATE TABLE test_like(id int, name char(20), description char(50));
+### 2025-09-15 09:38:22.764
+INSERT INTO test_like VALUES (1, 'Alice', 'A student from Beijing');
+### 2025-09-15 09:38:30.328
+SELECT * FROM test_like;
+### 2025-09-15 09:38:39.079
+SELECT * FROM test_like WHERE name LIKE 'A%';
+### 2025-09-15 09:38:51.407
+INSERT INTO test_like VALUES (2, 'Bob', 'A teacher from Shanghai');INSERT INTO test_like VALUES (3, 'Charlie', 'A worker from Guangzhou');
+### 2025-09-15 09:39:10.111
+SELECT * FROM test_like WHERE description LIKE '%teacher%';SELECT * FROM test_like WHERE name LIKE '_ob';SELECT * FROM test_like WHERE description LIKE '%from%';
