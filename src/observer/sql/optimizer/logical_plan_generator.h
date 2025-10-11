@@ -34,7 +34,7 @@ class LogicalPlanGenerator
 {
 public:
   LogicalPlanGenerator()          = default;
-  virtual ~LogicalPlanGenerator() = default; 
+  virtual ~LogicalPlanGenerator() = default;
 
   RC create(Stmt *stmt, unique_ptr<LogicalOperator> &logical_operator);
 

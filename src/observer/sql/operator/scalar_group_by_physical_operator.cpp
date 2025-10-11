@@ -20,8 +20,9 @@ See the Mulan PSL v2 for more details. */
 using namespace std;
 using namespace common;
 
-ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(vector<Expression *> &&expressions , FilterStmt *having_filter_stmt)
-    : GroupByPhysicalOperator(std::move(expressions) , having_filter_stmt)
+ScalarGroupByPhysicalOperator::ScalarGroupByPhysicalOperator(
+    vector<Expression *> &&expressions, FilterStmt *having_filter_stmt)
+    : GroupByPhysicalOperator(std::move(expressions), having_filter_stmt)
 {}
 
 RC ScalarGroupByPhysicalOperator::open(Trx *trx)
@@ -65,7 +66,7 @@ RC ScalarGroupByPhysicalOperator::open(Trx *trx)
       composite_tuple.add_tuple(make_unique<ValueListTuple>(std::move(child_tuple_to_value)));
       group_value_ = make_unique<GroupValueType>(std::move(aggregator_list), std::move(composite_tuple));
     }
-    
+
     rc = aggregate(get<0>(*group_value_), group_value_expression_tuple);
     if (OB_FAIL(rc)) {
       LOG_WARN("failed to aggregate values. rc=%s", strrc(rc));
@@ -82,14 +83,13 @@ RC ScalarGroupByPhysicalOperator::open(Trx *trx)
     return rc;
   }
 
-
   // 双重保障：如果没有输入行，确保为聚合函数创建默认值
   // 正常情况下，PhysicalPlanGenerator的EmptyPhysicalOperator已经处理了这种情况
   // 这里作为额外的安全检查，确保count(*)返回0，其他聚合函数返回NULL
   if (group_value_ == nullptr) {
     AggregatorList aggregator_list;
     create_aggregator_list(aggregator_list);
-    
+
     CompositeTuple composite_tuple;
     group_value_ = make_unique<GroupValueType>(std::move(aggregator_list), std::move(composite_tuple));
   }
@@ -108,8 +108,8 @@ RC ScalarGroupByPhysicalOperator::next()
   if (group_value_ == nullptr || emitted_) {
     return RC::RECORD_EOF;
   }
-  
-  //检查
+
+  // 检查
   if (!check_having_condition(*group_value_)) {
     emitted_ = true;
     return RC::RECORD_EOF;

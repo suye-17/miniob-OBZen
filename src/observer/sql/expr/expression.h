@@ -471,23 +471,24 @@ public:
   const char *aggregate_name() const { return aggregate_name_.c_str(); }
 
   unique_ptr<Expression> &child() { return child_; }
-  
+
   // 新增：多参数相关方法
-  bool is_multi_param() const { return !children_.empty(); }
-  const vector<unique_ptr<Expression>>& children() const { return children_; }
+  bool                                  is_multi_param() const { return !children_.empty(); }
+  const vector<unique_ptr<Expression>> &children() const { return children_; }
 
   RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
-  AttrType value_type() const override { 
+  AttrType value_type() const override
+  {
     if (is_multi_param()) {
       return children_.empty() ? AttrType::UNDEFINED : children_[0]->value_type();
     } else {
-      return child_->value_type(); 
+      return child_->value_type();
     }
   }
 
 private:
-  string                 aggregate_name_;
-  unique_ptr<Expression> child_;  // 保持单参数兼容性
+  string                         aggregate_name_;
+  unique_ptr<Expression>         child_;     // 保持单参数兼容性
   vector<unique_ptr<Expression>> children_;  // 新增：多参数存储
 };
 

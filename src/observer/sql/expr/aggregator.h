@@ -50,14 +50,18 @@ private:
 class AvgAggregator : public Aggregator
 {
 public:
-  AvgAggregator() { count_ = 0; sum_initialized_ = false; }
+  AvgAggregator()
+  {
+    count_           = 0;
+    sum_initialized_ = false;
+  }
   RC accumulate(const Value &value) override;
   RC evaluate(Value &result) override;
 
 private:
   Value sum_;
-  int count_;
-  bool sum_initialized_;
+  int   count_;
+  bool  sum_initialized_;
 };
 
 class MaxAggregator : public Aggregator
@@ -69,7 +73,7 @@ public:
 
 private:
   Value max_value_;
-  bool has_value_;
+  bool  has_value_;
 };
 
 class MinAggregator : public Aggregator
@@ -81,5 +85,5 @@ public:
 
 private:
   Value min_value_;
-  bool has_value_;
+  bool  has_value_;
 };

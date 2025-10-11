@@ -51,7 +51,7 @@ int compare_string(void *arg1, int arg1_max_length, void *arg2, int arg2_max_len
   const char *s1     = (const char *)arg1;
   const char *s2     = (const char *)arg2;
   int         maxlen = min(arg1_max_length, arg2_max_length);
-  
+
   // 使用 memcmp 而不是 strncmp（strncmp 遇到 \0 停止，影响多字段索引）
   int result = memcmp(s1, s2, maxlen);
   if (0 != result) {

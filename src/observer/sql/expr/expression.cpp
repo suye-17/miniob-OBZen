@@ -91,7 +91,7 @@ RC CastExpr::cast(const Value &value, Value &cast_value) const
 RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 {
   Value value;
-  RC rc = child_->get_value(tuple, value);
+  RC    rc = child_->get_value(tuple, value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -102,7 +102,7 @@ RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 RC CastExpr::try_get_value(Value &result) const
 {
   Value value;
-  RC rc = child_->try_get_value(value);
+  RC    rc = child_->try_get_value(value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -114,8 +114,7 @@ RC CastExpr::try_get_value(Value &result) const
 
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right)
     : comp_(comp), left_(std::move(left)), right_(std::move(right))
-{
-}
+{}
 
 ComparisonExpr::~ComparisonExpr() {}
 
@@ -166,19 +165,19 @@ RC ComparisonExpr::try_get_value(Value &cell) const
 {
   // 尝试计算常量表达式的值
   Value left_value, right_value;
-  
+
   RC rc = left_->try_get_value(left_value);
   if (rc != RC::SUCCESS) {
     return RC::INVALID_ARGUMENT;
   }
-  
+
   // IS NULL 和 IS NOT NULL 是一元操作，不需要右操作数
   if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
     bool is_null = left_value.is_null();
     cell.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
     return RC::SUCCESS;
   }
-  
+
   // 对于其他比较操作，需要右操作数
   rc = right_->try_get_value(right_value);
   if (rc != RC::SUCCESS) {
@@ -192,7 +191,7 @@ RC ComparisonExpr::try_get_value(Value &cell) const
   }
 
   bool value = false;
-  rc = compare_value(left_value, right_value, value);
+  rc         = compare_value(left_value, right_value, value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
   } else {
@@ -368,7 +367,7 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
     value.set_null();
     return RC::SUCCESS;
   }
-  
+
   // 对于二元运算，检查右操作数
   if (arithmetic_type_ != Type::NEGATIVE && right_value.is_null()) {
     value.set_null();
@@ -377,7 +376,7 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 
   const AttrType target_type = value_type();
   value.set_type(target_type);
-  
+
   LOG_INFO("ARITHMETIC calc_value: left=%s(%d), right=%s(%d), target_type=%d, op_type=%d",
            left_value.to_string().c_str(), (int)left_value.attr_type(),
            right_value.to_string().c_str(), (int)right_value.attr_type(),
@@ -567,10 +566,10 @@ RC ArithmeticExpr::try_get_value(Value &value) const
   Value left_value;
   Value right_value;
 
-  // 减少冗余日志输出 - 只在需要时输出
-  #ifdef DEBUG_EXPRESSION_EVAL
+// 减少冗余日志输出 - 只在需要时输出
+#ifdef DEBUG_EXPRESSION_EVAL
   LOG_INFO("ARITHMETIC try_get_value: type=%d", (int)arithmetic_type_);
-  #endif
+#endif
 
   rc = left_->try_get_value(left_value);
   if (rc != RC::SUCCESS) {
@@ -586,12 +585,12 @@ RC ArithmeticExpr::try_get_value(Value &value) const
     }
   }
 
-  #ifdef DEBUG_EXPRESSION_EVAL
+#ifdef DEBUG_EXPRESSION_EVAL
   LOG_INFO("ARITHMETIC try_get_value calling calc_value: left=%s, right=%s, op=%d",
            left_value.to_string().c_str(), 
            right_value.to_string().c_str(), 
            (int)arithmetic_type_);
-  #endif
+#endif
 
   return calc_value(left_value, right_value, value);
 }

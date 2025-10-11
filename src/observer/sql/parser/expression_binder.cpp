@@ -371,9 +371,8 @@ RC check_aggregate_expression(AggregateExpr &expression)
   AttrType            child_value_type = child_expression->value_type();
   switch (aggregate_type) {
     case AggregateExpr::Type::SUM:
-    case AggregateExpr::Type::AVG:       // 支持数值类型和NULL值（UNDEFINED类型代表NULL常量）
-      if (child_value_type != AttrType::INTS && 
-          child_value_type != AttrType::FLOATS && 
+    case AggregateExpr::Type::AVG:  // 支持数值类型和NULL值（UNDEFINED类型代表NULL常量）
+      if (child_value_type != AttrType::INTS && child_value_type != AttrType::FLOATS &&
           child_value_type != AttrType::UNDEFINED) {
         LOG_WARN("invalid child value type for aggregate expression: %d", static_cast<int>(child_value_type));
         return RC::INVALID_ARGUMENT;
@@ -388,7 +387,7 @@ RC check_aggregate_expression(AggregateExpr &expression)
   }
 
   // 子表达式中不能再包含聚合表达式
-  function<RC(unique_ptr<Expression>&)> check_aggregate_expr = [](unique_ptr<Expression> &expr) -> RC {
+  function<RC(unique_ptr<Expression> &)> check_aggregate_expr = [](unique_ptr<Expression> &expr) -> RC {
     RC rc = RC::SUCCESS;
     if (expr->type() == ExprType::AGGREGATION) {
       LOG_WARN("aggregate expression cannot be nested");
@@ -410,16 +409,16 @@ RC ExpressionBinder::bind_aggregate_expression(
   }
 
   auto unbound_aggregate_expr = static_cast<UnboundAggregateExpr *>(expr.get());
-  
+
   // 新增：检测多参数聚合函数并返回错误
   if (unbound_aggregate_expr->is_multi_param()) {
     LOG_WARN("Aggregate functions do not support multiple parameters");
     return RC::INVALID_ARGUMENT;
   }
-  
-  const char *aggregate_name = unbound_aggregate_expr->aggregate_name();
+
+  const char         *aggregate_name = unbound_aggregate_expr->aggregate_name();
   AggregateExpr::Type aggregate_type;
-  RC rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
+  RC                  rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
   if (OB_FAIL(rc)) {
     LOG_WARN("invalid aggregate name: %s", aggregate_name);
     return rc;

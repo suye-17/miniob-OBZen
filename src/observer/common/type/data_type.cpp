@@ -41,7 +41,7 @@ RC DataType::cast_to(const Value &val, AttrType type, Value &result) const
     result.set_type(type);  // 设置目标类型
     return RC::SUCCESS;
   }
-  
+
   // 对于其他类型，返回不支持，让具体的子类处理
   return RC::UNSUPPORTED;
 }

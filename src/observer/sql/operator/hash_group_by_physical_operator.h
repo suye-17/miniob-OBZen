@@ -28,9 +28,8 @@ See the Mulan PSL v2 for more details. */
 class HashGroupByPhysicalOperator : public GroupByPhysicalOperator
 {
 public:
-  HashGroupByPhysicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, 
-                              vector<Expression *> &&expressions,    
-                              FilterStmt *having_filter_stmt = nullptr);
+  HashGroupByPhysicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions,
+      FilterStmt *having_filter_stmt = nullptr);
 
   virtual ~HashGroupByPhysicalOperator() = default;
 

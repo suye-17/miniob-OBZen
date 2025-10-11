@@ -16,8 +16,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/trx/trx.h"
 
-IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index, ReadWriteMode mode, const Value *left_value,
-    bool left_inclusive, const Value *right_value, bool right_inclusive)
+IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index, ReadWriteMode mode,
+    const Value *left_value, bool left_inclusive, const Value *right_value, bool right_inclusive)
     : table_(table),
       index_(index),
       mode_(mode),
@@ -43,8 +43,7 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index,
       right_values_(right_values),
       left_inclusive_(left_inclusive),
       right_inclusive_(right_inclusive)
-{
-}
+{}
 
 RC IndexScanPhysicalOperator::open(Trx *trx)
 {
@@ -53,13 +52,13 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
   }
 
   IndexScanner *index_scanner = nullptr;
-  
+
   if (use_composite_key_) {
-    char *left_key = nullptr;
+    char *left_key  = nullptr;
     char *right_key = nullptr;
-    int left_len = 0;
-    int right_len = 0;
-    
+    int   left_len  = 0;
+    int   right_len = 0;
+
     if (!left_values_.empty()) {
       RC rc = build_composite_key(left_values_, left_key, left_len, true);
       if (rc != RC::SUCCESS) {
@@ -67,7 +66,7 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
         return rc;
       }
     }
-    
+
     if (!right_values_.empty()) {
       RC rc = build_composite_key(right_values_, right_key, right_len, false);
       if (rc != RC::SUCCESS) {
@@ -76,19 +75,20 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
         return rc;
       }
     }
-    
-    index_scanner = index_->create_scanner(
-        left_key, left_len, left_inclusive_,
-        right_key, right_len, right_inclusive_);
-    
+
+    index_scanner = index_->create_scanner(left_key, left_len, left_inclusive_, right_key, right_len, right_inclusive_);
+
     delete[] left_key;
     delete[] right_key;
   } else {
-    index_scanner = index_->create_scanner(
-        left_value_.data(), left_value_.length(), left_inclusive_,
-        right_value_.data(), right_value_.length(), right_inclusive_);
+    index_scanner = index_->create_scanner(left_value_.data(),
+        left_value_.length(),
+        left_inclusive_,
+        right_value_.data(),
+        right_value_.length(),
+        right_inclusive_);
   }
-  
+
   if (nullptr == index_scanner) {
     LOG_WARN("failed to create index scanner");
     return RC::INTERNAL;
@@ -184,17 +184,18 @@ RC IndexScanPhysicalOperator::filter(RowTuple &tuple, bool &result)
   return rc;
 }
 
-RC IndexScanPhysicalOperator::build_composite_key(const vector<Value> &values, char *&key, int &key_len, bool is_left_key)
+RC IndexScanPhysicalOperator::build_composite_key(
+    const vector<Value> &values, char *&key, int &key_len, bool is_left_key)
 {
-  const IndexMeta &index_meta = index_->index_meta();
+  const IndexMeta      &index_meta  = index_->index_meta();
   const vector<string> &field_names = index_meta.fields();
-  
+
   if (values.size() > field_names.size()) {
     LOG_WARN("too many values for composite key. values=%zu, fields=%zu", 
              values.size(), field_names.size());
     return RC::INVALID_ARGUMENT;
   }
-  
+
   key_len = 0;
   for (size_t i = 0; i < field_names.size(); i++) {
     const FieldMeta *field = table_->table_meta().field(field_names[i].c_str());
@@ -204,28 +205,28 @@ RC IndexScanPhysicalOperator::build_composite_key(const vector<Value> &values, c
     }
     key_len += field->len();
   }
-  
-  key = new char[key_len];
+
+  key        = new char[key_len];
   int offset = 0;
-  
+
   for (size_t i = 0; i < values.size(); i++) {
-    const FieldMeta *field = table_->table_meta().field(field_names[i].c_str());
-    int field_len = field->len();
-    int actual_len = std::min(values[i].length(), field_len);
-    
+    const FieldMeta *field      = table_->table_meta().field(field_names[i].c_str());
+    int              field_len  = field->len();
+    int              actual_len = std::min(values[i].length(), field_len);
+
     memcpy(key + offset, values[i].data(), actual_len);
     if (actual_len < field_len) {
       memset(key + offset + actual_len, 0, field_len - actual_len);
     }
-    
+
     offset += field_len;
   }
-  
+
   if (offset < key_len) {
     unsigned char fill_byte = is_left_key ? 0x00 : 0xFF;
     memset(key + offset, fill_byte, key_len - offset);
   }
-  
+
   return RC::SUCCESS;
 }
 

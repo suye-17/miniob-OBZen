@@ -26,10 +26,11 @@ class Expression;
  * @brief UPDATE语句解析的辅助结构
  * @details 用于在yacc解析过程中临时存储多个字段赋值
  */
-struct UpdateList {
-  vector<string> attribute_names;
-  vector<Expression*> expressions;
-  
+struct UpdateList
+{
+  vector<string>       attribute_names;
+  vector<Expression *> expressions;
+
   ~UpdateList();  // 析构函数声明，实现在 parse.cpp 中
 };
 
@@ -86,11 +87,11 @@ struct ConditionSqlNode
                                  ///< 1时，操作符右边是属性名，0时，是属性值
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
-  
+
   // 新增字段以支持表达式类型的条件
-  bool is_expression_condition = false;  ///< TRUE if this is an expression vs expression condition
-  Expression *left_expression = nullptr; ///< left-hand side expression if is_expression_condition = TRUE
-  Expression *right_expression = nullptr; ///< right-hand side expression if is_expression_condition = TRUE
+  bool        is_expression_condition = false;    ///< TRUE if this is an expression vs expression condition
+  Expression *left_expression         = nullptr;  ///< left-hand side expression if is_expression_condition = TRUE
+  Expression *right_expression        = nullptr;  ///< right-hand side expression if is_expression_condition = TRUE
 };
 
 /**
@@ -151,9 +152,9 @@ struct DeleteSqlNode
  */
 struct UpdateSqlNode
 {
-  string                   relation_name;   ///< 表名
+  string                   relation_name;    ///< 表名
   vector<string>           attribute_names;  ///< 更新的字段，支持多个字段
-  vector<Expression*>      expressions;      ///< 更新的表达式，支持多个表达式
+  vector<Expression *>     expressions;      ///< 更新的表达式，支持多个表达式
   vector<ConditionSqlNode> conditions;
 };
 
@@ -168,7 +169,7 @@ struct AttrInfoSqlNode
   string   name;      ///< Attribute name
   size_t   length;    ///< Length of attribute
   bool     nullable;  ///< Whether the field can be NULL (default: true)
-  
+
   AttrInfoSqlNode() : type(AttrType::UNDEFINED), length(0), nullable(true) {}
 };
 
@@ -213,12 +214,13 @@ struct AnalyzeTableSqlNode
  */
 struct CreateIndexSqlNode
 {
-  string index_name;      ///< Index name
-  string relation_name;   ///< Relation name
-  vector<string> attribute_names;  ///< Attribute names
-  bool is_unique = false; ///< Whether this is a unique index
-  string attribute_name() const { 
-    return attribute_names.empty() ? "" : attribute_names[0]; //不为空，返回字段名
+  string         index_name;         ///< Index name
+  string         relation_name;      ///< Relation name
+  vector<string> attribute_names;    ///< Attribute names
+  bool           is_unique = false;  ///< Whether this is a unique index
+  string         attribute_name() const
+  {
+    return attribute_names.empty() ? "" : attribute_names[0];  // 不为空，返回字段名
   }
 };
 

@@ -23,7 +23,7 @@ using namespace std;
 using namespace common;
 
 GroupByPhysicalOperator::GroupByPhysicalOperator(vector<Expression *> &&expressions, FilterStmt *having_filter_stmt)
- : aggregate_expressions_(std::move(expressions)), having_filter_stmt_(having_filter_stmt)
+    : aggregate_expressions_(std::move(expressions)), having_filter_stmt_(having_filter_stmt)
 {
   value_expressions_.reserve(aggregate_expressions_.size());
   ranges::for_each(aggregate_expressions_, [this](Expression *expr) {
@@ -111,15 +111,15 @@ bool GroupByPhysicalOperator::check_having_condition(const GroupValueType &group
   }
 
   const CompositeTuple &composite_tuple = std::get<1>(group_value);
-  
+
   for (const auto &filter_unit : having_filter_stmt_->filter_units()) {
     Value left_value, right_value;
-    
+
     if (!get_filter_value(filter_unit->left(), composite_tuple, left_value) ||
         !get_filter_value(filter_unit->right(), composite_tuple, right_value)) {
       return false;
     }
-    
+
     if (!evaluate_comparison(left_value, right_value, filter_unit->comp())) {
       return false;
     }
@@ -128,9 +128,8 @@ bool GroupByPhysicalOperator::check_having_condition(const GroupValueType &group
   return true;
 }
 
-bool GroupByPhysicalOperator::get_filter_value(const FilterObj &filter_obj, 
-                                            const CompositeTuple &composite_tuple, 
-                                            Value &result_value)
+bool GroupByPhysicalOperator::get_filter_value(
+    const FilterObj &filter_obj, const CompositeTuple &composite_tuple, Value &result_value)
 {
   switch (filter_obj.type_) {
     case FilterObj::Type::EXPRESSION: {
@@ -141,24 +140,21 @@ bool GroupByPhysicalOperator::get_filter_value(const FilterObj &filter_obj,
       result_value = filter_obj.value;
       return true;
     }
-    default:
-      return false;
+    default: return false;
   }
 }
 
-bool GroupByPhysicalOperator::evaluate_comparison(const Value &left_value, 
-                                                  const Value &right_value, 
-                                                  CompOp comp_op)
+bool GroupByPhysicalOperator::evaluate_comparison(const Value &left_value, const Value &right_value, CompOp comp_op)
 {
   int compare_result = left_value.compare(right_value);
-  
+
   switch (comp_op) {
-    case EQUAL_TO:    return compare_result == 0;
-    case LESS_THAN:   return compare_result < 0;
-    case GREAT_THAN:  return compare_result > 0;
-    case LESS_EQUAL:  return compare_result <= 0;
+    case EQUAL_TO: return compare_result == 0;
+    case LESS_THAN: return compare_result < 0;
+    case GREAT_THAN: return compare_result > 0;
+    case LESS_EQUAL: return compare_result <= 0;
     case GREAT_EQUAL: return compare_result >= 0;
-    case NOT_EQUAL:   return compare_result != 0;
-    default:          return false;
+    case NOT_EQUAL: return compare_result != 0;
+    default: return false;
   }
 }

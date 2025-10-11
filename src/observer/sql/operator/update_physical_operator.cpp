@@ -59,19 +59,19 @@ RC UpdatePhysicalOperator::open(Trx *trx)
   // 批量更新所有记录
   for (Record &record : records_) {
     Record new_record = record;
-    
+
     RowTuple row_tuple;
     row_tuple.set_record(&record);
     row_tuple.set_schema(table_, table_->table_meta().field_metas());
-    
+
     // 逐个字段更新
     for (size_t i = 0; i < field_names_.size(); ++i) {
       const FieldMeta *field_meta = field_metas[i];
-      Expression *expression = expressions_[i];
-      
+      Expression      *expression = expressions_[i];
+
       int offset = field_meta->offset();
-      int len = field_meta->len();
-      
+      int len    = field_meta->len();
+
       // 计算表达式的值
       Value expression_value;
       rc = expression->get_value(row_tuple, expression_value);
@@ -80,16 +80,16 @@ RC UpdatePhysicalOperator::open(Trx *trx)
                  table_->name(), field_names_[i].c_str(), strrc(rc));
         return rc;
       }
-      
-      int int_val;
-      float float_val;
+
+      int         int_val;
+      float       float_val;
       std::string string_val;
-      
+
       // 类型转换
       Value converted_value;
       if (expression_value.attr_type() != field_meta->type()) {
         RC cast_rc = DataType::type_instance(expression_value.attr_type())
-                       ->cast_to(expression_value, field_meta->type(), converted_value);
+                         ->cast_to(expression_value, field_meta->type(), converted_value);
         if (cast_rc != RC::SUCCESS) {
           LOG_WARN("failed to cast expression result from %s to %s. table=%s, field=%s",
                    attr_type_to_string(expression_value.attr_type()), 
@@ -100,7 +100,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       } else {
         converted_value = expression_value;
       }
-      
+
       // 处理 NULL 值
       if (converted_value.is_null()) {
         if (!field_meta->nullable()) {
@@ -132,9 +132,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
             int_val = converted_value.get_int();
             memcpy(new_record.data() + offset, &int_val, len);
           } break;
-          default:
-            LOG_WARN("unsupported field type: %d", field_meta->type());
-            return RC::INTERNAL;
+          default: LOG_WARN("unsupported field type: %d", field_meta->type()); return RC::INTERNAL;
         }
       }
     }
@@ -145,22 +143,19 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       LOG_WARN("failed to update record: %s", strrc(rc));
       return rc;
     }
-    
+
     update_count_++;
   }
 
   return RC::SUCCESS;
 }
 
-RC UpdatePhysicalOperator::next()
-{
-  return RC::RECORD_EOF;
-}
+RC UpdatePhysicalOperator::next() { return RC::RECORD_EOF; }
 
 RC UpdatePhysicalOperator::close()
 {
   records_.clear();
   update_count_ = 0;
-  trx_ = nullptr;
+  trx_          = nullptr;
   return RC::SUCCESS;
 }

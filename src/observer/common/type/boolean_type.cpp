@@ -18,9 +18,9 @@ RC BooleanType::to_string(const Value &val, string &result) const
     result = "NULL";
     return RC::SUCCESS;
   }
-  
+
   bool value = val.get_boolean();
-  result = value ? "1" : "0";  // MySQL风格：true显示为1，false显示为0
+  result     = value ? "1" : "0";  // MySQL风格：true显示为1，false显示为0
   return RC::SUCCESS;
 }
 
@@ -30,7 +30,7 @@ RC BooleanType::cast_to(const Value &val, AttrType type, Value &result) const
     result.set_null();
     return RC::SUCCESS;
   }
-  
+
   bool value = val.get_boolean();
   switch (type) {
     case AttrType::BOOLEANS: {
@@ -66,10 +66,10 @@ int BooleanType::compare(const Value &left, const Value &right) const
   if (right.is_null()) {
     return 1;
   }
-  
-  bool left_val = left.get_boolean();
+
+  bool left_val  = left.get_boolean();
   bool right_val = right.get_boolean();
-  
+
   if (left_val == right_val) {
     return 0;
   }

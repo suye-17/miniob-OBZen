@@ -18,29 +18,29 @@ See the Mulan PSL v2 for more details. */
 RC SumAggregator::accumulate(const Value &value)
 {
   if (value.is_null()) {
-    return RC::SUCCESS; // SUM忽略NULL值
+    return RC::SUCCESS;  // SUM忽略NULL值
   }
 
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
   }
-  
+
   // 类型兼容性检查
   if (value.attr_type() != value_.attr_type()) {
     LOG_WARN("type mismatch in SUM. value type: %s, accumulated type: %s", 
             attr_type_to_string(value.attr_type()), attr_type_to_string(value_.attr_type()));
     return RC::INVALID_ARGUMENT;
   }
-  
+
   Value::add(value, value_, value_);
   return RC::SUCCESS;
 }
 
-RC SumAggregator::evaluate(Value& result)
+RC SumAggregator::evaluate(Value &result)
 {
   if (value_.attr_type() == AttrType::UNDEFINED) {
-    result.set_null(); // 没有非NULL值参与计算
+    result.set_null();  // 没有非NULL值参与计算
   } else {
     result = value_;
   }
@@ -67,12 +67,12 @@ RC CountAggregator::evaluate(Value &result)
 RC AvgAggregator::accumulate(const Value &value)
 {
   if (value.is_null()) {
-    return RC::SUCCESS; // AVG忽略NULL值
+    return RC::SUCCESS;  // AVG忽略NULL值
   }
 
   if (!sum_initialized_) {
-    sum_ = value;
-    count_ = 1;
+    sum_             = value;
+    count_           = 1;
     sum_initialized_ = true;
   } else {
     Value::add(value, sum_, sum_);
@@ -91,7 +91,7 @@ RC AvgAggregator::evaluate(Value &result)
   Value count_value;
   // 确保除数类型与被除数兼容，AVG结果总是浮点数
   count_value.set_float((float)count_);
-  
+
   // 先设置result的类型，然后进行除法
   result.set_type(AttrType::FLOATS);
   RC rc = Value::divide(sum_, count_value, result);
@@ -100,7 +100,7 @@ RC AvgAggregator::evaluate(Value &result)
     result.set_null();
     return rc;
   }
-  
+
   return RC::SUCCESS;
 }
 
@@ -108,7 +108,7 @@ RC AvgAggregator::evaluate(Value &result)
 RC MaxAggregator::accumulate(const Value &value)
 {
   if (value.is_null()) {
-    return RC::SUCCESS; // MAX忽略NULL值
+    return RC::SUCCESS;  // MAX忽略NULL值
   }
 
   if (!has_value_ || value.compare(max_value_) > 0) {
@@ -132,7 +132,7 @@ RC MaxAggregator::evaluate(Value &result)
 RC MinAggregator::accumulate(const Value &value)
 {
   if (value.is_null()) {
-    return RC::SUCCESS; // MIN忽略NULL值
+    return RC::SUCCESS;  // MIN忽略NULL值
   }
 
   if (!has_value_ || value.compare(min_value_) < 0) {

@@ -25,15 +25,12 @@ ParsedSqlNode::ParsedSqlNode(SqlCommandFlag _flag) : flag(_flag) {}
 
 UpdateList::~UpdateList()
 {
-  for (Expression* expr : expressions) {
+  for (Expression *expr : expressions) {
     delete expr;
   }
 }
 
-void ParsedSqlResult::add_sql_node(unique_ptr<ParsedSqlNode> sql_node)
-{
-  sql_nodes_.emplace_back(std::move(sql_node));
-}
+void ParsedSqlResult::add_sql_node(unique_ptr<ParsedSqlNode> sql_node) { sql_nodes_.emplace_back(std::move(sql_node)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

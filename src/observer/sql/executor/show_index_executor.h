@@ -2,12 +2,11 @@
 
 #include "common/sys/rc.h"
 
-
 class SQLStageEvent;
-class ShowIndexExecutor 
+class ShowIndexExecutor
 {
 public:
-    ShowIndexExecutor() = default;
-    ~ShowIndexExecutor() = default; 
-    RC execute(SQLStageEvent *sql_event);
+  ShowIndexExecutor()  = default;
+  ~ShowIndexExecutor() = default;
+  RC execute(SQLStageEvent *sql_event);
 };

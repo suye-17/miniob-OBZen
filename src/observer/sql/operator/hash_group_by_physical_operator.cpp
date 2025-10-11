@@ -22,12 +22,9 @@ using namespace std;
 using namespace common;
 
 HashGroupByPhysicalOperator::HashGroupByPhysicalOperator(
-    vector<unique_ptr<Expression>> &&group_by_exprs, 
-    vector<Expression *> &&expressions , 
-    FilterStmt *having_filter_stmt)
-    : GroupByPhysicalOperator(std::move(expressions) , having_filter_stmt), group_by_exprs_(std::move(group_by_exprs))
-{
-}
+    vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions, FilterStmt *having_filter_stmt)
+    : GroupByPhysicalOperator(std::move(expressions), having_filter_stmt), group_by_exprs_(std::move(group_by_exprs))
+{}
 
 RC HashGroupByPhysicalOperator::open(Trx *trx)
 {
@@ -64,7 +61,7 @@ RC HashGroupByPhysicalOperator::open(Trx *trx)
 
     // 计算聚合值
     GroupValueType &group_value = get<1>(*found_group);
-    rc = aggregate(get<0>(group_value), group_value_expression_tuple);
+    rc                          = aggregate(get<0>(group_value), group_value_expression_tuple);
     if (OB_FAIL(rc)) {
       LOG_WARN("failed to aggregate values. rc=%s", strrc(rc));
       return rc;
@@ -83,7 +80,7 @@ RC HashGroupByPhysicalOperator::open(Trx *trx)
   // 得到最终聚合后的值
   for (GroupType &group : groups_) {
     GroupValueType &group_value = get<1>(group);
-    rc = evaluate(group_value);
+    rc                          = evaluate(group_value);
     if (OB_FAIL(rc)) {
       LOG_WARN("failed to evaluate group value. rc=%s", strrc(rc));
       return rc;
@@ -101,7 +98,7 @@ RC HashGroupByPhysicalOperator::next()
     if (current_group_ == groups_.end()) {
       return RC::RECORD_EOF;
     }
-  
+
     if (first_emited_) {
       ++current_group_;
     } else {
@@ -110,13 +107,12 @@ RC HashGroupByPhysicalOperator::next()
     if (current_group_ == groups_.end()) {
       return RC::RECORD_EOF;
     }
-    //having 检查
+    // having 检查
     const GroupValueType &group_value = get<1>(*current_group_);
     if (check_having_condition(group_value)) {
       return RC::SUCCESS;
-    } 
-    //如果不满足，直接进行下一组
-    
+    }
+    // 如果不满足，直接进行下一组
   }
 }
 
@@ -180,8 +176,8 @@ RC HashGroupByPhysicalOperator::find_group(const Tuple &child_tuple, GroupType *
 
     CompositeTuple composite_tuple;
     composite_tuple.add_tuple(make_unique<ValueListTuple>(std::move(child_tuple_to_value)));
-    groups_.emplace_back(std::move(group_by_evaluated_tuple), 
-                         GroupValueType(std::move(aggregator_list), std::move(composite_tuple)));
+    groups_.emplace_back(
+        std::move(group_by_evaluated_tuple), GroupValueType(std::move(aggregator_list), std::move(composite_tuple)));
     found_group = &groups_.back();
   }
 

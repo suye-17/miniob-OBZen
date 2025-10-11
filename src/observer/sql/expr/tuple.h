@@ -197,11 +197,11 @@ public:
     const FieldMeta *field_meta = field_expr->field().meta();
     cell.reset();
     cell.set_type(field_meta->type());
-    
+
     // NULL值检测：如果字段可为NULL且数据全为0xFF，则设置为NULL
     if (field_meta->nullable()) {
-      const char *data = this->record_->data() + field_meta->offset();
-      bool is_null_pattern = true;
+      const char *data            = this->record_->data() + field_meta->offset();
+      bool        is_null_pattern = true;
       for (int i = 0; i < field_meta->len(); i++) {
         if ((unsigned char)data[i] != 0xFF) {
           is_null_pattern = false;
@@ -213,7 +213,7 @@ public:
         return RC::SUCCESS;
       }
     }
-    
+
     // 非NULL值正常设置数据
     cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
     return RC::SUCCESS;
@@ -458,4 +458,3 @@ private:
   Tuple *left_  = nullptr;
   Tuple *right_ = nullptr;
 };
-

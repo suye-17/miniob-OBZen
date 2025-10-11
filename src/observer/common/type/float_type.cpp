@@ -59,11 +59,11 @@ RC FloatType::divide(const Value &left, const Value &right, Value &result) const
     result.set_null();
     return RC::SUCCESS;
   }
-  
-  float left_val = left.get_float();
+
+  float left_val  = left.get_float();
   float right_val = right.get_float();
   LOG_INFO("FloatType::divide: %f / %f", left_val, right_val);
-  
+
   if (right_val > -EPSILON && right_val < EPSILON) {
     // 除零返回NULL（符合SQL标准）
     result.set_null();
@@ -101,20 +101,18 @@ int FloatType::cast_cost(AttrType type)
 RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const
 {
   switch (type) {
-  case AttrType::INTS: {
-    int int_value = (int)val.get_float();  // 截断小数部分
-    result.set_int(int_value);
-    return RC::SUCCESS;
-  }
-  default:
-    LOG_WARN("unsupported type %d", type);
-    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    case AttrType::INTS: {
+      int int_value = (int)val.get_float();  // 截断小数部分
+      result.set_int(int_value);
+      return RC::SUCCESS;
+    }
+    default: LOG_WARN("unsupported type %d", type); return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
 }
 
 RC FloatType::set_value_from_str(Value &val, const string &data) const
 {
-  RC                rc = RC::SUCCESS;
+  RC           rc = RC::SUCCESS;
   stringstream deserialize_stream;
   deserialize_stream.clear();
   deserialize_stream.str(data);

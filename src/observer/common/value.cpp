@@ -121,7 +121,7 @@ void Value::set_data(char *data, int length)
       break;
     }
   }
-  
+
   if (is_null_data) {
     set_null();
     return;
@@ -145,7 +145,7 @@ void Value::set_data(char *data, int length)
     } break;
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
-      length_            = length;
+      length_           = length;
     } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
@@ -214,10 +214,10 @@ void Value::set_value(const Value &value)
 {
   if (value.is_null()) {
     set_null();
-    attr_type_ = value.attr_type_; // 保持原有类型信息
+    attr_type_ = value.attr_type_;  // 保持原有类型信息
     return;
   }
-  
+
   switch (value.attr_type_) {
     case AttrType::INTS: {
       set_int(value.get_int());
@@ -267,7 +267,7 @@ string Value::to_string() const
   if (is_null()) {
     return "NULL";
   }
-  
+
   string res;
   RC     rc = DataType::type_instance(this->attr_type_)->to_string(*this, res);
   if (OB_FAIL(rc)) {
@@ -277,8 +277,8 @@ string Value::to_string() const
   return res;
 }
 
-int Value::compare(const Value &other) const 
-{ 
+int Value::compare(const Value &other) const
+{
   // NULL比较处理：NULL == NULL为true，NULL与任何非NULL值比较都为false
   if (is_null() && other.is_null()) {
     return 0;  // NULL = NULL
@@ -287,10 +287,10 @@ int Value::compare(const Value &other) const
     return -1;  // NULL < 任何值
   }
   if (other.is_null()) {
-    return 1;   // 任何值 > NULL
+    return 1;  // 任何值 > NULL
   }
-  
-  return DataType::type_instance(this->attr_type_)->compare(*this, other); 
+
+  return DataType::type_instance(this->attr_type_)->compare(*this, other);
 }
 
 int Value::get_int() const

@@ -59,13 +59,13 @@ private:
   Record   current_record_;
   RowTuple tuple_;
 
-  bool use_composite_key_ = false;
-  Value left_value_;
-  Value right_value_;
+  bool          use_composite_key_ = false;
+  Value         left_value_;
+  Value         right_value_;
   vector<Value> left_values_;
   vector<Value> right_values_;
-  bool  left_inclusive_  = false;
-  bool  right_inclusive_ = false;
+  bool          left_inclusive_  = false;
+  bool          right_inclusive_ = false;
 
   vector<unique_ptr<Expression>> predicates_;
 };
