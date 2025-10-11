@@ -170,17 +170,17 @@ RC UpdatePhysicalOperator::open(Trx *trx)
           memset(new_record.data() + offset, 0, len);
           memcpy(new_record.data() + offset, string_val.c_str(), string_val.length());
         } else {
-          // 长TEXT：使用特殊布局
-          // 在offset位置写入标记: [0xFF][0xFF][0xFF][0xFF][text_length(8bytes)][data_offset_in_record(4bytes)]
+          // 长TEXT：使用extended format（与Table::set_value_to_record一致）
+          // 格式: [0xFFFFFFFF (4)][text_length (4)][data_offset (4)]
           memset(new_record.data() + offset, 0, len);
-          uint32_t *marker = reinterpret_cast<uint32_t*>(new_record.data() + offset);
-          *marker = 0xFFFFFFFF;  // 特殊标记，不同于table_id
           
-          uint64_t *text_length_ptr = reinterpret_cast<uint64_t*>(new_record.data() + offset + 4);
-          *text_length_ptr = string_val.length();
+          uint32_t marker = 0xFFFFFFFF;
+          uint32_t text_length = static_cast<uint32_t>(string_val.length());
+          uint32_t data_offset = record.len();  // 数据在原record大小之后
           
-          uint32_t *data_offset_ptr = reinterpret_cast<uint32_t*>(new_record.data() + offset + 12);
-          *data_offset_ptr = record.len();  // 数据在原record大小之后
+          memcpy(new_record.data() + offset, &marker, sizeof(uint32_t));
+          memcpy(new_record.data() + offset + 4, &text_length, sizeof(uint32_t));
+          memcpy(new_record.data() + offset + 8, &data_offset, sizeof(uint32_t));
           
           // 将完整TEXT数据复制到record末尾
           memcpy(new_record.data() + record.len(), string_val.c_str(), string_val.length());

@@ -153,9 +153,6 @@ namespace common {
 
 RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_pool, const Record &raw_record, Record &output_record) 
   {
-    LOG_ERROR("==== 开始处理TEXT字段读取 ====");
-    LOG_ERROR("raw_record: len=%d, data=%p", raw_record.len(), raw_record.data());
-    
     const char *raw_data = raw_record.data();
     int raw_len = raw_record.len();
     uint32_t table_id = table_meta->table_id();
@@ -169,7 +166,6 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         return RC::RECORD_INVALID_RID;
     }
     
-    // 第1步：快速检查是否有TEXT溢出字段
     bool has_overflow = false;
     for (int i = 0; i < table_meta->field_num(); i++) {
         const FieldMeta *field = table_meta->field(i);
@@ -179,26 +175,46 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         }
         
         const char *field_data = raw_data + field->offset();
-        if (is_overflow_pointer(field_data, field->len(), table_id)) {
+        uint32_t inline_capacity = field->len() - 20;
+        const char *overflow_ptr_location = field_data + inline_capacity;
+        
+        if (is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
             has_overflow = true;
             break;
         }
     }
     
-    // 第2步：没有溢出，直接复制
     if (!has_overflow) {
-        LOG_DEBUG("没有溢出字段，直接复制数据");
         output_record.copy_data(raw_data, raw_len);
         return RC::SUCCESS;
     }
     
-    LOG_DEBUG("发现溢出字段，开始展开");
+    // 计算展开后需要的总空间
+    int extra_space = 0;
+    for (int i = 0; i < table_meta->field_num(); i++) {
+        const FieldMeta *field = table_meta->field(i);
+        if (field->type() != AttrType::TEXTS) {
+            continue;
+        }
+        
+        const char *field_data = raw_data + field->offset();
+        uint32_t inline_capacity = field->len() - 20;
+        const char *overflow_ptr_location = field_data + inline_capacity;
+        
+        if (is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
+            uint64_t total_length = *reinterpret_cast<const uint64_t*>(overflow_ptr_location + 12);
+            // 额外空间 = 完整TEXT长度（包括inline+overflow）
+            extra_space += total_length;
+        }
+    }
     
-    // 第3步：有溢出，需要展开数据（但保持记录长度不变）
-    auto new_data = std::make_unique<char[]>(raw_len);
+    // 分配足够大的buffer来容纳展开后的TEXT
+    int new_len = raw_len + extra_space;
+    auto new_data = std::make_unique<char[]>(new_len);
     memcpy(new_data.get(), raw_data, raw_len);  // 先复制原始数据
+    int current_extra_offset = raw_len;  // 当前额外数据的写入位置
     
-    // 第4步：逐个处理TEXT字段，将溢出数据展开到字段空间中
+    // 处理TEXT字段，读取overflow数据
     for (int i = 0; i < table_meta->field_num(); i++) {
         const FieldMeta *field = table_meta->field(i);
         if (field->type() != AttrType::TEXTS) {
@@ -207,8 +223,12 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         
         char *field_ptr = new_data.get() + field->offset();
         
+        // 计算inline容量和overflow pointer位置
+        uint32_t inline_capacity = field->len() - 20;
+        const char *overflow_ptr_location = field_ptr + inline_capacity;
+        
         // 确保TEXT字段以\0结尾（对于非溢出的TEXT也很重要）
-        if (!is_overflow_pointer(field_ptr, field->len(), table_id)) {
+        if (!is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
             // 非溢出TEXT：确保在字段末尾有\0
             // 注意：field_ptr可能不是以\0结尾的，需要找到实际长度
             size_t text_len = 0;
@@ -222,23 +242,24 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
                 text_len = field->len() - 1;  // 整个字段都是数据
                 field_ptr[text_len] = '\0';
             }
-            LOG_DEBUG("Non-overflow TEXT field %s: %zu bytes", field->name(), text_len);
             continue;
         }
         
         // 溢出TEXT：需要读取溢出页并展开
         {
-            uint32_t first_page_num = *reinterpret_cast<const uint32_t*>(field_ptr + 4);
-            uint64_t total_length = *reinterpret_cast<const uint64_t*>(field_ptr + 12);
-            
+            // Overflow pointer在inline data之后
             uint32_t inline_len = std::min(static_cast<uint32_t>(INLINE_TEXT_CAPACITY),
                                          static_cast<uint32_t>(field->len() - 20));
+            const char *overflow_ptr = field_ptr + inline_len;
+            
+            uint32_t first_page_num = *reinterpret_cast<const uint32_t*>(overflow_ptr + 4);
+            uint64_t total_length = *reinterpret_cast<const uint64_t*>(overflow_ptr + 12);
+            
             uint32_t overflow_length = total_length > inline_len ? total_length - inline_len : 0;
             
             auto overflow_buffer = std::make_unique<char[]>(overflow_length);
             uint32_t buffer_offset = 0;  
             
-            // 步骤1：循环读取所有溢出页
             PageNum current_page = first_page_num;
             int page_count = 0;
             
@@ -276,9 +297,6 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
                 buffer_offset += copy_size;
                 current_page = next_page; 
                 page_count++;
-                
-                LOG_DEBUG("Read overflow page %d: %u bytes, next_page=%d", 
-                         page_count, copy_size, next_page);
             }
             
             // 验证读取长度
@@ -287,52 +305,36 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
                         field->name(), buffer_offset, overflow_length);
             }
             
-            LOG_DEBUG("Read %d overflow pages, %u bytes total for field %s", 
-                    page_count, buffer_offset, field->name());
-            
-            // 步骤2：重组TEXT字段数据（内联部分 + 溢出部分）
-            // 将完整TEXT展开到固定的field->len()空间中
+            // 将完整TEXT复制到扩展空间
             uint32_t full_text_len = inline_len + buffer_offset;
-            auto full_text = std::make_unique<char[]>(full_text_len + 1);
             
-            // 复制内联部分
-            memcpy(full_text.get(), field_ptr + 20, inline_len);
-            // 复制溢出部分
-            memcpy(full_text.get() + inline_len, overflow_buffer.get(), buffer_offset);
-            full_text[full_text_len] = '\0';
+            auto inline_data_copy = std::make_unique<char[]>(inline_len);
+            memcpy(inline_data_copy.get(), field_ptr, inline_len);
             
-            // 将完整TEXT写入字段空间（最多field->len()字节）
-            // 注意：数据库字段是定长的，不需要为\0预留空间
-            uint32_t write_len = std::min(full_text_len, static_cast<uint32_t>(field->len()));
-            memcpy(field_ptr, full_text.get(), write_len);
+            memcpy(new_data.get() + current_extra_offset, inline_data_copy.get(), inline_len);
+            memcpy(new_data.get() + current_extra_offset + inline_len, overflow_buffer.get(), buffer_offset);
             
-            // 清空剩余空间
-            if (write_len < static_cast<uint32_t>(field->len())) {
-                memset(field_ptr + write_len, 0, field->len() - write_len);
-            }
+            // 标记扩展TEXT: [0xFFFFFFFE][offset][length]
+            uint32_t extended_marker = 0xFFFFFFFE;
+            uint32_t text_offset = current_extra_offset;
+            uint32_t text_length = full_text_len;
             
-            if (full_text_len > write_len) {
-                LOG_WARN("TEXT field %s truncated: %d -> %d bytes", field->name(), full_text_len, write_len);
-            }
+            memcpy(field_ptr, &extended_marker, sizeof(uint32_t));
+            memcpy(field_ptr + 4, &text_offset, sizeof(uint32_t));
+            memcpy(field_ptr + 8, &text_length, sizeof(uint32_t));
             
-            LOG_DEBUG("TEXT字段 %s 展开完成: %d字节 (内联%d + 溢出%d)", 
-                     field->name(), write_len, inline_len, buffer_offset);
+            current_extra_offset += full_text_len;
         }
     }
     
-    // 第5步：设置输出记录
-    RC rc = output_record.copy_data(new_data.get(), raw_len);
+    RC rc = output_record.copy_data(new_data.get(), new_len);
     if (rc != RC::SUCCESS) {
         LOG_ERROR("Failed to copy data to output record");
         return rc;
     }
     
-    LOG_ERROR("==== process_text_fields_on_read完成 ====");
-    LOG_ERROR("output_record: len=%d, data=%p", output_record.len(), output_record.data());
-    
-    // 验证输出数据
     if (output_record.data() == nullptr) {
-        LOG_ERROR("ERROR: output_record.data() is NULL!");
+        LOG_ERROR("output_record.data() is NULL after process_text_fields_on_read");
         return RC::INTERNAL;
     }
     
@@ -899,26 +901,38 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
     }
     
     const char *field_data = new_data.get() + field->offset();
+    size_t inline_capacity = field->len() - 20;
+    
+    // 检查是否是extended format marker (0xFFFFFFFF) at field start
+    uint32_t marker_at_start = 0;
+    memcpy(&marker_at_start, field_data, sizeof(uint32_t));
+    
+    if (marker_at_start == 0xFFFFFFFF) {
+      // Extended format from Table::make_record, skip this field
+      continue;
+    }
+    
+    // 检查是否已经是overflow pointer（在inline_capacity之后的位置）
+    const char *overflow_ptr_location = field_data + inline_capacity;
+    bool is_overflow = is_overflow_pointer(overflow_ptr_location, 20, table_meta_->table_id());
+    
+    if (is_overflow) {
+      // Already has overflow pointer, skip processing
+      continue;
+    }
     
     int actual_len = strnlen(field_data, field->len());
-    
-    LOG_ERROR("📏 TEXT字段 '%s' 实际长度: %d, 字段最大长度: %d", 
-              field->name(), actual_len, field->len());
     
     int inline_len = std::min(actual_len, INLINE_TEXT_CAPACITY);  // INLINE_TEXT_CAPACITY = 768
     int remain = actual_len - inline_len;
     
-    // 🔧 修复内存重叠：提前保存内联数据
     auto inline_data_backup = make_unique<char[]>(inline_len);
     memcpy(inline_data_backup.get(), field_data, inline_len);
     
-    LOG_ERROR("存储分析: 总长度=%d, 内联长度=%d, 溢出长度=%d", 
-              actual_len, inline_len, remain);
-    
     if (remain == 0) {
-      LOG_ERROR("纯内联存储：无需溢出页");
+      // Inline storage only, no overflow needed
     } else if (static_cast<uint32_t>(remain) <= ov_cap()) {
-      LOG_ERROR("单页溢出存储：需要1个溢出页 (容量=%d)", ov_cap());
+      // Single overflow page needed
 
       // 1. 分配溢出页
       Frame *frame = nullptr;
@@ -948,7 +962,6 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
       }
 
       PageNum overflow_page_num = frame->page_num();
-      LOG_ERROR("成功写入 %d 字节溢出数据到页面 %d", remain, overflow_page_num);
       frame->write_unlatch();
       frame->unpin();
 
@@ -968,8 +981,6 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
       }
 
       rewritten = true;  // 标记数据被修改了
-      LOG_ERROR("成功创建TEXT溢出指针：表ID=%d, 页号=%d, 偏移=%d, 总长度=%d", 
-                table_meta_->table_id(), overflow_page_num, sizeof(OverflowPageHeader), actual_len);
     } else {
       LOG_INFO("Multi-page overflow: total=%d bytes, overflow=%d bytes", actual_len, remain);
       
@@ -978,38 +989,31 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
       
       LOG_INFO("需要分配 %d 个溢出页来存储 %d 字节的溢出数据", num_pages, remain);
       
-      // 步骤2：准备循环分配溢出页
-      PageNum first_page_num = BP_INVALID_PAGE_NUM;  // 记录第一页的页号
-      Frame *prev_frame = nullptr;                    // 记录前一页的Frame指针
-      uint32_t data_offset = inline_len;              // 当前在field_data中的偏移
+      PageNum first_page_num = BP_INVALID_PAGE_NUM;
+      Frame *prev_frame = nullptr;
+      uint32_t data_offset = inline_len;
       
-      // 步骤3：循环分配每一个溢出页
       for (int i = 0; i < num_pages; i++) {
-        // 3.1 分配新的溢出页
         Frame *frame = nullptr;
         if ((ret = disk_buffer_pool_->allocate_page(&frame)) != RC::SUCCESS) {
           LOG_ERROR("Failed to allocate overflow page %d/%d", i+1, num_pages);
-          // TODO: 这里应该清理已分配的页面（步骤4会完善）
           return ret;
         }
         
-        // 标记为溢出页，以便scanner跳过
         mark_overflow_page(frame->page_num());
+        frame->write_latch();
         
-        frame->write_latch();  // 加写锁
-        
-        // 3.2 初始化溢出页头部
         OverflowPageHeader *header = hdr(frame);
         header->page_type = PageType::TEXT_OVERFLOW;
-        header->next_page = BP_INVALID_PAGE_NUM;  // 先设为结束，后面可能会被前一页更新
+        header->next_page = BP_INVALID_PAGE_NUM;
         
-        uint32_t remaining_data = actual_len - data_offset;  
+        uint32_t remaining_data = actual_len - data_offset;
         uint32_t write_size = std::min(PAGE_CAPACITY, remaining_data);
         header->data_length = write_size;
         
         if (i == 0) {
           header->total_length = actual_len;
-          first_page_num = frame->page_num();  
+          first_page_num = frame->page_num();
         } else {
           header->total_length = 0;
         }
@@ -1024,7 +1028,7 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
         
         if (prev_frame != nullptr) {
           OverflowPageHeader *prev_header = hdr(prev_frame);
-          prev_header->next_page = frame->page_num();  
+          prev_header->next_page = frame->page_num();
           prev_frame->mark_dirty();
           
           prev_frame->write_unlatch();
@@ -1032,11 +1036,8 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
         }
         
         frame->mark_dirty();
-        prev_frame = frame;  
-        data_offset += write_size;  
-        
-        LOG_DEBUG("溢出页 %d/%d: page_num=%d, size=%u bytes", 
-                 i+1, num_pages, frame->page_num(), write_size);
+        prev_frame = frame;
+        data_offset += write_size;
       }
       
       if (prev_frame != nullptr) {
@@ -1281,20 +1282,15 @@ RC RecordFileHandler::get_record(const RID &rid, Record &record)
     return rc;
   }
 
-  LOG_ERROR("准备调用 process_text_fields_on_read");
   rc = process_text_fields_on_read(table_meta_, disk_buffer_pool_, inplace_record, record);
   if (OB_FAIL(rc)) {
     LOG_ERROR("Failed to process TEXT overflow fields. rid=%s", rid.to_string().c_str());
     return rc;
   }
-  LOG_ERROR("process_text_fields_on_read 调用完成");
   record.set_rid(rid);
   
-  LOG_ERROR("get_record 返回前检查: record.len=%d, record.data=%p", 
-           record.len(), record.data());
-  
   if (record.data() == nullptr) {
-      LOG_ERROR("ERROR: record.data() is NULL before return!");
+      LOG_ERROR("record.data() is NULL in get_record. rid=%s", rid.to_string().c_str());
       return RC::INTERNAL;
   }
   

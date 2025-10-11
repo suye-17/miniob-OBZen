@@ -122,6 +122,8 @@ public:
 
 private:
   RC set_value_to_record(char *record_data, const Value &value, const FieldMeta *field);
+  RC set_value_to_record(char *record_data, int base_record_size, int &extended_text_offset, 
+                         const Value &value, const FieldMeta *field);
 
 private:
   // RC init_record_handler(const char *base_dir);

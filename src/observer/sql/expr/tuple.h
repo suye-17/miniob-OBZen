@@ -213,9 +213,28 @@ public:
       LOG_WARN("RowTuple::cell_at: record_->data() is null");
       return RC::INTERNAL;
     }
-             
+    
     cell.reset();
     cell.set_type(field_meta->type());
+    
+    // 处理扩展TEXT标记 (0xFFFFFFFE)
+    if (field_meta->type() == AttrType::TEXTS) {
+      const char *field_data = record_->data() + field_meta->offset();
+      uint32_t marker = *reinterpret_cast<const uint32_t*>(field_data);
+      
+      if (marker == 0xFFFFFFFE) {
+        // 扩展TEXT：从扩展区域读取完整数据
+        uint32_t text_offset = *reinterpret_cast<const uint32_t*>(field_data + 4);
+        uint32_t text_length = *reinterpret_cast<const uint32_t*>(field_data + 8);
+        
+        const char *text_data = record_->data() + text_offset;
+        cell.set_data(text_data, text_length);
+        
+        return RC::SUCCESS;
+      }
+    }
+    
+    // 正常情况：直接读取field区域
     cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
     
     return RC::SUCCESS;

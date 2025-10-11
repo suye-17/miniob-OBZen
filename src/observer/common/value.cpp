@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "common/type/attr_type.h"
+#include "common/types.h"
 
 Value::Value(int val) { set_int(val); }
 
@@ -292,10 +293,13 @@ void Value::set_text(const char *s, int len /*= 65535*/)
     length_               = 0;
   } else {
     own_data_ = true;
-    if (len > 0) {
-      len = strnlen(s, len);
-    } else {
-      len = strlen(s);
+    // 对于TEXT类型，len参数是实际长度，不使用strlen/strnlen避免截断
+    if (len <= 0) {
+      len = strlen(s); // 只在len无效时才使用strlen
+    }
+    // 限制最大长度为TEXT_MAX_LENGTH
+    if (len > TEXT_MAX_LENGTH) {
+      len = TEXT_MAX_LENGTH;
     }
     value_.pointer_value_ = new char[len + 1];
     length_               = len;

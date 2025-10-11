@@ -263,10 +263,44 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   }
 
   const int normal_field_start_index = table_meta_.sys_field_num();
-  // 复制所有字段的值
-  int   record_size = table_meta_.record_size();
-  char *record_data = (char *)malloc(record_size);
-  memset(record_data, 0, record_size);
+  
+  // 计算record大小（包含TEXT字段的额外空间）
+  int base_record_size = table_meta_.record_size();
+  int extra_text_size = 0;
+  
+  for (int i = 0; i < value_num; i++) {
+    const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
+    const Value &value = values[i];
+    
+    // 如果field类型是TEXT，需要检查值的长度（可能需要类型转换）
+    if (field->type() == AttrType::TEXTS) {
+      std::string str_val;
+      
+      if (value.attr_type() == AttrType::TEXTS) {
+        str_val = value.get_string();
+      } else if (value.attr_type() == AttrType::CHARS) {
+        // CHARS转TEXT
+        str_val = value.get_string();
+      } else {
+        // 其他类型转TEXT，暂时跳过（如果cast失败会在后面处理）
+        continue;
+      }
+      
+      // TEXT字段的inline容量是 field->len() - 20（去除overflow pointer header）
+      size_t inline_capacity = field->len() - 20;
+      if (str_val.length() > inline_capacity) {
+        // 超长TEXT，需要在record后面附加完整数据
+        extra_text_size += str_val.length();
+      }
+    }
+  }
+  
+  int actual_record_size = base_record_size + extra_text_size;
+  char *record_data = (char *)malloc(actual_record_size);
+  memset(record_data, 0, actual_record_size);
+  
+  // 用于追踪extended text在record末尾的偏移
+  int extended_text_offset = base_record_size;
 
   for (int i = 0; i < value_num && OB_SUCC(rc); i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
@@ -280,10 +314,9 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
         break;
       }
       
-      // 特殊处理向量类型：检查维度是否匹配
       if (field->type() == AttrType::VECTORS && real_value.attr_type() == AttrType::VECTORS) {
         const vector<float> &vec = real_value.get_vector();
-        int expected_dimension = field->len() / sizeof(float);  // 字段长度除以float大小得到维度
+        int expected_dimension = field->len() / sizeof(float);
         if (static_cast<int>(vec.size()) != expected_dimension) {
           LOG_WARN("Vector dimension mismatch. table=%s, field=%s, expected=%d, actual=%zu",
               table_meta_.name(), field->name(), expected_dimension, vec.size());
@@ -292,12 +325,11 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
         }
       }
       
-      rc = set_value_to_record(record_data, real_value, field);
+      rc = set_value_to_record(record_data, base_record_size, extended_text_offset, real_value, field);
     } else {
-      // 即使类型相同，对于向量类型也需要检查维度
       if (field->type() == AttrType::VECTORS && value.attr_type() == AttrType::VECTORS) {
         const vector<float> &vec = value.get_vector();
-        int expected_dimension = field->len() / sizeof(float);  // 字段长度除以float大小得到维度
+        int expected_dimension = field->len() / sizeof(float);
         if (static_cast<int>(vec.size()) != expected_dimension) {
           LOG_WARN("Vector dimension mismatch. table=%s, field=%s, expected=%d, actual=%zu",
               table_meta_.name(), field->name(), expected_dimension, vec.size());
@@ -305,7 +337,7 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
           break;
         }
       }
-      rc = set_value_to_record(record_data, value, field);
+      rc = set_value_to_record(record_data, base_record_size, extended_text_offset, value, field);
     }
   }
   if (OB_FAIL(rc)) {
@@ -314,19 +346,82 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
     return rc;
   }
 
-  record.set_data_owner(record_data, record_size);
+  record.set_data_owner(record_data, actual_record_size);
   return RC::SUCCESS;
 }
 
+RC Table::set_value_to_record(char *record_data, int base_record_size, int &extended_text_offset, 
+                              const Value &value, const FieldMeta *field)
+{
+  size_t       copy_len = field->len();
+  const size_t data_len = value.length();
+  
+  if (field->type() == AttrType::TEXTS) {
+    const char *text_data = value.data();
+    size_t text_length = value.length();
+    size_t inline_capacity = field->len() - 20;
+    
+    if (text_length <= inline_capacity) {
+      memcpy(record_data + field->offset(), text_data, text_length);
+      if (text_length < static_cast<size_t>(field->len())) {
+        record_data[field->offset() + text_length] = '\0';
+      }
+    } else {
+      // Extended format: [marker][length][offset]
+      char *field_data = record_data + field->offset();
+      uint32_t marker = 0xFFFFFFFF;
+      uint32_t full_length = static_cast<uint32_t>(text_length);
+      uint32_t data_offset_in_record = static_cast<uint32_t>(extended_text_offset);
+      
+      memcpy(field_data, &marker, sizeof(uint32_t));
+      memcpy(field_data + 4, &full_length, sizeof(uint32_t));
+      memcpy(field_data + 8, &data_offset_in_record, sizeof(uint32_t));
+      
+      memcpy(record_data + extended_text_offset, text_data, text_length);
+      extended_text_offset += text_length;
+    }
+    return RC::SUCCESS;
+  }
+  
+  if (field->type() == AttrType::CHARS) {
+    if (copy_len > data_len) {
+      copy_len = data_len + 1;
+    }
+  }
+  memcpy(record_data + field->offset(), value.data(), copy_len);
+  return RC::SUCCESS;
+}
+
+// 旧版本接口（不支持超长TEXT）
 RC Table::set_value_to_record(char *record_data, const Value &value, const FieldMeta *field)
 {
   size_t       copy_len = field->len();
   const size_t data_len = value.length();
-  if (field->type() == AttrType::CHARS || field->type() == AttrType::TEXTS) {
+  
+  if (field->type() == AttrType::TEXTS) {
+    const char *text_data = value.data();
+    size_t text_length = value.length();
+    size_t inline_capacity = field->len() - 20;
+    
+    if (text_length <= inline_capacity) {
+      memcpy(record_data + field->offset(), text_data, text_length);
+      if (text_length < static_cast<size_t>(field->len())) {
+        record_data[field->offset() + text_length] = '\0';
+      }
+    } else {
+      memcpy(record_data + field->offset(), text_data, inline_capacity);
+      record_data[field->offset() + inline_capacity] = '\0';
+      LOG_WARN("TEXT field '%s' truncated from %zu to %zu bytes in legacy set_value_to_record", 
+               field->name(), text_length, inline_capacity);
+    }
+    return RC::SUCCESS;
+  }
+  
+  if (field->type() == AttrType::CHARS) {
     if (copy_len > data_len) {
       copy_len = data_len + 1;
     }
-  } 
+  }
   memcpy(record_data + field->offset(), value.data(), copy_len);
   return RC::SUCCESS;
 }

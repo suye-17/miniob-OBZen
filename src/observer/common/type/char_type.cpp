@@ -53,7 +53,7 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
       result.set_vector(elements);
     } break;
     case AttrType::TEXTS: {
-      result.set_text(val.value_.pointer_value_, strlen(val.value_.pointer_value_));
+      result.set_text(val.value_.pointer_value_, val.length_);
     } break;
     default: return RC::UNIMPLEMENTED;
   }
