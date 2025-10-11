@@ -20,7 +20,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/filter_stmt.h"
 
 class FilterStmt;  // 前向声明
-class FilterObj;   // 前向声明
 
 /**
  * @brief Group By 物理算子基类
