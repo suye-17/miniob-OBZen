@@ -35,12 +35,11 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/heap_table_engine.h"
 #include "storage/table/lsm_table_engine.h"
 
-Table::~Table()
-{
-}
+Table::~Table() {}
 
 RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, const char *base_dir,
-    span<const AttrInfoSqlNode> attributes, const vector<string> &primary_keys, StorageFormat storage_format, StorageEngine storage_engine)
+    span<const AttrInfoSqlNode> attributes, const vector<string> &primary_keys, StorageFormat storage_format,
+    StorageEngine storage_engine)
 {
   if (table_id < 0) {
     LOG_WARN("invalid table id. table_id=%d, table_name=%s", table_id, name);
@@ -76,7 +75,8 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
 
   // 创建文件
   const vector<FieldMeta> *trx_fields = db->trx_kit().trx_fields();
-  if ((rc = table_meta_.init(table_id, name, trx_fields, attributes, primary_keys, storage_format, storage_engine)) != RC::SUCCESS) {
+  if ((rc = table_meta_.init(table_id, name, trx_fields, attributes, primary_keys, storage_format, storage_engine)) !=
+      RC::SUCCESS) {
     LOG_ERROR("Failed to init table meta. name:%s, ret:%d", name, rc);
     return rc;  // delete table file
   }
@@ -92,7 +92,7 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   table_meta_.serialize(fs);
   fs.close();
 
-  db_       = db;
+  db_ = db;
 
   string             data_file = table_data_file(base_dir, name);
   BufferPoolManager &bpm       = db->buffer_pool_manager();
@@ -131,13 +131,13 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
 RC Table::drop()
 {
   RC rc = RC::SUCCESS;
-  
+
   // 1. 删除所有索引文件
   for (int i = 0; i < table_meta_.index_num(); i++) {
     const IndexMeta *index_meta = table_meta_.index(i);
     if (index_meta != nullptr) {
       string index_file_path = table_index_file(db_->path().c_str(), table_meta_.name(), index_meta->name());
-      int ret = ::unlink(index_file_path.c_str());
+      int    ret             = ::unlink(index_file_path.c_str());
       if (ret != 0 && errno != ENOENT) {
         LOG_WARN("Failed to remove index file: %s, error: %s", index_file_path.c_str(), strerror(errno));
       } else {
@@ -153,7 +153,7 @@ RC Table::drop()
 
   // 3. 删除表数据文件
   string table_data_path = table_data_file(db_->path().c_str(), table_meta_.name());
-  int ret = ::unlink(table_data_path.c_str());
+  int    ret             = ::unlink(table_data_path.c_str());
   if (ret != 0 && errno != ENOENT) {
     LOG_WARN("Failed to remove table data file: %s, error: %s", table_data_path.c_str(), strerror(errno));
   } else {
@@ -162,7 +162,7 @@ RC Table::drop()
 
   // 4. 删除表元数据文件
   string table_meta_path = table_meta_file(db_->path().c_str(), table_meta_.name());
-  ret = ::unlink(table_meta_path.c_str());
+  ret                    = ::unlink(table_meta_path.c_str());
   if (ret != 0 && errno != ENOENT) {
     LOG_WARN("Failed to remove table meta file: %s, error: %s", table_meta_path.c_str(), strerror(errno));
     rc = RC::IOERR_ACCESS;
@@ -190,7 +190,7 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
   }
   fs.close();
 
-  db_       = db;
+  db_ = db;
 
   // // 加载数据文件
   // RC rc = init_record_handler(base_dir);
@@ -203,7 +203,7 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
 
   if (table_meta_.storage_engine() == StorageEngine::HEAP) {
     engine_ = make_unique<HeapTableEngine>(&table_meta_, db_, this);
-  }  else if (table_meta_.storage_engine() == StorageEngine::LSM) {
+  } else if (table_meta_.storage_engine() == StorageEngine::LSM) {
     engine_ = make_unique<LsmTableEngine>(&table_meta_, db_, this);
   } else {
     rc = RC::UNSUPPORTED;
@@ -220,34 +220,22 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
   return rc;
 }
 
-RC Table::insert_record(Record &record)
-{
-  return engine_->insert_record(record);
-}
+RC Table::insert_record(Record &record) { return engine_->insert_record(record); }
 
-RC Table::visit_record(const RID &rid, function<bool(Record &)> visitor)
-{
-  return engine_->visit_record(rid, visitor);
-}
+RC Table::visit_record(const RID &rid, function<bool(Record &)> visitor) { return engine_->visit_record(rid, visitor); }
 
-RC Table::insert_record_with_trx(Record &record, Trx *trx)
-{
-  return engine_->insert_record_with_trx(record, trx);
-}
+RC Table::insert_record_with_trx(Record &record, Trx *trx) { return engine_->insert_record_with_trx(record, trx); }
 RC Table::delete_record_with_trx(const Record &record, Trx *trx)
 {
   return engine_->delete_record_with_trx(record, trx);
 }
 
-RC Table::update_record_with_trx(const Record &old_record, const Record &new_record, Trx* trx)
+RC Table::update_record_with_trx(const Record &old_record, const Record &new_record, Trx *trx)
 {
   return engine_->update_record_with_trx(old_record, new_record, trx);
 }
 
-RC Table::get_record(const RID &rid, Record &record)
-{
-  return engine_->get_record(rid, record);
-}
+RC Table::get_record(const RID &rid, Record &record) { return engine_->get_record(rid, record); }
 
 const char *Table::name() const { return table_meta_.name(); }
 
@@ -270,14 +258,14 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
 
   for (int i = 0; i < value_num && OB_SUCC(rc); i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &    value = values[i];
+    const Value     &value = values[i];
 
-    //验证null
+    // 验证null
     if (!field->nullable() && value.is_null()) {
       LOG_WARN("Cannot insert NULL into NOT NULL field: %s.%s", 
          table_meta_.name(), field->name());
-      //释放
-      free (record_data);
+      // 释放
+      free(record_data);
       return RC::CONSTRAINT_VIOLATION;
     }
     if (value.is_null()) {
@@ -285,8 +273,7 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
       null_value.set_type(field->type());  // 设置为字段的类型
       null_value.set_null();               // 设置为NULL
       rc = set_value_to_record(record_data, null_value, field);
-    }
-    else if (field->type() != value.attr_type()) {
+    } else if (field->type() != value.attr_type()) {
       Value real_value;
       rc = Value::cast_to(value, field->type(), real_value);
       if (OB_FAIL(rc)) {
@@ -311,13 +298,13 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
 
 RC Table::set_value_to_record(char *record_data, const Value &value, const FieldMeta *field)
 {
-  //null值特殊处理
+  // null值特殊处理
   if (value.is_null()) {
     // 使用0xFF填充来标识NULL值，区别于真正的0值
     memset(record_data + field->offset(), 0xFF, field->len());
     return RC::SUCCESS;
   }
-  
+
   size_t       copy_len = field->len();
   const size_t data_len = value.length();
   if (field->type() == AttrType::CHARS) {
@@ -348,21 +335,9 @@ RC Table::create_index(Trx *trx, const vector<const FieldMeta *> &field_metas, c
   return engine_->create_index(trx, field_metas, index_name, is_unique);
 }
 
-RC Table::delete_record(const Record &record)
-{
-  return engine_->delete_record(record);
-}
+RC Table::delete_record(const Record &record) { return engine_->delete_record(record); }
 
-Index *Table::find_index(const char *index_name) const
-{
-  return engine_->find_index(index_name);
-}
-Index *Table::find_index_by_field(const char *field_name) const
-{
-  return engine_->find_index_by_field(field_name);
-}
+Index *Table::find_index(const char *index_name) const { return engine_->find_index(index_name); }
+Index *Table::find_index_by_field(const char *field_name) const { return engine_->find_index_by_field(field_name); }
 
-RC Table::sync()
-{
-  return engine_->sync();
-}
+RC Table::sync() { return engine_->sync(); }

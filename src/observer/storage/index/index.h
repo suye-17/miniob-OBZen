@@ -44,7 +44,8 @@ public:
   {
     return RC::UNSUPPORTED;
   }
-  virtual RC create(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
+  virtual RC create(
+      Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
   {
     return RC::UNSUPPORTED;
   }
@@ -52,7 +53,8 @@ public:
   {
     return RC::UNSUPPORTED;
   }
-  virtual RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
+  virtual RC open(
+      Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas)
   {
     return RC::UNSUPPORTED;
   }
@@ -101,8 +103,8 @@ protected:
   RC init(const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas);
 
 protected:
-  IndexMeta index_meta_;  ///< 索引的元数据
-  FieldMeta field_meta_;  ///< 考虑一个字段的索引（保持向后兼容）
+  IndexMeta         index_meta_;   ///< 索引的元数据
+  FieldMeta         field_meta_;   ///< 考虑一个字段的索引（保持向后兼容）
   vector<FieldMeta> field_metas_;  ///< 多字段索引的字段元数据
 };
 

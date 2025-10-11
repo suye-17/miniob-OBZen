@@ -55,8 +55,8 @@ RC FilterStmt::create(Db *db, Table *default_table, unordered_map<string, Table 
   return rc;
 }
 
-RC get_table_and_field(Db *db, Table *default_table, unordered_map<string, Table *> *tables,
-    const RelAttrSqlNode &attr, Table *&table, const FieldMeta *&field)
+RC get_table_and_field(Db *db, Table *default_table, unordered_map<string, Table *> *tables, const RelAttrSqlNode &attr,
+    Table *&table, const FieldMeta *&field)
 {
   if (common::is_blank(attr.relation_name.c_str())) {
     table = default_table;
@@ -84,41 +84,42 @@ RC get_table_and_field(Db *db, Table *default_table, unordered_map<string, Table
 }
 
 // 辅助函数：创建恒假条件（用于NULL处理）
-RC FilterStmt::create_always_false_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+RC FilterStmt::create_always_false_condition(FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit)
 {
   // 创建 1 = 0 的条件，确保总是返回FALSE
   Value one_value;
   one_value.set_int(1);
   left_obj.init_value(one_value);
-  
+
   Value zero_value;
   zero_value.set_int(0);
   right_obj.init_value(zero_value);
-  
+
   filter_unit->set_left(left_obj);
   filter_unit->set_right(right_obj);
   filter_unit->set_comp(EQUAL_TO);
-  
+
   return RC::SUCCESS;
 }
 
 // 辅助函数：创建表达式等于真值的条件
-RC FilterStmt::create_expression_equals_true_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+RC FilterStmt::create_expression_equals_true_condition(
+    FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit)
 {
   filter_unit->set_left(left_obj);
-  
+
   // 右侧设置为true值
   Value true_value;
   true_value.set_boolean(true);
   right_obj.init_value(true_value);
   filter_unit->set_right(right_obj);
   filter_unit->set_comp(EQUAL_TO);
-  
+
   return RC::SUCCESS;
 }
 
 // 辅助函数：处理单独表达式条件
-RC FilterStmt::handle_single_expression_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit)
+RC FilterStmt::handle_single_expression_condition(FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit)
 {
   // 检查是否为NULL值：如果是，创建恒假条件
   if (left_obj.is_value() && left_obj.value.is_null()) {
@@ -131,9 +132,8 @@ RC FilterStmt::handle_single_expression_condition(FilterObj& left_obj, FilterObj
 }
 
 // 辅助函数：统一处理表达式转换为FilterObj
-RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
-                                                unordered_map<string, Table *> *tables,
-                                                FilterObj& filter_obj, const char* side_name)
+RC FilterStmt::convert_expression_to_filter_obj(Expression *expr, Table *default_table,
+    unordered_map<string, Table *> *tables, FilterObj &filter_obj, const char *side_name)
 {
   if (expr == nullptr) {
     LOG_WARN("%s expression is null", side_name);
@@ -143,12 +143,12 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
   // 智能处理：区分不同类型的表达式
   if (expr->type() == ExprType::UNBOUND_FIELD) {
     // 字段表达式，需要绑定到具体表
-    auto unbound_field = static_cast<UnboundFieldExpr*>(expr);
-    const char* table_name = unbound_field->table_name();
-    const char* field_name = unbound_field->field_name();
-    
-    Table* target_table = nullptr;
-    
+    auto        unbound_field = static_cast<UnboundFieldExpr *>(expr);
+    const char *table_name    = unbound_field->table_name();
+    const char *field_name    = unbound_field->field_name();
+
+    Table *target_table = nullptr;
+
     // 检查是否指定了表名
     if (!common::is_blank(table_name)) {
       // 有表名前缀，在tables中查找
@@ -171,14 +171,14 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
         target_table = default_table;
       } else if (tables != nullptr && !tables->empty()) {
         // 多表查询，在所有表中查找字段
-        vector<Table*> matching_tables;
-        for (const auto& pair : *tables) {
-          Table* table = pair.second;
+        vector<Table *> matching_tables;
+        for (const auto &pair : *tables) {
+          Table *table = pair.second;
           if (table->table_meta().field(field_name) != nullptr) {
             matching_tables.push_back(table);
           }
         }
-        
+
         if (matching_tables.empty()) {
           LOG_WARN("field not found in any table: %s", field_name);
           return RC::SCHEMA_FIELD_NOT_EXIST;
@@ -195,10 +195,10 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
         return RC::SCHEMA_TABLE_NOT_EXIST;
       }
     }
-    
+
     // 在目标表中查找字段
     if (target_table != nullptr) {
-      const FieldMeta* field_meta = target_table->table_meta().field(field_name);
+      const FieldMeta *field_meta = target_table->table_meta().field(field_name);
       if (field_meta != nullptr) {
         Field field(target_table, field_meta);
         filter_obj.init_attr(field);
@@ -211,7 +211,7 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
   } else if (expr->type() == ExprType::VALUE) {
     // 常量表达式，直接求值
     Value result;
-    RC rc = expr->try_get_value(result);
+    RC    rc = expr->try_get_value(result);
     if (rc == RC::SUCCESS) {
       // 检查NULL值：如果表达式结果是NULL，设置特殊标记
       if (result.is_null()) {
@@ -226,7 +226,7 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
   } else {
     // 复杂表达式，尝试静态求值，失败则存储表达式副本
     Value result;
-    RC rc = expr->try_get_value(result);
+    RC    rc = expr->try_get_value(result);
     if (rc == RC::SUCCESS) {
       // 能静态求值的常量表达式
       // 检查NULL值：如果表达式结果是NULL，设置特殊标记
@@ -245,7 +245,7 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
         }
         filter_obj.init_expression(copied_expr.release());
         return RC::SUCCESS;
-      } catch (const std::exception& e) {
+      } catch (const std::exception &e) {
         LOG_WARN("exception when copying %s expression: %s", side_name, e.what());
         return RC::INTERNAL;
       } catch (...) {
@@ -254,7 +254,7 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression* expr, Table* default
       }
     }
   }
-  
+
   // 默认返回错误（不应该到达这里）
   LOG_WARN("unexpected end of convert_expression_to_filter_obj function");
   return RC::INTERNAL;
@@ -276,14 +276,14 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
   // 统一架构：所有条件都是表达式条件
   if (condition.is_expression_condition) {
     FilterObj left_obj, right_obj;
-    
+
     // 处理左侧表达式
     rc = convert_expression_to_filter_obj(condition.left_expression, default_table, tables, left_obj, "left");
     if (rc != RC::SUCCESS) {
       delete filter_unit;
       return rc;
     }
-    
+
     // 处理单独表达式条件（NO_OP）
     if (comp == NO_OP) {
       rc = handle_single_expression_condition(left_obj, right_obj, filter_unit);
@@ -307,15 +307,15 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
       filter_unit->set_right(right_obj);
       filter_unit->set_comp(comp);
     }
-    
+
     // 清理原始表达式内存（已经复制到FilterObj中）
     delete condition.left_expression;
     if (condition.right_expression != nullptr) {
       delete condition.right_expression;
-      const_cast<ConditionSqlNode&>(condition).right_expression = nullptr;
+      const_cast<ConditionSqlNode &>(condition).right_expression = nullptr;
     }
-    const_cast<ConditionSqlNode&>(condition).left_expression = nullptr;
-    
+    const_cast<ConditionSqlNode &>(condition).left_expression = nullptr;
+
     return RC::SUCCESS;
   }
 

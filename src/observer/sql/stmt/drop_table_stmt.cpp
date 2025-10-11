@@ -2,8 +2,7 @@
 #include "common/log/log.h"
 #include "storage/db/db.h"
 
-DropTableStmt::DropTableStmt(const string &table_name) : table_name_(table_name)
-{}
+DropTableStmt::DropTableStmt(const string &table_name) : table_name_(table_name) {}
 
 DropTableStmt::~DropTableStmt() = default;
 

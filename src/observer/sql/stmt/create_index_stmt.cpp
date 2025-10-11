@@ -26,13 +26,12 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
   stmt = nullptr;
 
   const char *table_name = create_index.relation_name.c_str();
-  if (is_blank(table_name) || is_blank(create_index.index_name.c_str()) ||
-      create_index.attribute_names.empty()) {
+  if (is_blank(table_name) || is_blank(create_index.index_name.c_str()) || create_index.attribute_names.empty()) {
     LOG_WARN("invalid argument. db=%p, table_name=%p, index name=%s, attribute count=%zu",
         db, table_name, create_index.index_name.c_str(), create_index.attribute_names.size());
     return RC::INVALID_ARGUMENT;
   }
-  //检测关联字段数是不是大于 5
+  // 检测关联字段数是不是大于 5
   if (create_index.attribute_names.size() > 5) {
     LOG_WARN("too many fields for index. max=5, actual=%zu", create_index.attribute_names.size());
     return RC::INVALID_ARGUMENT;
@@ -45,7 +44,7 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
-  //验证所有字段是否都存在
+  // 验证所有字段是否都存在
   vector<const FieldMeta *> field_metas;
   for (const auto &attribute_name : create_index.attribute_names) {
     const FieldMeta *field_meta = table->table_meta().field(attribute_name.c_str());

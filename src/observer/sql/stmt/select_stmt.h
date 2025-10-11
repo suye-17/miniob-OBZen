@@ -44,7 +44,8 @@ public:
 
   vector<unique_ptr<Expression>> &query_expressions() { return query_expressions_; }
   vector<unique_ptr<Expression>> &group_by() { return group_by_; }
-  FilterStmt            *having_filter_stmt() const { return having_filter_stmt_; }
+  FilterStmt                     *having_filter_stmt() const { return having_filter_stmt_; }
+
 private:
   vector<unique_ptr<Expression>> query_expressions_;
   vector<Table *>                tables_;

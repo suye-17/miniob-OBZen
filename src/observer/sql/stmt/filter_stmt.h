@@ -31,46 +31,49 @@ class FieldMeta;
  */
 struct FilterObj
 {
-  enum class Type {
+  enum class Type
+  {
     FIELD,      // 字段引用 (如: id, name)
     VALUE,      // 常量值 (如: 123, 'hello')
     EXPRESSION  // 复杂表达式 (如: id+1, (col1*2)/3)
   };
 
-  Type type_;
-  Field field;
-  Value value;
+  Type        type_;
+  Field       field;
+  Value       value;
   Expression *expression;
 
   FilterObj() : type_(Type::VALUE), expression(nullptr) {}
-  
+
   // 析构函数：释放表达式内存
-  ~FilterObj() {
+  ~FilterObj()
+  {
     if (expression != nullptr) {
       delete expression;
       expression = nullptr;
     }
   }
-  
+
   // 拷贝构造函数：深拷贝表达式
-  FilterObj(const FilterObj& other) 
-    : type_(other.type_), field(other.field), value(other.value), expression(nullptr) {
+  FilterObj(const FilterObj &other) : type_(other.type_), field(other.field), value(other.value), expression(nullptr)
+  {
     if (other.expression != nullptr) {
       expression = other.expression->copy().release();
     }
   }
-  
+
   // 拷贝赋值运算符：深拷贝表达式
-  FilterObj& operator=(const FilterObj& other) {
+  FilterObj &operator=(const FilterObj &other)
+  {
     if (this != &other) {
       // 先释放当前的表达式
       delete expression;
-      
+
       // 拷贝数据
       type_ = other.type_;
       field = other.field;
       value = other.value;
-      
+
       // 深拷贝表达式
       if (other.expression != nullptr) {
         expression = other.expression->copy().release();
@@ -80,26 +83,27 @@ struct FilterObj
     }
     return *this;
   }
-  
+
   // 移动构造函数
-  FilterObj(FilterObj&& other) noexcept
-    : type_(other.type_), field(std::move(other.field)), 
-      value(std::move(other.value)), expression(other.expression) {
+  FilterObj(FilterObj &&other) noexcept
+      : type_(other.type_), field(std::move(other.field)), value(std::move(other.value)), expression(other.expression)
+  {
     other.expression = nullptr;
   }
-  
+
   // 移动赋值运算符
-  FilterObj& operator=(FilterObj&& other) noexcept {
+  FilterObj &operator=(FilterObj &&other) noexcept
+  {
     if (this != &other) {
       // 先释放当前的表达式
       delete expression;
-      
+
       // 移动数据
-      type_ = other.type_;
-      field = std::move(other.field);
-      value = std::move(other.value);
+      type_      = other.type_;
+      field      = std::move(other.field);
+      value      = std::move(other.value);
       expression = other.expression;
-      
+
       // 清空源对象
       other.expression = nullptr;
     }
@@ -109,24 +113,24 @@ struct FilterObj
   void init_attr(const Field &field)
   {
     clear_expression();
-    type_ = Type::FIELD;
+    type_       = Type::FIELD;
     this->field = field;
   }
 
   void init_value(const Value &value)
   {
     clear_expression();
-    type_ = Type::VALUE;
+    type_       = Type::VALUE;
     this->value = value;
   }
-  
+
   void init_expression(Expression *expr)
   {
     clear_expression();
-    type_ = Type::EXPRESSION;
+    type_      = Type::EXPRESSION;
     expression = expr;
   }
-  
+
   // 查询方法
   bool is_attr() const { return type_ == Type::FIELD; }
   bool is_value() const { return type_ == Type::VALUE; }
@@ -134,7 +138,8 @@ struct FilterObj
   Type get_type() const { return type_; }
 
 private:
-  void clear_expression() {
+  void clear_expression()
+  {
     if (expression != nullptr) {
       delete expression;
       expression = nullptr;
@@ -197,9 +202,8 @@ private:
    *   - VALUE: 静态求值为常量
    *   - 其他: 尝试静态求值，失败则保存表达式副本
    */
-  static RC convert_expression_to_filter_obj(Expression* expr, Table* default_table, 
-                                             unordered_map<string, Table *> *tables,
-                                             FilterObj& filter_obj, const char* side_name);
+  static RC convert_expression_to_filter_obj(Expression *expr, Table *default_table,
+      unordered_map<string, Table *> *tables, FilterObj &filter_obj, const char *side_name);
 
   /**
    * @brief 处理单独表达式条件（WHERE expression）
@@ -211,17 +215,17 @@ private:
    *   - 如果是NULL值，创建恒假条件（1=0）
    *   - 否则创建 expression=true 的条件
    */
-  static RC handle_single_expression_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
+  static RC handle_single_expression_condition(FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit);
 
   /**
    * @brief 创建恒假条件（用于NULL值处理）
    */
-  static RC create_always_false_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
+  static RC create_always_false_condition(FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit);
 
   /**
    * @brief 创建表达式等于真值的条件
    */
-  static RC create_expression_equals_true_condition(FilterObj& left_obj, FilterObj& right_obj, FilterUnit* filter_unit);
-  
+  static RC create_expression_equals_true_condition(FilterObj &left_obj, FilterObj &right_obj, FilterUnit *filter_unit);
+
   vector<FilterUnit *> filter_units_;  ///< 过滤单元列表，默认AND关系
 };

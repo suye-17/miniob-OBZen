@@ -28,9 +28,11 @@ public:
   virtual ~BplusTreeIndex() noexcept;
 
   RC create(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) override;
-  RC create(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas) override;
+  RC create(Table *table, const char *file_name, const IndexMeta &index_meta,
+      const vector<const FieldMeta *> &field_metas) override;
   RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) override;
-  RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const vector<const FieldMeta *> &field_metas) override;
+  RC open(Table *table, const char *file_name, const IndexMeta &index_meta,
+      const vector<const FieldMeta *> &field_metas) override;
   RC close();
 
   RC insert_entry(const char *record, const RID *rid) override;
@@ -48,11 +50,11 @@ private:
   bool             inited_ = false;
   Table           *table_  = nullptr;
   BplusTreeHandler index_handler_;
-  
+
   // 唯一性检查辅助方法
   bool is_null_key(const char *key_data, int key_len) const;
-  RC check_key_exists(const char *key_data, int key_len, bool &exists);
-  RC build_index(const char *record, char *&composite_key, int &key_len);
+  RC   check_key_exists(const char *key_data, int key_len, bool &exists);
+  RC   build_index(const char *record, char *&composite_key, int &key_len);
 };
 
 /**

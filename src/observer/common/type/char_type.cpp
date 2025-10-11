@@ -32,7 +32,7 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
   switch (type) {
     case AttrType::DATES: {
       int date;
-      RC rc = parse_date(val.value_.pointer_value_, date);
+      RC  rc = parse_date(val.value_.pointer_value_, date);
       if (rc != RC::SUCCESS) {
         return rc;
       }
@@ -67,16 +67,16 @@ RC CharType::to_string(const Value &val, string &result) const
     result = "";
     return RC::SUCCESS;
   }
-  
+
   // 找到实际字符串的结束位置（去除尾部空格）
-  const char *data = val.value_.pointer_value_;
-  int actual_length = val.length_;
-  
+  const char *data          = val.value_.pointer_value_;
+  int         actual_length = val.length_;
+
   // 从后往前找到最后一个非空格字符
   while (actual_length > 0 && (data[actual_length - 1] == ' ' || data[actual_length - 1] == '\0')) {
     actual_length--;
   }
-  
+
   result = string(data, actual_length);
   return RC::SUCCESS;
 }
