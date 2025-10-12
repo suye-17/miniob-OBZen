@@ -31,7 +31,13 @@ int TextType::cast_cost(AttrType type)
 RC TextType::cast_to(const Value &val, AttrType type, Value &result) const
 {
   switch (type) {
-  case AttrType::TEXTS:      
+  case AttrType::TEXTS:
+    // 严格检查TEXT长度限制（符合MySQL严格模式）
+    if (val.length_ > TEXT_MAX_LENGTH) {
+      LOG_ERROR("TEXT data length %d exceeds maximum allowed length %d bytes", 
+                val.length_, TEXT_MAX_LENGTH);
+      return RC::INVALID_ARGUMENT;
+    }
     result = val;
     break;
   case AttrType::CHARS:
@@ -45,12 +51,8 @@ RC TextType::cast_to(const Value &val, AttrType type, Value &result) const
 
 RC TextType::set_value_from_str(Value &val, const string &data) const
 {
-  if (data.length() > TEXT_MAX_LENGTH) {
-    LOG_WARN("Text length %zu exceeds maximum %d bytes", data.length(), TEXT_MAX_LENGTH);
-    return RC::INVALID_ARGUMENT;
-  }
-  val.set_text(data.c_str(), data.length());
-  return RC::SUCCESS;
+  // set_text内部会检查长度限制
+  return val.set_text(data.c_str(), data.length());
 }
 
 RC TextType::to_string(const Value &val, string &result) const

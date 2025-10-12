@@ -54,13 +54,11 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
       result.set_vector(elements);
     } break;
     case AttrType::TEXTS: {
-      // 严格检查TEXT长度限制，超过则返回错误（符合MySQL严格模式）
-      if (val.length_ > TEXT_MAX_LENGTH) {
-        LOG_ERROR("TEXT data length %d exceeds maximum allowed length %d bytes", 
-                  val.length_, TEXT_MAX_LENGTH);
-        return RC::INVALID_ARGUMENT;
+      // set_text内部会检查TEXT长度限制（符合MySQL严格模式）
+      RC rc = result.set_text(val.value_.pointer_value_, val.length_);
+      if (rc != RC::SUCCESS) {
+        return rc;
       }
-      result.set_text(val.value_.pointer_value_, val.length_);
     } break;
     default: return RC::UNIMPLEMENTED;
   }

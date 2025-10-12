@@ -157,7 +157,10 @@ void Value::set_data(char *data, int length)
       set_string(data, length);
     } break;
     case AttrType::TEXTS: {
-      set_text(data, length);
+      RC rc = set_text(data, length);
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to set TEXT value: length=%d exceeds maximum %d", length, TEXT_MAX_LENGTH);
+      }
     } break;
     case AttrType::INTS: {
       value_.int_value_ = *(int *)data;
@@ -284,29 +287,33 @@ void Value::set_vector(const vector<float> &val)
   length_              = val.size() * sizeof(float);
 }
 
-void Value::set_text(const char *s, int len /*= 65535*/)
+RC Value::set_text(const char *s, int len /*= 65535*/)
 {
   reset();
   attr_type_ = AttrType::TEXTS;
   if (s == nullptr) {
     value_.pointer_value_ = nullptr;
     length_               = 0;
-  } else {
-    own_data_ = true;
-    // 对于TEXT类型，len参数是实际长度，不使用strlen/strnlen避免截断
-    if (len <= 0) {
-      len = strlen(s); // 只在len无效时才使用strlen
-    }
-    // 限制最大长度为TEXT_MAX_LENGTH（符合MySQL非严格模式行为）
-    if (len > TEXT_MAX_LENGTH) {
-      LOG_WARN("TEXT data truncated from %d bytes to %d bytes (TEXT_MAX_LENGTH)", len, TEXT_MAX_LENGTH);
-      len = TEXT_MAX_LENGTH;
-    }
-    value_.pointer_value_ = new char[len + 1];
-    length_               = len;
-    memcpy(value_.pointer_value_, s, len);
-    value_.pointer_value_[len] = '\0';
+    return RC::SUCCESS;
   }
+  
+  own_data_ = true;
+  // 对于TEXT类型，len参数是实际长度，不使用strlen/strnlen避免截断
+  if (len <= 0) {
+    len = strlen(s); // 只在len无效时才使用strlen
+  }
+  
+  // 严格检查TEXT长度限制（符合MySQL严格模式）
+  if (len > TEXT_MAX_LENGTH) {
+    LOG_ERROR("TEXT data length %d exceeds maximum allowed length %d bytes", len, TEXT_MAX_LENGTH);
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  value_.pointer_value_ = new char[len + 1];
+  length_               = len;
+  memcpy(value_.pointer_value_, s, len);
+  value_.pointer_value_[len] = '\0';
+  return RC::SUCCESS;
 }
 
 void Value::set_value(const Value &value)
@@ -331,7 +338,10 @@ void Value::set_value(const Value &value)
       set_vector(value.get_vector());
     } break;
     case AttrType::TEXTS: {
-      set_text(value.get_string().c_str());
+      RC rc = set_text(value.get_string().c_str());
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to set TEXT value from string");
+      }
     } break;
     default: {
       ASSERT(false, "got an invalid value type");
