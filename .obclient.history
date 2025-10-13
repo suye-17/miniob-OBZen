@@ -36,3 +36,5 @@ SELECT -0 = 0 AS negative_zero_equals_zero, -0 < 0 AS negative_zero_less_than_ze
 SELECT 'A. Original Query (col1 - col2 > -0)' AS test_name, * FROM exp_table WHERE -0 < col1 - col2;
 ### 2025-10-13 17:42:06.307
 SELECT id FROM exp_table WHERE -0 < col1 - col2 ORDER BY id;
+### 2025-10-13 19:57:31.013
+create table t_test(id int, name char(10), age int);

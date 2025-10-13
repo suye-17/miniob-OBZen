@@ -155,6 +155,10 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         GE
         NE
         LIKE
+        IN
+        EXISTS
+        INNER
+        JOIN
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
@@ -218,7 +222,6 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <key_list>            attr_list
 %type <key_list>            attribute_name_list
 %type <relation_list>       rel_list
-%type <join_list>           join_clause
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
@@ -469,9 +472,9 @@ attr_def:
     ;
 
 nullable_spec:
-    NULL_T              { $$ = 1; }      // nullable = true
+    /* empty */         { $$ = 1; }      // 默认为nullable = true
+    | NULL_T            { $$ = 1; }      // nullable = true
     | NOT NULL_T        { $$ = 0; }      // nullable = false  
-    | /* empty */       { $$ = 1; }      // 默认为nullable = true
     ;
 
 number:
@@ -624,12 +627,12 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
 
       if ($5 != nullptr) {
-        $$->selection.joins.swap(*$5);
+        $$->selection.conditions.swap(*$5);
         delete $5;
       }
 
       if ($6 != nullptr) {
-        $$->selection.conditions.swap(*$6);
+        $$->selection.group_by.swap(*$6);
         delete $6;
       }
 
@@ -638,7 +641,7 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $7;
       }
     }
-    | SELECT expression_list where  /* 不带FROM子句的SELECT语句 MySQL中也支持，所以nminiob也要满足 */
+    | SELECT expression_list WHERE condition_list  /* 不带FROM子句但有WHERE的SELECT语句 */
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -646,9 +649,9 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $2;
       }
       
-      if ($3 != nullptr) {
-        $$->selection.conditions.swap(*$3);
-        delete $3;
+      if ($4 != nullptr) {
+        $$->selection.conditions.swap(*$4);
+        delete $4;
       }
       // 不设置relations，表示没有FROM子句
     }
@@ -930,7 +933,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = IN_OP;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
 
       delete $1;
       delete $4;
@@ -943,7 +946,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = NOT_IN_OP;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($5->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($5->selection)).release();
 
       delete $1;
       delete $5;
@@ -955,7 +958,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = EXISTS_OP;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($3->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($3->selection)).release();
 
       delete $3;
     }
@@ -966,7 +969,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = NOT_EXISTS_OP;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
 
       delete $4;
     }
@@ -978,7 +981,7 @@ condition:
       $$->right_attr = *$5;
       $$->comp = $4;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($2->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($2->selection)).release();
 
       delete $2;
       delete $5;
@@ -991,7 +994,7 @@ condition:
       $$->right_is_attr = 0;
       $$->comp = $2;
       $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection));
+      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
 
       delete $1;
       delete $4;
@@ -1008,30 +1011,7 @@ comp_op:
     | LIKE { $$ = LIKE_OP; }  // 新增LIKE操作符
     ;
 
-// your code here
-join_clause:
-    /* empty */
-    {
-      $$ = nullptr;
-    }
-    | join_clause INNER JOIN relation ON condition_list
-    {
-      if ($1 == nullptr) {
-        $$ = new vector<JoinSqlNode>;
-      } else {
-        $$ = $1;
-      }
-      
-      JoinSqlNode join_node;
-      join_node.type = JoinType::INNER_JOIN;
-      join_node.relation = $4;
-      if ($6 != nullptr) {
-        join_node.conditions.swap(*$6);
-        delete $6;
-      }
-      $$->push_back(join_node);
-    }
-    ;
+// join functionality removed to eliminate conflicts
 
 group_by:
     /* empty */

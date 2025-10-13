@@ -144,6 +144,12 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   // collect query fields in `select` statement
   vector<unique_ptr<Expression>> bound_expressions;
   BinderContext binder_context;
+  
+  // 添加查询表到绑定上下文中
+  for (Table *table : tables) {
+    binder_context.add_table(table);
+  }
+  
   ExpressionBinder               expression_binder(binder_context);
 
   for (unique_ptr<Expression> &expression : select_sql.expressions) {

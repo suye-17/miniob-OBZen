@@ -118,6 +118,11 @@ struct ConditionSqlNode
   Expression *left_expression         = nullptr;  ///< left-hand side expression if is_expression_condition = TRUE
   Expression *right_expression        = nullptr;  ///< right-hand side expression if is_expression_condition = TRUE
   
+  // 新增字段以支持子查询和值列表
+  vector<Value> right_values;         ///< 用于IN操作的值列表
+  bool         has_subquery = false;  ///< TRUE if this condition involves a subquery
+  SelectSqlNode *subquery = nullptr;  ///< subquery if has_subquery = TRUE
+  
   // 构造函数
   ConditionSqlNode() = default;
   

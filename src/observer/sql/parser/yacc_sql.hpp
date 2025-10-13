@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_HOME_CHRIS_OBZEN_ZHANGHAO_2024_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
-# define YY_YY_HOME_CHRIS_OBZEN_ZHANGHAO_2024_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
+#ifndef YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
+# define YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -118,11 +118,16 @@ extern int yydebug;
     LE = 319,                      /* LE  */
     GE = 320,                      /* GE  */
     NE = 321,                      /* NE  */
-    NUMBER = 322,                  /* NUMBER  */
-    FLOAT = 323,                   /* FLOAT  */
-    ID = 324,                      /* ID  */
-    SSS = 325,                     /* SSS  */
-    UMINUS = 326                   /* UMINUS  */
+    LIKE = 322,                    /* LIKE  */
+    IN = 323,                      /* IN  */
+    EXISTS = 324,                  /* EXISTS  */
+    INNER = 325,                   /* INNER  */
+    JOIN = 326,                    /* JOIN  */
+    NUMBER = 327,                  /* NUMBER  */
+    FLOAT = 328,                   /* FLOAT  */
+    ID = 329,                      /* ID  */
+    SSS = 330,                     /* SSS  */
+    UMINUS = 331                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -131,7 +136,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 159 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.y"
+#line 164 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -152,7 +157,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 156 "/home/chris/OBZen-zhanghao-2024/src/observer/sql/parser/yacc_sql.hpp"
+#line 161 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -180,4 +185,4 @@ struct YYLTYPE
 int yyparse (const char * sql_string, ParsedSqlResult * sql_result, void * scanner);
 
 
-#endif /* !YY_YY_HOME_CHRIS_OBZEN_ZHANGHAO_2024_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED  */
+#endif /* !YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED  */
