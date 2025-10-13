@@ -14,7 +14,9 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "sql/parser/parse.h"
+#include "common/sys/rc.h"
+#include "common/value.h"
+#include "sql/parser/parse_defs.h"
 
 class Record;
 class Table;

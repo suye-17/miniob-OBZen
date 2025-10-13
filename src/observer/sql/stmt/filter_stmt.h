@@ -43,46 +43,10 @@ struct FilterObj
   Value       value;
   Expression *expression;
 
-  FilterObj() : type_(Type::VALUE), expression(nullptr) {}
-
-  // 析构函数：释放表达式内存
-  ~FilterObj()
-  {
-    if (expression != nullptr) {
-      delete expression;
-      expression = nullptr;
-    }
-  }
-
-  // 拷贝构造函数：深拷贝表达式
-  FilterObj(const FilterObj &other) : type_(other.type_), field(other.field), value(other.value), expression(nullptr)
-  {
-    if (other.expression != nullptr) {
-      expression = other.expression->copy().release();
-    }
-  }
-
-  // 拷贝赋值运算符：深拷贝表达式
-  FilterObj &operator=(const FilterObj &other)
-  {
-    if (this != &other) {
-      // 先释放当前的表达式
-      delete expression;
-
-      // 拷贝数据
-      type_ = other.type_;
-      field = other.field;
-      value = other.value;
-
-      // 深拷贝表达式
-      if (other.expression != nullptr) {
-        expression = other.expression->copy().release();
-      } else {
-        expression = nullptr;
-      }
-    }
-    return *this;
-  }
+  FilterObj();
+  ~FilterObj();
+  FilterObj(const FilterObj &other);
+  FilterObj &operator=(const FilterObj &other);
 
   // 移动构造函数
   FilterObj(FilterObj &&other) noexcept
@@ -92,23 +56,7 @@ struct FilterObj
   }
 
   // 移动赋值运算符
-  FilterObj &operator=(FilterObj &&other) noexcept
-  {
-    if (this != &other) {
-      // 先释放当前的表达式
-      delete expression;
-
-      // 移动数据
-      type_      = other.type_;
-      field      = std::move(other.field);
-      value      = std::move(other.value);
-      expression = other.expression;
-
-      // 清空源对象
-      other.expression = nullptr;
-    }
-    return *this;
-  }
+  FilterObj &operator=(FilterObj &&other) noexcept;
 
   void init_attr(const Field &field)
   {
@@ -138,13 +86,7 @@ struct FilterObj
   Type get_type() const { return type_; }
 
 private:
-  void clear_expression()
-  {
-    if (expression != nullptr) {
-      delete expression;
-      expression = nullptr;
-    }
-  }
+  void clear_expression();
 };
 
 class FilterUnit

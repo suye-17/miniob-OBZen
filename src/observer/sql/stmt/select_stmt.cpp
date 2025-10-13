@@ -33,9 +33,9 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   unique_ptr<Expression> left_expr;
   
   // 处理左侧表达式 - 优先使用表达式字段
-  if (condition.left_expr != nullptr) {
+  if (condition.left_expression != nullptr) {
     // 直接使用表达式（需要拷贝，因为解析器创建的表达式会被管理）
-    left_expr.reset(condition.left_expr->copy().release());
+    left_expr.reset(condition.left_expression->copy().release());
   } else if (condition.left_is_attr) {
     const RelAttrSqlNode &attr = condition.left_attr;
     left_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
@@ -45,31 +45,18 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
   
   // 检查是否为IN/NOT IN操作
   if (condition.comp == IN_OP || condition.comp == NOT_IN_OP) {
-    if (condition.has_subquery && condition.subquery) {
-      // 使用子查询构造ComparisonExpr，需要创建子查询的深拷贝
-      auto subquery_copy = SelectSqlNode::create_copy(condition.subquery.get());
-      expr = new ComparisonExpr(condition.comp, std::move(left_expr), std::move(subquery_copy));
-    } else {
-      // 使用值列表构造ComparisonExpr
-      expr = new ComparisonExpr(condition.comp, std::move(left_expr), condition.right_values);
-    }
+    // 使用值列表构造ComparisonExpr
+    vector<Value> right_values = {condition.right_value};
+    expr = new ComparisonExpr(condition.comp, std::move(left_expr), right_values);
     return RC::SUCCESS;
   }
   
   // 处理普通比较操作的右侧表达式
-  // 检查右侧是否为子查询
-  if (condition.has_subquery && condition.subquery) {
-    // 右侧是子查询（例如: attr >= (SELECT ...)）
-    auto subquery_copy = SelectSqlNode::create_copy(condition.subquery.get());
-    expr = new ComparisonExpr(condition.comp, std::move(left_expr), std::move(subquery_copy));
-    return RC::SUCCESS;
-  }
-  
   unique_ptr<Expression> right_expr;
   // 处理右侧表达式 - 优先使用表达式字段
-  if (condition.right_expr != nullptr) {
+  if (condition.right_expression != nullptr) {
     // 直接使用表达式（需要拷贝）
-    right_expr.reset(condition.right_expr->copy().release());
+    right_expr.reset(condition.right_expression->copy().release());
   } else if (condition.right_is_attr) {
     const RelAttrSqlNode &attr = condition.right_attr;
     right_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
@@ -156,6 +143,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
 
   // collect query fields in `select` statement
   vector<unique_ptr<Expression>> bound_expressions;
+  BinderContext binder_context;
   ExpressionBinder               expression_binder(binder_context);
 
   for (unique_ptr<Expression> &expression : select_sql.expressions) {
@@ -180,6 +168,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
 
   // 第七步：处理WHERE条件
   Table *default_table = nullptr;
+  vector<JoinTable> join_tables;
   if (tables.size() == 1 && join_tables.empty()) {
     default_table = tables[0];
   }

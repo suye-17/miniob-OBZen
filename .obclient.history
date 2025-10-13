@@ -2,3 +2,37 @@
 CREATE TABLE test_table(id int, name char(20));
 ### 2025-09-10 14:35:15.320
 SHOW TABLES;
+### 2025-10-13 17:14:14.760
+SELECT 1+2, 3*4, 5/2, -10;
+### 2025-10-13 17:15:30.660
+SELECT 1 WHERE 2 = 2/3;
+### 2025-10-13 17:16:05.459
+SELECT 1 WHERE 4 > 2;
+### 2025-10-13 17:16:25.602
+SELECT NULL + 1, 10/0, -NULL;
+### 2025-10-13 17:16:41.870
+SELECT 1 WHERE NULL;
+### 2025-10-13 17:16:57.471
+CREATE TABLE test_table(id INT, score FLOAT);
+### 2025-10-13 17:17:16.685
+SELECT count(*) FROM test_table WHERE 1=2;
+### 2025-10-13 17:17:30.564
+SELECT max(id), avg(score) FROM test_table WHERE 1=2;
+### 2025-10-13 17:17:46.970
+SELECT 1+2*3, (1+2)*3, 2+3*4-1;
+### 2025-10-13 17:18:06.074
+SELECT 1 WHERE 0;
+### 2025-10-13 17:18:20.907
+SELECT ((1+2)*3)+4, 1+(2*(3+4));
+### 2025-10-13 17:32:18.617
+DROP TABLE IF EXISTS exp_table; CREATE TABLE exp_table (id INT, col1 INT, col2 INT, col3 FLOAT, col4 FLOAT);
+### 2025-10-13 17:33:04.194
+CREATE TABLE exp_table (id INT, col1 INT, col2 INT, col3 FLOAT, col4 FLOAT);
+### 2025-10-13 17:33:30.307
+INSERT INTO exp_table VALUES (1, 9, 8, 3.22, 1.91), (2, 7, 4, 3.24, 4.97), (3, 5, 8, 1.36, 3.35), (4, 10, 10, 5.50, 5.50), (5, -2, -5, -1.00, -2.50), (6, -5, -2, -2.50, -1.00), (7, 0, 0, 0.00, 0.00), (8, 0, 5, 0.00, 1.00), (9, 5, 0, 1.00, 0.00), (10, NULL, 5, NULL, 1.00), (11, 5, NULL, 1.00, NULL), (12, NULL, NULL, NULL, NULL);
+### 2025-10-13 17:33:53.232
+SELECT -0 = 0 AS negative_zero_equals_zero, -0 < 0 AS negative_zero_less_than_zero;
+### 2025-10-13 17:35:22.464
+SELECT 'A. Original Query (col1 - col2 > -0)' AS test_name, * FROM exp_table WHERE -0 < col1 - col2;
+### 2025-10-13 17:42:06.307
+SELECT id FROM exp_table WHERE -0 < col1 - col2 ORDER BY id;

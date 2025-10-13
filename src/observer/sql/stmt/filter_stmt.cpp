@@ -21,7 +21,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
 #include "storage/record/record.h"
-#include "sql/parser/expression_binder.h"
 #include "sql/parser/parse_defs.h"
 
 FilterStmt::~FilterStmt()
@@ -326,4 +325,69 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   // 检查两个类型是否能够比较
   return rc;
+}
+
+// FilterObj 实现
+FilterObj::FilterObj() : type_(Type::VALUE), expression(nullptr) {}
+
+FilterObj::~FilterObj()
+{
+  if (expression != nullptr) {
+    delete expression;
+    expression = nullptr;
+  }
+}
+
+FilterObj::FilterObj(const FilterObj &other) : type_(other.type_), field(other.field), value(other.value), expression(nullptr)
+{
+  if (other.expression != nullptr) {
+    expression = other.expression->copy().release();
+  }
+}
+
+FilterObj &FilterObj::operator=(const FilterObj &other)
+{
+  if (this != &other) {
+    // 先释放当前的表达式
+    delete expression;
+
+    // 拷贝数据
+    type_ = other.type_;
+    field = other.field;
+    value = other.value;
+
+    // 深拷贝表达式
+    if (other.expression != nullptr) {
+      expression = other.expression->copy().release();
+    } else {
+      expression = nullptr;
+    }
+  }
+  return *this;
+}
+
+FilterObj &FilterObj::operator=(FilterObj &&other) noexcept
+{
+  if (this != &other) {
+    // 先释放当前的表达式
+    delete expression;
+
+    // 移动数据
+    type_      = other.type_;
+    field      = std::move(other.field);
+    value      = std::move(other.value);
+    expression = other.expression;
+
+    // 清空源对象
+    other.expression = nullptr;
+  }
+  return *this;
+}
+
+void FilterObj::clear_expression()
+{
+  if (expression != nullptr) {
+    delete expression;
+    expression = nullptr;
+  }
 }

@@ -329,7 +329,6 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   }
 
   bool bool_value = false;
-  RC rc = RC::SUCCESS;
 
   if (has_subquery_) {
     // 处理子查询

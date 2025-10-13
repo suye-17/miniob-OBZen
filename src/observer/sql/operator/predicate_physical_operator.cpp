@@ -77,3 +77,18 @@ RC PredicatePhysicalOperator::close()
 Tuple *PredicatePhysicalOperator::current_tuple() { return children_[0]->current_tuple(); }
 
 RC PredicatePhysicalOperator::tuple_schema(TupleSchema &schema) const { return children_[0]->tuple_schema(schema); }
+
+void PredicatePhysicalOperator::set_session_context(class Session *session)
+{
+  PhysicalOperator::set_session_context(session);
+  
+  if (expression_) {
+    expression_->set_session_context_recursive(session);
+  }
+  
+  for (auto &child : children_) {
+    if (child) {
+      child->set_session_context(session);
+    }
+  }
+}

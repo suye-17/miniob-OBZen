@@ -14,9 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/value.h"
 
-#include "common/lang/comparator.h"
 #include "common/lang/exception.h"
-#include "common/lang/sstream.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
 

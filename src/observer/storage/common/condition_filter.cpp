@@ -19,35 +19,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table.h"
 #include <math.h>
 
-// LIKE模式匹配函数：%匹配零个或多个字符，_匹配单个字符
-static bool do_like_match(const char *text, const char *pattern)
-{
-  const char *t = text;
-  const char *p = pattern;
-  
-  while (*p) {
-    if (*p == '%') {
-      p++;
-      if (*p == '\0') return true;
-      
-      while (*t) {
-        if (do_like_match(t, p)) return true;
-        t++;
-      }
-      return false;
-    } 
-    else if (*p == '_') {
-      if (*t == '\0') return false;
-      p++; t++;
-    } 
-    else {
-      if (*t != *p) return false;
-      p++; t++;
-    }
-  }
-  
-  return *t == '\0';
-}
 #include <stddef.h>
 
 using namespace common;
@@ -189,7 +160,7 @@ static bool match_like_pattern(const char *text, const char *pattern)
 }
 
 // LIKE匹配的安全入口函数，负责参数校验和调用核心匹配逻辑
-static bool do_like_match(const char *text, const char *pattern)
+static bool do_like_match_safe(const char *text, const char *pattern)
 {
   if (text == nullptr || pattern == nullptr) {
     return false;
@@ -230,7 +201,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     std::string pattern = right_value.get_string();
 
     // 执行LIKE匹配
-    return do_like_match(text.c_str(), pattern.c_str());
+    return do_like_match_safe(text.c_str(), pattern.c_str());
   }
 
   // 现有的比较操作逻辑
@@ -255,7 +226,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       std::string pattern = right_value.get_string();
       
       // 执行LIKE匹配
-      return do_like_match(text.c_str(), pattern.c_str());
+      return do_like_match_safe(text.c_str(), pattern.c_str());
     }
     case NOT_LIKE_OP: {
       // NOT LIKE操作只支持字符串类型
@@ -269,7 +240,7 @@ bool DefaultConditionFilter::filter(const Record &rec) const
       std::string pattern = right_value.get_string();
       
       // 执行NOT LIKE匹配（取反LIKE结果）
-      return !do_like_match(text.c_str(), pattern.c_str());
+      return !do_like_match_safe(text.c_str(), pattern.c_str());
     }
 
     default: LOG_WARN("Unknown comparison operator: %d", comp_op_); return false;

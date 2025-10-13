@@ -79,13 +79,13 @@ unique_ptr<SelectSqlNode> SelectSqlNode::create_copy(const SelectSqlNode* origin
 
 // ConditionSqlNode 析构函数实现
 ConditionSqlNode::~ConditionSqlNode() {
-  if (left_expr) {
-    delete left_expr;
-    left_expr = nullptr;
+  if (left_expression) {
+    delete left_expression;
+    left_expression = nullptr;
   }
-  if (right_expr) {
-    delete right_expr;
-    right_expr = nullptr;
+  if (right_expression) {
+    delete right_expression;
+    right_expression = nullptr;
   }
 }
 
@@ -98,27 +98,19 @@ ConditionSqlNode::ConditionSqlNode(const ConditionSqlNode& other) {
   right_is_attr = other.right_is_attr;
   right_attr = other.right_attr;
   right_value = other.right_value;
-  right_values = other.right_values;
-  has_subquery = other.has_subquery;
-  
-  // 深拷贝子查询
-  if (other.subquery) {
-    subquery = SelectSqlNode::create_copy(other.subquery.get());
-  } else {
-    subquery = nullptr;
-  }
+  is_expression_condition = other.is_expression_condition;
   
   // 深拷贝表达式
-  if (other.left_expr) {
-    left_expr = other.left_expr->copy().release();
+  if (other.left_expression) {
+    left_expression = other.left_expression->copy().release();
   } else {
-    left_expr = nullptr;
+    left_expression = nullptr;
   }
   
-  if (other.right_expr) {
-    right_expr = other.right_expr->copy().release();
+  if (other.right_expression) {
+    right_expression = other.right_expression->copy().release();
   } else {
-    right_expr = nullptr;
+    right_expression = nullptr;
   }
 }
 
@@ -126,13 +118,13 @@ ConditionSqlNode::ConditionSqlNode(const ConditionSqlNode& other) {
 ConditionSqlNode& ConditionSqlNode::operator=(const ConditionSqlNode& other) {
   if (this != &other) {
     // 清理原有表达式
-    if (left_expr) {
-      delete left_expr;
-      left_expr = nullptr;
+    if (left_expression) {
+      delete left_expression;
+      left_expression = nullptr;
     }
-    if (right_expr) {
-      delete right_expr;
-      right_expr = nullptr;
+    if (right_expression) {
+      delete right_expression;
+      right_expression = nullptr;
     }
     
     left_is_attr = other.left_is_attr;
@@ -142,27 +134,19 @@ ConditionSqlNode& ConditionSqlNode::operator=(const ConditionSqlNode& other) {
     right_is_attr = other.right_is_attr;
     right_attr = other.right_attr;
     right_value = other.right_value;
-    right_values = other.right_values;
-    has_subquery = other.has_subquery;
-    
-    // 深拷贝子查询
-    if (other.subquery) {
-      subquery = SelectSqlNode::create_copy(other.subquery.get());
-    } else {
-      subquery = nullptr;
-    }
+    is_expression_condition = other.is_expression_condition;
     
     // 深拷贝表达式
-    if (other.left_expr) {
-      left_expr = other.left_expr->copy().release();
+    if (other.left_expression) {
+      left_expression = other.left_expression->copy().release();
     } else {
-      left_expr = nullptr;
+      left_expression = nullptr;
     }
     
-    if (other.right_expr) {
-      right_expr = other.right_expr->copy().release();
+    if (other.right_expression) {
+      right_expression = other.right_expression->copy().release();
     } else {
-      right_expr = nullptr;
+      right_expression = nullptr;
     }
   }
   return *this;

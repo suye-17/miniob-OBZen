@@ -72,6 +72,11 @@ enum CompOp
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
   LIKE_OP,      ///< "LIKE"
+  NOT_LIKE_OP,  ///< "NOT LIKE"
+  IN_OP,        ///< "IN"
+  NOT_IN_OP,    ///< "NOT IN"
+  EXISTS_OP,    ///< "EXISTS"
+  NOT_EXISTS_OP,///< "NOT EXISTS"
   IS_NULL,      ///< "IS NULL"
   IS_NOT_NULL,  ///< "IS NOT NULL"
   NO_OP
@@ -112,6 +117,28 @@ struct ConditionSqlNode
   bool        is_expression_condition = false;    ///< TRUE if this is an expression vs expression condition
   Expression *left_expression         = nullptr;  ///< left-hand side expression if is_expression_condition = TRUE
   Expression *right_expression        = nullptr;  ///< right-hand side expression if is_expression_condition = TRUE
+  
+  // 构造函数
+  ConditionSqlNode() = default;
+  
+  // 析构函数声明（实现在cpp文件中）
+  ~ConditionSqlNode();
+  
+  // 拷贝构造函数声明（实现在cpp文件中）
+  ConditionSqlNode(const ConditionSqlNode& other);
+  
+  // 拷贝赋值操作符
+  ConditionSqlNode& operator=(const ConditionSqlNode& other);
+};
+
+/**
+ * @brief JOIN SQL节点
+ * @ingroup SQLParser
+ */
+struct JoinSqlNode {
+  JoinType                 type;       ///< JOIN类型
+  string                   relation;   ///< 连接的表名
+  vector<ConditionSqlNode> conditions; ///< ON条件列表，支持多个条件用AND连接
 };
 
 /**
@@ -135,6 +162,21 @@ struct SelectSqlNode
   vector<unique_ptr<Expression>> order_by;     ///< order by expressions
   vector<bool>                   order_desc;   ///< true for DESC, false for ASC
   vector<ConditionSqlNode>       having;       ///< having clause
+  
+  // 构造函数
+  SelectSqlNode() = default;
+  
+  // 析构函数声明（实现在cpp文件中，确保完整的Expression类型定义）
+  ~SelectSqlNode();
+  
+  // 拷贝构造函数声明（实现在cpp文件中）
+  SelectSqlNode(const SelectSqlNode& other);
+  
+  // 拷贝赋值操作符
+  SelectSqlNode& operator=(const SelectSqlNode& other);
+  
+  // 创建深拷贝的静态方法
+  static unique_ptr<SelectSqlNode> create_copy(const SelectSqlNode* other);
 };
 
 /**
