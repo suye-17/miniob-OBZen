@@ -132,7 +132,7 @@ RC CastExpr::cast(const Value &value, Value &cast_value) const
 RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 {
   Value value;
-  RC rc = child_->get_value(tuple, value);
+  RC    rc = child_->get_value(tuple, value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -143,7 +143,7 @@ RC CastExpr::get_value(const Tuple &tuple, Value &result) const
 RC CastExpr::try_get_value(Value &result) const
 {
   Value value;
-  RC rc = child_->try_get_value(value);
+  RC    rc = child_->try_get_value(value);
   if (rc != RC::SUCCESS) {
     return rc;
   }
@@ -154,9 +154,8 @@ RC CastExpr::try_get_value(Value &result) const
 ////////////////////////////////////////////////////////////////////////////////
 
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, unique_ptr<Expression> right)
-    : comp_(comp), left_(std::move(left)), right_(std::move(right)), has_value_list_(false)
-{
-}
+    : comp_(comp), left_(std::move(left)), right_(std::move(right))
+{}
 
 ComparisonExpr::ComparisonExpr(CompOp comp, unique_ptr<Expression> left, const vector<Value> &right_values)
     : comp_(comp), left_(std::move(left)), right_values_(right_values), has_value_list_(true), has_subquery_(false)
@@ -190,20 +189,13 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
   
   int cmp_result = left.compare(right);
   result         = false;
-  
-  LOG_DEBUG("compare_value: cmp_result=%d", cmp_result);
-  
-  // 检查比较是否成功（INT32_MAX表示类型不匹配或比较失败）
-  if (cmp_result == INT32_MAX) {
-    LOG_WARN("Type comparison failed between %d and %d", 
-             static_cast<int>(left.attr_type()), static_cast<int>(right.attr_type()));
-    return RC::INVALID_ARGUMENT;
-  }
-  
+  LOG_INFO("COMPARE: left=%s(%d), right=%s(%d), cmp_result=%d", 
+           left.to_string().c_str(), (int)left.attr_type(),
+           right.to_string().c_str(), (int)right.attr_type(), cmp_result);
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
-      LOG_DEBUG("EQUAL_TO comparison: cmp_result=%d, result=%s", cmp_result, result ? "TRUE" : "FALSE");
+      LOG_INFO("EQUAL_TO result: %s", result ? "true" : "false");
     } break;
     case LESS_EQUAL: {
       result = (cmp_result <= 0);
@@ -220,39 +212,11 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case GREAT_THAN: {
       result = (cmp_result > 0);
     } break;
-    case LIKE_OP: {
-      // LIKE操作只支持字符串类型
-      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
-        LOG_WARN("LIKE operation only supports CHARS type, got left: %d, right: %d", 
-                 left.attr_type(), right.attr_type());
-        rc = RC::INVALID_ARGUMENT;
-      } else {
-        std::string text = left.get_string();
-        std::string pattern = right.get_string();
-        result = match_like_pattern(text.c_str(), pattern.c_str());
-      }
+    case IS_NULL: {
+      result = left.is_null();
     } break;
-    case NOT_LIKE_OP: {
-      // NOT LIKE操作只支持字符串类型
-      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
-        LOG_WARN("NOT LIKE operation only supports CHARS type, got left: %d, right: %d", 
-                 left.attr_type(), right.attr_type());
-        rc = RC::INVALID_ARGUMENT;
-      } else {
-        std::string text = left.get_string();
-        std::string pattern = right.get_string();
-        result = !match_like_pattern(text.c_str(), pattern.c_str());
-      }
-    } break;
-    case IN_OP:
-    case NOT_IN_OP: {
-      LOG_WARN("IN/NOT IN should use compare_with_value_list method");
-      rc = RC::INTERNAL;
-    } break;
-    case EXISTS_OP:
-    case NOT_EXISTS_OP: {
-      LOG_WARN("EXISTS/NOT EXISTS should be handled in get_value with subquery");
-      rc = RC::INTERNAL;
+    case IS_NOT_NULL: {
+      result = !left.is_null();
     } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
@@ -296,48 +260,74 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
 
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
-  // EXISTS/NOT EXISTS 不支持 try_get_value（需要执行子查询）
-  if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+  // 尝试计算常量表达式的值
+  Value left_value, right_value;
+
+  RC rc = left_->try_get_value(left_value);
+  if (rc != RC::SUCCESS) {
     return RC::INVALID_ARGUMENT;
   }
 
-  // 处理IN/NOT IN操作
-  if (has_value_list_ && left_ && left_->type() == ExprType::VALUE) {
-    ValueExpr *left_value_expr = static_cast<ValueExpr *>(left_.get());
-    const Value &left_cell = left_value_expr->get_value();
-    
-    bool value = false;
-    RC rc = compare_with_value_list(left_cell, right_values_, value);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to compare with value list. rc=%s", strrc(rc));
-    } else {
-      cell.set_boolean(value);
-    }
-    return rc;
-  }
-  
-  // 处理普通比较操作
-  if (left_ && left_->type() == ExprType::VALUE && right_ && right_->type() == ExprType::VALUE) {
-    ValueExpr *  left_value_expr  = static_cast<ValueExpr *>(left_.get());
-    ValueExpr *  right_value_expr = static_cast<ValueExpr *>(right_.get());
-    const Value &left_cell        = left_value_expr->get_value();
-    const Value &right_cell       = right_value_expr->get_value();
-
-    bool value = false;
-    RC   rc    = compare_value(left_cell, right_cell, value);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
-    } else {
-      cell.set_boolean(value);
-    }
-    return rc;
+  // IS NULL 和 IS NOT NULL 是一元操作，不需要右操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    cell.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
   }
 
-  return RC::INVALID_ARGUMENT;
+  // 对于其他比较操作，需要右操作数
+  rc = right_->try_get_value(right_value);
+  if (rc != RC::SUCCESS) {
+    return RC::INVALID_ARGUMENT;
+  }
+
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    cell.set_null();
+    return RC::SUCCESS;
+  }
+
+  bool value = false;
+  rc         = compare_value(left_value, right_value, value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to compare tuple cells. rc=%s", strrc(rc));
+  } else {
+    cell.set_boolean(value);
+  }
+  return rc;
 }
 
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
+  Value left_value;
+  Value right_value;
+
+  RC rc = left_->get_value(tuple, left_value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  // IS NULL 和 IS NOT NULL 处理 - 只需要左操作数
+  if (comp_ == IS_NULL || comp_ == IS_NOT_NULL) {
+    bool is_null = left_value.is_null();
+    value.set_boolean(comp_ == IS_NULL ? is_null : !is_null);
+    return RC::SUCCESS;
+  }
+
+  // 对于其他比较操作，需要获取右操作数
+  rc = right_->get_value(tuple, right_value);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  // SQL标准：NULL与任何值比较都返回NULL
+  if (left_value.is_null() || right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
   bool bool_value = false;
   RC rc = RC::SUCCESS;
 
@@ -789,8 +779,25 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 {
   RC rc = RC::SUCCESS;
 
+  // NULL值传播：任何NULL参与的运算都返回NULL
+  if (left_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
+  // 对于二元运算，检查右操作数
+  if (arithmetic_type_ != Type::NEGATIVE && right_value.is_null()) {
+    value.set_null();
+    return RC::SUCCESS;
+  }
+
   const AttrType target_type = value_type();
   value.set_type(target_type);
+
+  LOG_INFO("ARITHMETIC calc_value: left=%s(%d), right=%s(%d), target_type=%d, op_type=%d",
+           left_value.to_string().c_str(), (int)left_value.attr_type(),
+           right_value.to_string().c_str(), (int)right_value.attr_type(),
+           (int)target_type, (int)arithmetic_type_);
 
   switch (arithmetic_type_) {
     case Type::ADD: {
@@ -901,6 +908,19 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+
+  // 处理一元运算符（如负号）
+  if (arithmetic_type_ == Type::NEGATIVE) {
+    // 对于负号运算，right_是nullptr，直接对left_value取负
+    return calc_value(left_value, Value(), value);
+  }
+
+  // 处理二元运算符
+  if (right_ == nullptr) {
+    LOG_WARN("right operand is null for binary arithmetic operation");
+    return RC::INVALID_ARGUMENT;
+  }
+
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
@@ -963,19 +983,31 @@ RC ArithmeticExpr::try_get_value(Value &value) const
   Value left_value;
   Value right_value;
 
+// 减少冗余日志输出 - 只在需要时输出
+#ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value: type=%d", (int)arithmetic_type_);
+#endif
+
   rc = left_->try_get_value(left_value);
   if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+    // try_get_value失败是正常的（表达式包含字段时），不需要警告
     return rc;
   }
 
   if (right_) {
     rc = right_->try_get_value(right_value);
     if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+      // try_get_value失败是正常的（表达式包含字段时），不需要警告
       return rc;
     }
   }
+
+#ifdef DEBUG_EXPRESSION_EVAL
+  LOG_INFO("ARITHMETIC try_get_value calling calc_value: left=%s, right=%s, op=%d",
+           left_value.to_string().c_str(), 
+           right_value.to_string().c_str(), 
+           (int)arithmetic_type_);
+#endif
 
   return calc_value(left_value, right_value, value);
 }
@@ -1002,6 +1034,10 @@ UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, Expressio
 
 UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, unique_ptr<Expression> child)
     : aggregate_name_(aggregate_name), child_(std::move(child))
+{}
+
+UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, vector<unique_ptr<Expression>> children)
+    : aggregate_name_(aggregate_name), children_(std::move(children))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,24 +1073,24 @@ unique_ptr<Aggregator> AggregateExpr::create_aggregator() const
 {
   unique_ptr<Aggregator> aggregator;
   switch (aggregate_type_) {
+    case Type::COUNT: {
+      aggregator = make_unique<CountAggregator>();
+      break;
+    }
     case Type::SUM: {
       aggregator = make_unique<SumAggregator>();
       break;
     }
-    case Type::MIN: {
-      aggregator = make_unique<MinAggregator>();
+    case Type::AVG: {
+      aggregator = make_unique<AvgAggregator>();
       break;
     }
     case Type::MAX: {
       aggregator = make_unique<MaxAggregator>();
       break;
     }
-    case Type::COUNT: {
-      aggregator = make_unique<CountAggregator>();
-      break;
-    }
-    case Type::AVG: {
-      aggregator = make_unique<AvgAggregator>();
+    case Type::MIN: {
+      aggregator = make_unique<MinAggregator>();
       break;
     }
     default: {

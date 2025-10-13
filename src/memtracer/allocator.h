@@ -9,11 +9,7 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #pragma once
-
-#include <cstddef>  // for size_t
-#include <cstdint>  // for intptr_t  
-#include <new>      // for std::nothrow_t
-#include <sys/types.h>  // for off_t
+// #include <sys/mman.h>  // mmap/munmap
 
 #include "memtracer/common.h"
 

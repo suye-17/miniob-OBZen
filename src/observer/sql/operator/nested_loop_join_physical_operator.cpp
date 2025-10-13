@@ -64,7 +64,7 @@ RC NestedLoopJoinPhysicalOperator::next()
     rc = right_next();
     if (rc != RC::SUCCESS) {
       if (rc == RC::RECORD_EOF) {
-        rc = RC::SUCCESS;
+        rc          = RC::SUCCESS;
         round_done_ = true;
         continue;
       } else {

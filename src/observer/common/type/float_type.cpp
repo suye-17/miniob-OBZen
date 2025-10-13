@@ -54,34 +54,62 @@ int FloatType::compare(const Value &left, const Value &right) const
 
 RC FloatType::add(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_float(left.get_float() + right.get_float());
   return RC::SUCCESS;
 }
 RC FloatType::subtract(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_float(left.get_float() - right.get_float());
   return RC::SUCCESS;
 }
 RC FloatType::multiply(const Value &left, const Value &right, Value &result) const
 {
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_float(left.get_float() * right.get_float());
   return RC::SUCCESS;
 }
 
 RC FloatType::divide(const Value &left, const Value &right, Value &result) const
 {
-  if (right.get_float() > -EPSILON && right.get_float() < EPSILON) {
-    // NOTE:
-    // 设置为浮点数最大值是不正确的。通常的做法是设置为NULL，但是当前的miniob没有NULL概念，所以这里设置为浮点数最大值。
-    result.set_float(numeric_limits<float>::max());
+  if (left.is_null() || right.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
+
+  float left_val  = left.get_float();
+  float right_val = right.get_float();
+  LOG_INFO("FloatType::divide: %f / %f", left_val, right_val);
+
+  if (right_val > -EPSILON && right_val < EPSILON) {
+    // 除零返回NULL（符合SQL标准）
+    result.set_null();
+    result.set_type(AttrType::FLOATS);  // 保持运算结果类型
+    LOG_INFO("FloatType::divide: Division by zero, returning NULL");
   } else {
-    result.set_float(left.get_float() / right.get_float());
+    float div_result = left_val / right_val;
+    result.set_float(div_result);
+    LOG_INFO("FloatType::divide: Result = %f", div_result);
   }
   return RC::SUCCESS;
 }
 
 RC FloatType::negative(const Value &val, Value &result) const
 {
+  if (val.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
+  }
   result.set_float(-val.get_float());
   return RC::SUCCESS;
 }
@@ -100,20 +128,18 @@ int FloatType::cast_cost(AttrType type)
 RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const
 {
   switch (type) {
-  case AttrType::INTS: {
-    int int_value = (int)val.get_float();  // 截断小数部分
-    result.set_int(int_value);
-    return RC::SUCCESS;
-  }
-  default:
-    LOG_WARN("unsupported type %d", type);
-    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    case AttrType::INTS: {
+      int int_value = (int)val.get_float();  // 截断小数部分
+      result.set_int(int_value);
+      return RC::SUCCESS;
+    }
+    default: LOG_WARN("unsupported type %d", type); return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
 }
 
 RC FloatType::set_value_from_str(Value &val, const string &data) const
 {
-  RC                rc = RC::SUCCESS;
+  RC           rc = RC::SUCCESS;
   stringstream deserialize_stream;
   deserialize_stream.clear();
   deserialize_stream.str(data);

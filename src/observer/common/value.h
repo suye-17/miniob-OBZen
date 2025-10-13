@@ -91,6 +91,8 @@ public:
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);
   void set_boolean(bool val);
+  void set_null() { is_null_ = true; }
+  bool is_null() const { return is_null_; }
 
   string to_string() const;
 
@@ -132,4 +134,6 @@ private:
 
   /// 是否申请并占有内存, 目前对于 CHARS 类型 own_data_ 为true, 其余类型 own_data_ 为false
   bool own_data_ = false;
+  /// NULL标志位，表示该值是否为NULL
+  bool is_null_ = false;
 };

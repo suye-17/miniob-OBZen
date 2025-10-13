@@ -56,6 +56,7 @@ public:
 
   vector<unique_ptr<Expression>> &query_expressions() { return query_expressions_; }
   vector<unique_ptr<Expression>> &group_by() { return group_by_; }
+  FilterStmt                     *having_filter_stmt() const { return having_filter_stmt_; }
 
 private:
   vector<unique_ptr<Expression>> query_expressions_;
@@ -63,4 +64,5 @@ private:
   vector<JoinTable>              join_tables_;      ///< JOIN表列表
   FilterStmt                    *filter_stmt_ = nullptr;
   vector<unique_ptr<Expression>> group_by_;
+  FilterStmt                    *having_filter_stmt_ = nullptr;
 };

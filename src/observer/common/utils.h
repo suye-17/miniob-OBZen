@@ -5,4 +5,4 @@
 
 bool check_date(int year, int month, int day);
 
-RC parse_date(const char* str, int &result);
+RC parse_date(const char *str, int &result);

@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/chris/OBZen-zhanghao-2024"],
+      "env": {}
+    },
+    "Sequential Thinking": {
+      "type": "http",
+      "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp?api_key=9a2797e5-a64d-4dc8-ad43-cf0adc265977&profile=happy-otter-SSESVQ",
+      "headers": {}
+    },
+    "Exa Search": {
+      "type": "http",
+      "url": "https://server.smithery.ai/exa/mcp?api_key=9a2797e5-a64d-4dc8-ad43-cf0adc265977&profile=happy-otter-SSESVQ",
+      "headers": {}
+    }
+  }
+}

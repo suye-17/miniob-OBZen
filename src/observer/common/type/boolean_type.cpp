@@ -9,41 +9,69 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "common/type/boolean_type.h"
-#include "common/lang/sstream.h"
-#include "common/log/log.h"
 #include "common/value.h"
-
-int BooleanType::compare(const Value &left, const Value &right) const
-{
-  ASSERT(left.attr_type() == AttrType::BOOLEANS, "left type is not boolean");
-  ASSERT(right.attr_type() == AttrType::BOOLEANS, "right type is not boolean");
-  
-  bool left_val = left.get_boolean();
-  bool right_val = right.get_boolean();
-  
-  if (left_val == right_val) {
-    return 0;
-  }
-  return left_val ? 1 : -1;
-}
+#include "common/log/log.h"
 
 RC BooleanType::to_string(const Value &val, string &result) const
 {
-  ASSERT(val.attr_type() == AttrType::BOOLEANS, "value type is not boolean");
-  
-  stringstream ss;
-  ss << (val.get_boolean() ? "TRUE" : "FALSE");
-  result = ss.str();
+  if (val.is_null()) {
+    result = "NULL";
+    return RC::SUCCESS;
+  }
+
+  bool value = val.get_boolean();
+  result     = value ? "1" : "0";  // MySQL风格：true显示为1，false显示为0
   return RC::SUCCESS;
 }
 
-int BooleanType::cast_cost(AttrType type)
+RC BooleanType::cast_to(const Value &val, AttrType type, Value &result) const
 {
-  if (type == AttrType::BOOLEANS) {
-    return 0;
+  if (val.is_null()) {
+    result.set_null();
+    return RC::SUCCESS;
   }
-  // 布尔类型不支持隐式类型转换
-  return INT32_MAX;
+
+  bool value = val.get_boolean();
+  switch (type) {
+    case AttrType::BOOLEANS: {
+      result = val;
+      return RC::SUCCESS;
+    }
+    case AttrType::INTS: {
+      result.set_int(value ? 1 : 0);
+      return RC::SUCCESS;
+    }
+    case AttrType::FLOATS: {
+      result.set_float(value ? 1.0f : 0.0f);
+      return RC::SUCCESS;
+    }
+    case AttrType::CHARS: {
+      result.set_string(value ? "1" : "0");
+      return RC::SUCCESS;
+    }
+    default: {
+      return RC::UNIMPLEMENTED;
+    }
+  }
 }
 
+int BooleanType::compare(const Value &left, const Value &right) const
+{
+  if (left.is_null() && right.is_null()) {
+    return 0;
+  }
+  if (left.is_null()) {
+    return -1;
+  }
+  if (right.is_null()) {
+    return 1;
+  }
 
+  bool left_val  = left.get_boolean();
+  bool right_val = right.get_boolean();
+
+  if (left_val == right_val) {
+    return 0;
+  }
+  return left_val ? 1 : -1;  // true > false
+}

@@ -16,6 +16,23 @@ See the Mulan PSL v2 for more details. */
 
 #include "storage/common/column.h"
 
+/**
+ * @brief 快速检查数据是否为NULL（全0xFF填充）
+ * @tparam T 数据类型
+ * @param data 指向数据的指针
+ * @return true 如果是NULL，false 否则
+ */
+template<typename T>
+inline bool is_null_value(const T* data) {
+  const char* bytes = reinterpret_cast<const char*>(data);
+  for (size_t i = 0; i < sizeof(T); i++) {
+    if ((unsigned char)bytes[i] != 0xFF) {
+      return false;
+    }
+  }
+  return true;
+}
+
 struct Equal
 {
   template <class T>
@@ -367,6 +384,17 @@ void compare_result(T *left, T *right, int n, vector<uint8_t> &result, CompOp op
     }
     case CompOp::LESS_THAN: {
       compare_operation<T, LEFT_CONSTANT, RIGHT_CONSTANT, LessThan>(left, right, n, result);
+      break;
+    }
+    case CompOp::IS_NULL: 
+    case CompOp::IS_NOT_NULL: {
+      // 统一的NULL检查逻辑
+      bool check_for_null = (op == CompOp::IS_NULL);
+      for (int i = 0; i < n; i++) {
+        const T *value_ptr = LEFT_CONSTANT ? left : (left + i);
+        bool is_null = is_null_value(value_ptr);
+        result[i] = check_for_null ? is_null : !is_null;
+      }
       break;
     }
     default: break;

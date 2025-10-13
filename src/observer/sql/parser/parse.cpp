@@ -13,6 +13,7 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "sql/parser/parse.h"
+#include "sql/parser/parse_defs.h"
 #include "common/log/log.h"
 #include "sql/expr/expression.h"
 
@@ -22,10 +23,14 @@ ParsedSqlNode::ParsedSqlNode() : flag(SCF_ERROR) {}
 
 ParsedSqlNode::ParsedSqlNode(SqlCommandFlag _flag) : flag(_flag) {}
 
-void ParsedSqlResult::add_sql_node(unique_ptr<ParsedSqlNode> sql_node)
+UpdateList::~UpdateList()
 {
-  sql_nodes_.emplace_back(std::move(sql_node));
+  for (Expression *expr : expressions) {
+    delete expr;
+  }
 }
+
+void ParsedSqlResult::add_sql_node(unique_ptr<ParsedSqlNode> sql_node) { sql_nodes_.emplace_back(std::move(sql_node)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

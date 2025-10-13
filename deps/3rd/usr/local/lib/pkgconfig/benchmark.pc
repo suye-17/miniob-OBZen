@@ -1,0 +1,12 @@
+prefix=/home/chris/OBZen-zhanghao-2024/deps/3rd/usr/local
+exec_prefix=${prefix}
+libdir=/home/chris/OBZen-zhanghao-2024/deps/3rd/usr/local/lib
+includedir=/home/chris/OBZen-zhanghao-2024/deps/3rd/usr/local/include
+
+Name: benchmark
+Description: Google microbenchmark framework
+Version: 1.9.4.39
+
+Libs: -L${libdir} -lbenchmark
+Libs.private: -lpthread -lrt
+Cflags: -I${includedir}

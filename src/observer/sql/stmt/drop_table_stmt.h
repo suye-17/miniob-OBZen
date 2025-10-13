@@ -3,7 +3,6 @@
 #include "sql/stmt/stmt.h"
 #include "sql/parser/parse_defs.h"
 
-
 /**
  * @brief DropTable 语句
  * @ingroup Statement

@@ -117,11 +117,9 @@ SelectStmt::~SelectStmt()
     delete filter_stmt_;
     filter_stmt_ = nullptr;
   }
-  
-  for (auto &join_table : join_tables_) {
-    if (join_table.condition != nullptr) {
-      delete join_table.condition;
-    }
+  if (nullptr != having_filter_stmt_) {
+    delete having_filter_stmt_;
+    having_filter_stmt_ = nullptr;
   }
 }
 
@@ -156,73 +154,10 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     table_map.insert({table_name, table});
   }
 
-  // 第二步：处理JOIN表
-  vector<JoinTable> join_tables;
-  for (const JoinSqlNode &join_sql : select_sql.joins) {
-    Table *join_table = db->find_table(join_sql.relation.c_str());
-    if (nullptr == join_table) {
-      LOG_WARN("no such join table. db=%s, table_name=%s", 
-               db->name(), join_sql.relation.c_str());
-      delete select_stmt;
-      return RC::SCHEMA_TABLE_NOT_EXIST;
-    }
-
-    JoinTable join_info;
-    join_info.table = join_table;
-    join_info.alias = join_sql.relation;
-    join_info.join_type = join_sql.type;
-    join_info.condition = nullptr;  // 稍后绑定
-    
-    join_tables.push_back(join_info);
-    table_map.insert({join_sql.relation, join_table});
-  }
-
-  // 第三步：构建多表绑定上下文
-  BinderContext binder_context;
-  
-  // 添加主表到绑定上下文
-  for (Table *table : tables) {
-    binder_context.add_table(table);
-  }
-  
-  // 添加JOIN表到绑定上下文
-  for (const JoinTable &join_table : join_tables) {
-    binder_context.add_table(join_table.table);
-  }
-
-  // 第四步：绑定JOIN条件表达式
-  ExpressionBinder expression_binder(binder_context);
-  for (size_t i = 0; i < select_sql.joins.size(); i++) {
-    const JoinSqlNode &join_sql = select_sql.joins[i];
-    
-    // 转换多个ConditionSqlNode为Expression (用AND连接)
-    Expression *condition_expr = nullptr;
-    RC rc = create_join_conditions_expression(join_sql.conditions, condition_expr, table_map);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to create join condition expression");
-      delete select_stmt;
-      return rc;
-    }
-    
-    if (condition_expr != nullptr) {
-      // 绑定表达式
-      vector<unique_ptr<Expression>> bound_expressions;
-      unique_ptr<Expression> condition_copy(condition_expr);
-      rc = expression_binder.bind_expression(condition_copy, bound_expressions);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to bind join condition expression");
-        delete select_stmt;
-        return rc;
-      }
-      
-      join_tables[i].condition = bound_expressions[0].release();
-    } else {
-      join_tables[i].condition = nullptr;
-    }
-  }
-
-  // 第五步：绑定查询表达式
+  // collect query fields in `select` statement
   vector<unique_ptr<Expression>> bound_expressions;
+  ExpressionBinder               expression_binder(binder_context);
+
   for (unique_ptr<Expression> &expression : select_sql.expressions) {
     RC rc = expression_binder.bind_expression(expression, bound_expressions);
     if (OB_FAIL(rc)) {
@@ -249,6 +184,22 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     default_table = tables[0];
   }
 
+  // create having filter statement
+  FilterStmt *having_filter_stmt = nullptr;
+  if (!select_sql.having.empty()) {
+    RC rc = FilterStmt::create(db,
+        default_table,
+        &table_map,
+        select_sql.having.data(),
+        static_cast<int>(select_sql.having.size()),
+        having_filter_stmt);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("cannot construct having filter stmt");
+      return rc;
+    }
+  }
+
+  // create filter statement in `where` statement
   FilterStmt *filter_stmt = nullptr;
   RC rc = FilterStmt::create(db,
                             default_table,
@@ -268,7 +219,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   select_stmt->query_expressions_.swap(bound_expressions);
   select_stmt->filter_stmt_ = filter_stmt;
   select_stmt->group_by_.swap(group_by_expressions);
-  
-  stmt = select_stmt;
+  select_stmt->having_filter_stmt_ = having_filter_stmt;
+  stmt                             = select_stmt;
   return RC::SUCCESS;
 }

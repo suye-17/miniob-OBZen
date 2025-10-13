@@ -31,6 +31,18 @@ struct SelectSqlNode;
 class Expression;
 
 /**
+ * @brief UPDATE语句解析的辅助结构
+ * @details 用于在yacc解析过程中临时存储多个字段赋值
+ */
+struct UpdateList
+{
+  vector<string>       attribute_names;
+  vector<Expression *> expressions;
+
+  ~UpdateList();  // 析构函数声明，实现在 parse.cpp 中
+};
+
+/**
  * @defgroup SQLParser SQL Parser
  */
 
@@ -60,11 +72,8 @@ enum CompOp
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
   LIKE_OP,      ///< "LIKE"
-  NOT_LIKE_OP,  ///< "NOT LIKE"
-  IN_OP,        ///< "IN"
-  NOT_IN_OP,    ///< "NOT IN"
-  EXISTS_OP,    ///< "EXISTS"
-  NOT_EXISTS_OP,///< "NOT EXISTS"
+  IS_NULL,      ///< "IS NULL"
+  IS_NOT_NULL,  ///< "IS NOT NULL"
   NO_OP
 };
 
@@ -98,37 +107,11 @@ struct ConditionSqlNode
                                  ///< 1时，操作符右边是属性名，0时，是属性值
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
-  vector<Value>  right_values;   ///< 用于IN操作的值列表
-  
-  // 新增：子查询支持
-  bool                     has_subquery;    ///< TRUE if right side is a subquery
-  unique_ptr<SelectSqlNode> subquery;       ///< 子查询节点，用于IN/NOT IN操作
-  
-  // 新增：表达式支持
-  Expression              *left_expr;       ///< 左侧表达式（如果不为nullptr，则使用表达式而非left_is_attr）
-  Expression              *right_expr;      ///< 右侧表达式（如果不为nullptr，则使用表达式）
-  
-  // 构造函数，初始化新字段
-  ConditionSqlNode() : left_is_attr(0), comp(NO_OP), right_is_attr(0), has_subquery(false), subquery(nullptr), left_expr(nullptr), right_expr(nullptr) {}
-  
-  // 析构函数
-  ~ConditionSqlNode();
-  
-  // 拷贝构造函数
-  ConditionSqlNode(const ConditionSqlNode& other);
-  
-  // 拷贝赋值操作符
-  ConditionSqlNode& operator=(const ConditionSqlNode& other);
-};
 
-/**
- * @brief JOIN SQL节点
- * @ingroup SQLParser
- */
-struct JoinSqlNode {
-  JoinType                 type;       ///< JOIN类型
-  string                   relation;   ///< 连接的表名
-  vector<ConditionSqlNode> conditions; ///< ON条件列表，支持多个条件用AND连接
+  // 新增字段以支持表达式类型的条件
+  bool        is_expression_condition = false;    ///< TRUE if this is an expression vs expression condition
+  Expression *left_expression         = nullptr;  ///< left-hand side expression if is_expression_condition = TRUE
+  Expression *right_expression        = nullptr;  ///< right-hand side expression if is_expression_condition = TRUE
 };
 
 /**
@@ -149,21 +132,9 @@ struct SelectSqlNode
   vector<JoinSqlNode>            joins;        ///< JOIN子句列表
   vector<ConditionSqlNode>       conditions;   ///< 查询条件，使用AND串联起来多个条件
   vector<unique_ptr<Expression>> group_by;     ///< group by clause
-  
-  // 构造函数
-  SelectSqlNode() = default;
-  
-  // 析构函数声明（实现在cpp文件中，确保完整的Expression类型定义）
-  ~SelectSqlNode();
-  
-  // 拷贝构造函数声明（实现在cpp文件中）
-  SelectSqlNode(const SelectSqlNode& other);
-  
-  // 拷贝赋值操作符
-  SelectSqlNode& operator=(const SelectSqlNode& other);
-  
-  // 创建深拷贝的静态方法
-  static unique_ptr<SelectSqlNode> create_copy(const SelectSqlNode* original);
+  vector<unique_ptr<Expression>> order_by;     ///< order by expressions
+  vector<bool>                   order_desc;   ///< true for DESC, false for ASC
+  vector<ConditionSqlNode>       having;       ///< having clause
 };
 
 /**
@@ -202,9 +173,9 @@ struct DeleteSqlNode
  */
 struct UpdateSqlNode
 {
-  string                   relation_name;   ///< Relation to update
-  string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Expression              *expression;      ///< 更新的表达式，支持复杂计算
+  string                   relation_name;    ///< 表名
+  vector<string>           attribute_names;  ///< 更新的字段，支持多个字段
+  vector<Expression *>     expressions;      ///< 更新的表达式，支持多个表达式
   vector<ConditionSqlNode> conditions;
 };
 
@@ -215,9 +186,12 @@ struct UpdateSqlNode
  */
 struct AttrInfoSqlNode
 {
-  AttrType type;    ///< Type of attribute
-  string   name;    ///< Attribute name
-  size_t   length;  ///< Length of attribute
+  AttrType type;      ///< Type of attribute
+  string   name;      ///< Attribute name
+  size_t   length;    ///< Length of attribute
+  bool     nullable;  ///< Whether the field can be NULL (default: true)
+
+  AttrInfoSqlNode() : type(AttrType::UNDEFINED), length(0), nullable(true) {}
 };
 
 /**
@@ -261,9 +235,14 @@ struct AnalyzeTableSqlNode
  */
 struct CreateIndexSqlNode
 {
-  string index_name;      ///< Index name
-  string relation_name;   ///< Relation name
-  string attribute_name;  ///< Attribute name
+  string         index_name;         ///< Index name
+  string         relation_name;      ///< Relation name
+  vector<string> attribute_names;    ///< Attribute names
+  bool           is_unique = false;  ///< Whether this is a unique index
+  string         attribute_name() const
+  {
+    return attribute_names.empty() ? "" : attribute_names[0];  // 不为空，返回字段名
+  }
 };
 
 /**
@@ -274,6 +253,16 @@ struct DropIndexSqlNode
 {
   string index_name;     ///< Index name
   string relation_name;  ///< Relation name
+};
+
+/**
+ * @brief 描述一个show index语句
+ * @ingroup SQLParser
+ * @details show index 是查询表索引信息的语句
+ */
+struct ShowIndexSqlNode
+{
+  string relation_name;  ///< 表名
 };
 
 /**
@@ -351,6 +340,7 @@ enum SqlCommandFlag
   SCF_ANALYZE_TABLE,
   SCF_CREATE_INDEX,
   SCF_DROP_INDEX,
+  SCF_SHOW_INDEX,
   SCF_SYNC,
   SCF_SHOW_TABLES,
   SCF_DESC_TABLE,
@@ -383,6 +373,7 @@ public:
   AnalyzeTableSqlNode analyze_table;
   CreateIndexSqlNode  create_index;
   DropIndexSqlNode    drop_index;
+  ShowIndexSqlNode    show_index;
   DescTableSqlNode    desc_table;
   LoadDataSqlNode     load_data;
   ExplainSqlNode      explain;

@@ -33,7 +33,7 @@ RC DropTableExecutor::execute(SQLStageEvent *sql_event)
   DropTableStmt *drop_table_stmt = static_cast<DropTableStmt *>(stmt);
 
   const char *table_name = drop_table_stmt->table_name().c_str();
-  RC rc = session->get_current_db()->drop_table(table_name);
+  RC          rc         = session->get_current_db()->drop_table(table_name);
 
   // 设置简单的成功/失败状态，不输出详细日志
   SqlResult *sql_result = sql_event->session_event()->sql_result();

@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "sql/operator/group_by_physical_operator.h"
 #include "sql/expr/composite_tuple.h"
+#include "sql/stmt/filter_stmt.h"
 
 /**
  * @brief Group By Hash 方式物理算子
@@ -27,7 +28,8 @@ See the Mulan PSL v2 for more details. */
 class HashGroupByPhysicalOperator : public GroupByPhysicalOperator
 {
 public:
-  HashGroupByPhysicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions);
+  HashGroupByPhysicalOperator(vector<unique_ptr<Expression>> &&group_by_exprs, vector<Expression *> &&expressions,
+      FilterStmt *having_filter_stmt = nullptr);
 
   virtual ~HashGroupByPhysicalOperator() = default;
 

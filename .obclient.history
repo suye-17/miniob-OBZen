@@ -1,0 +1,4 @@
+### 2025-09-10 14:35:04.583
+CREATE TABLE test_table(id int, name char(20));
+### 2025-09-10 14:35:15.320
+SHOW TABLES;
