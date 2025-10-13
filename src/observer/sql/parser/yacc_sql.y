@@ -471,14 +471,9 @@ value:
       char *tmp = common::substr($1,1,strlen($1)-2);
       size_t str_len = strlen(tmp);
       
-      // 严格检查字符串长度是否超过TEXT最大长度（模拟MySQL严格模式）
-      if (str_len > TEXT_MAX_LENGTH) {
-        free(tmp);
-        yyerror(&@$, sql_string, sql_result, scanner, "String literal too long");
-        YYABORT;
-      }
-      
-      // 创建Value对象：短字符串用CHARS类型，长字符串用TEXTS类型
+      // 注意：这里不再在解析阶段限制字符串长度
+      // 长度检查推迟到类型转换阶段（cast_to TEXTS）和插入阶段处理
+      // 这样可以支持不同字段类型的不同长度限制，并提供更准确的错误信息
       $$ = new Value(tmp, str_len);
       free(tmp);
     }
