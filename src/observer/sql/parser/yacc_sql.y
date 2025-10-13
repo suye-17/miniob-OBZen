@@ -7,6 +7,7 @@
 
 #include "common/log/log.h"
 #include "common/lang/string.h"
+#include "common/types.h"
 #include "sql/parser/parse_defs.h"
 #include "sql/parser/yacc_sql.hpp"
 #include "sql/parser/lex_sql.h"
@@ -468,6 +469,13 @@ value:
     }
     |SSS {
       char *tmp = common::substr($1,1,strlen($1)-2);
+      size_t str_len = strlen(tmp);
+      if (str_len > TEXT_MAX_LENGTH) {
+        LOG_ERROR("String literal length %zu exceeds maximum TEXT length %u", str_len, TEXT_MAX_LENGTH);
+        free(tmp);
+        yyerror(&@$, sql_string, sql_result, scanner, "String literal too long");
+        YYABORT;
+      }
       $$ = new Value(tmp);
       free(tmp);
     }
