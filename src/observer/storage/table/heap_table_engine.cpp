@@ -69,7 +69,8 @@ RC HeapTableEngine::insert_record(Record &record)
       memcpy(&data_offset_in_record, field_data + 8, sizeof(uint32_t));
       
       const char *actual_text_data = record.data() + data_offset_in_record;
-      size_t inline_capacity = field_meta.len() - 20;
+      size_t inline_capacity = std::min(static_cast<size_t>(INLINE_TEXT_CAPACITY), 
+                                        static_cast<size_t>(field_meta.len() - 16));
       
       if (full_length <= inline_capacity) {
         memcpy(final_record_data + field_meta.offset(), actual_text_data, full_length);
@@ -274,7 +275,7 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
           actual_text_data = new_field_ptr;
         }
         
-        const uint32_t inline_capacity = field->len() - 20;
+        const uint32_t inline_capacity = field->len() - 16;
         
         if (text_len <= inline_capacity) {
           memset(field_ptr, 0, field->len());
@@ -287,7 +288,7 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
           
           char *overflow_ptr = field_ptr + inline_capacity;
           uint32_t *magic_ptr = reinterpret_cast<uint32_t*>(overflow_ptr);
-          uint32_t *page_num_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 4);
+          PageNum *page_num_ptr = reinterpret_cast<PageNum*>(overflow_ptr + 4);
           uint32_t *offset_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 8);
           uint32_t *total_len_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 12);
           

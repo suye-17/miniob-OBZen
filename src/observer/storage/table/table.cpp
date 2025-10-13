@@ -286,8 +286,8 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
         continue;
       }
       
-      // TEXT字段的inline容量是 field->len() - 20（去除overflow pointer header）
-      size_t inline_capacity = field->len() - 20;
+      // TEXT字段的inline容量是 field->len() - 16（去除overflow pointer header）
+      size_t inline_capacity = field->len() - 16;
       // 限制TEXT长度到TEXT_MAX_LENGTH
       size_t safe_text_length = std::min(str_val.length(), static_cast<size_t>(TEXT_MAX_LENGTH));
       if (safe_text_length > inline_capacity) {
@@ -361,7 +361,7 @@ RC Table::set_value_to_record(char *record_data, int base_record_size, int &exte
   if (field->type() == AttrType::TEXTS) {
     const char *text_data = value.data();
     size_t text_length = value.length();
-    size_t inline_capacity = field->len() - 20;
+    size_t inline_capacity = field->len() - 16;
     
     if (text_length <= inline_capacity) {
       memcpy(record_data + field->offset(), text_data, text_length);
@@ -405,7 +405,7 @@ RC Table::set_value_to_record(char *record_data, const Value &value, const Field
   if (field->type() == AttrType::TEXTS) {
     const char *text_data = value.data();
     size_t text_length = value.length();
-    size_t inline_capacity = field->len() - 20;
+    size_t inline_capacity = field->len() - 16;
     
     if (text_length <= inline_capacity) {
       memcpy(record_data + field->offset(), text_data, text_length);

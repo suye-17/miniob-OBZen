@@ -391,7 +391,7 @@ attr_def:
       $$->type = (AttrType)$2;
       $$->name = $1;
       if ($$->type == AttrType::TEXTS) {
-        $$->length = 788;    // TEXT字段在记录中占用: 20字节指针 + 768字节内联数据
+        $$->length = 784;    // TEXT字段在记录中占用: 16字节指针 + 768字节内联数据
       } else {
         $$->length = 4;
       }

@@ -119,17 +119,24 @@ namespace {
 
   bool is_overflow_pointer(const char* field_data, uint32_t field_len, uint32_t expected_table_id)
   {
-    if (field_data == nullptr || field_len < 20) {
+    if (field_data == nullptr || field_len < 16) {
       return false;
     }
 
     uint32_t table_id = *reinterpret_cast<const uint32_t*>(field_data);
+    LOG_DEBUG("is_overflow_pointer check: table_id=%d, expected=%d, field_len=%d", 
+             table_id, expected_table_id, field_len);
+    
     if (table_id != expected_table_id) {
+      LOG_DEBUG("is_overflow_pointer: table_id mismatch, returning false");
       return false;
     }
 
-    uint32_t page_num = *reinterpret_cast<const uint32_t*>(field_data + 4);
-    if (page_num == 0 || page_num == static_cast<uint32_t>(BP_INVALID_PAGE_NUM)) {
+    PageNum page_num = *reinterpret_cast<const PageNum*>(field_data + 4);
+    LOG_DEBUG("is_overflow_pointer: page_num=%d", page_num);
+    
+    if (page_num == 0 || page_num == BP_INVALID_PAGE_NUM) {
+        LOG_DEBUG("is_overflow_pointer: invalid page_num, returning false");
         return false;
     }
 
@@ -138,7 +145,7 @@ namespace {
         return false;
     }
 
-    uint64_t length = *reinterpret_cast<const uint64_t*>(field_data + 12);
+    uint32_t length = *reinterpret_cast<const uint32_t*>(field_data + 12);
     if (length == 0 || length > TEXT_MAX_LENGTH) {
         return false;
     }
@@ -157,6 +164,9 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
     int raw_len = raw_record.len();
     uint32_t table_id = table_meta->table_id();
     
+    LOG_DEBUG("=== ENTER process_text_fields_on_read for table: %s, record_len: %d ===", 
+             table_meta->name(), raw_len);
+    
     // 安全检查：记录长度必须匹配表的记录大小
     int expected_len = table_meta->record_size();
     if (raw_len != expected_len) {
@@ -167,6 +177,8 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
     }
     
     bool has_overflow = false;
+    LOG_DEBUG("Checking %d fields for TEXT overflow...", table_meta->field_num());
+    
     for (int i = 0; i < table_meta->field_num(); i++) {
         const FieldMeta *field = table_meta->field(i);
         
@@ -174,13 +186,22 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
             continue;
         }
         
+        LOG_DEBUG("Found TEXT field[%d]: %s, offset: %d, len: %d", 
+                 i, field->name(), field->offset(), field->len());
+        
         const char *field_data = raw_data + field->offset();
-        uint32_t inline_capacity = field->len() - 20;
+        uint32_t inline_capacity = field->len() - 16;
         const char *overflow_ptr_location = field_data + inline_capacity;
         
-        if (is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
+        LOG_DEBUG("Checking overflow pointer for field %s: inline_capacity=%d", 
+                 field->name(), inline_capacity);
+        
+        if (is_overflow_pointer(overflow_ptr_location, 16, table_id)) {
+            LOG_DEBUG("Field %s HAS overflow pointer - will need expansion", field->name());
             has_overflow = true;
             break;
+        } else {
+            LOG_DEBUG("Field %s has NO overflow pointer - normal TEXT", field->name());
         }
     }
     
@@ -198,11 +219,11 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         }
         
         const char *field_data = raw_data + field->offset();
-        uint32_t inline_capacity = field->len() - 20;
+        uint32_t inline_capacity = field->len() - 16;
         const char *overflow_ptr_location = field_data + inline_capacity;
         
-        if (is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
-            uint64_t total_length = *reinterpret_cast<const uint64_t*>(overflow_ptr_location + 12);
+        if (is_overflow_pointer(overflow_ptr_location, 16, table_id)) {
+            uint32_t total_length = *reinterpret_cast<const uint32_t*>(overflow_ptr_location + 12);
             // 额外空间 = 完整TEXT长度（包括inline+overflow）
             extra_space += total_length;
         }
@@ -224,11 +245,11 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         char *field_ptr = new_data.get() + field->offset();
         
         // 计算inline容量和overflow pointer位置
-        uint32_t inline_capacity = field->len() - 20;
+        uint32_t inline_capacity = field->len() - 16;
         const char *overflow_ptr_location = field_ptr + inline_capacity;
         
         // 确保TEXT字段以\0结尾（对于非溢出的TEXT也很重要）
-        if (!is_overflow_pointer(overflow_ptr_location, 20, table_id)) {
+        if (!is_overflow_pointer(overflow_ptr_location, 16, table_id)) {
             // 非溢出TEXT：确保在字段末尾有\0
             // 注意：field_ptr可能不是以\0结尾的，需要找到实际长度
             size_t text_len = 0;
@@ -249,11 +270,25 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         {
             // Overflow pointer在inline data之后
             uint32_t inline_len = std::min(static_cast<uint32_t>(INLINE_TEXT_CAPACITY),
-                                         static_cast<uint32_t>(field->len() - 20));
+                                         static_cast<uint32_t>(field->len() - 16));
             const char *overflow_ptr = field_ptr + inline_len;
             
-            uint32_t first_page_num = *reinterpret_cast<const uint32_t*>(overflow_ptr + 4);
-            uint64_t total_length = *reinterpret_cast<const uint64_t*>(overflow_ptr + 12);
+            PageNum first_page_num = *reinterpret_cast<const PageNum*>(overflow_ptr + 4);
+            uint32_t total_length = *reinterpret_cast<const uint32_t*>(overflow_ptr + 12);
+            
+            LOG_DEBUG("TEXT overflow read: field_len=%d, inline_len=%d, first_page=%d, total_length=%d", 
+                     field->len(), inline_len, first_page_num, total_length);
+            
+            // 安全检查：防止读取到无效数据
+            if (first_page_num <= 0 || first_page_num == BP_INVALID_PAGE_NUM) {
+                LOG_ERROR("Invalid first_page_num: %d for field %s", first_page_num, field->name());
+                return RC::INTERNAL;
+            }
+            
+            if (total_length > TEXT_MAX_LENGTH || total_length == 0) {
+                LOG_ERROR("Invalid total_length: %d for field %s", total_length, field->name());
+                return RC::INTERNAL;
+            }
             
             uint32_t overflow_length = total_length > inline_len ? total_length - inline_len : 0;
             
@@ -263,13 +298,28 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
             PageNum current_page = first_page_num;
             int page_count = 0;
             
+            LOG_DEBUG("Starting overflow page reading loop: total_pages_needed_approx=%d", 
+                     (overflow_length / 4000) + 1);
+                     
             while (current_page != BP_INVALID_PAGE_NUM && buffer_offset < overflow_length) {
+                LOG_DEBUG("Reading overflow page: current_page=%d, buffer_offset=%d, overflow_length=%d, page_count=%d", 
+                         current_page, buffer_offset, overflow_length, page_count);
+                
+                if (page_count > 100) {  // 防止无限循环
+                    LOG_ERROR("Too many overflow pages (%d) for field %s, possible corruption!", 
+                             page_count, field->name());
+                    return RC::INTERNAL;
+                }
+                
                 Frame *frame = nullptr;
                 RC rc = buffer_pool->get_this_page(current_page, &frame);
                 if (rc != RC::SUCCESS) {
-                    LOG_ERROR("Failed to get overflow page %d for field %s", current_page, field->name());
+                    LOG_ERROR("Failed to get overflow page %d for field %s, RC=%s", 
+                             current_page, field->name(), strrc(rc));
                     return rc;
                 }
+                
+                LOG_DEBUG("Successfully got overflow page %d, frame=%p", current_page, frame);
                 
                 frame->read_latch();
                 
@@ -337,6 +387,9 @@ RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_poo
         LOG_ERROR("output_record.data() is NULL after process_text_fields_on_read");
         return RC::INTERNAL;
     }
+    
+    LOG_DEBUG("=== EXIT process_text_fields_on_read SUCCESS: table=%s, final_record_len=%d ===", 
+             table_meta->name(), output_record.len());
     
     return RC::SUCCESS;
   }
@@ -901,7 +954,7 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
     }
     
     const char *field_data = new_data.get() + field->offset();
-    size_t inline_capacity = field->len() - 20;
+    size_t inline_capacity = field->len() - 16;
     
     // 检查是否是extended format marker (0xFFFFFFFF) at field start
     uint32_t marker_at_start = 0;
@@ -914,7 +967,7 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
     
     // 检查是否已经是overflow pointer（在inline_capacity之后的位置）
     const char *overflow_ptr_location = field_data + inline_capacity;
-    bool is_overflow = is_overflow_pointer(overflow_ptr_location, 20, table_meta_->table_id());
+    bool is_overflow = is_overflow_pointer(overflow_ptr_location, 16, table_meta_->table_id());
     
     if (is_overflow) {
       // Already has overflow pointer, skip processing
@@ -970,14 +1023,14 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
       *reinterpret_cast<uint32_t*>(field_ptr + 0) = table_meta_->table_id();    // 表ID
       *reinterpret_cast<uint32_t*>(field_ptr + 4) = overflow_page_num;          // 页号
       *reinterpret_cast<uint32_t*>(field_ptr + 8) = sizeof(OverflowPageHeader); // 偏移
-      *reinterpret_cast<uint64_t*>(field_ptr + 12) = actual_len;                // 长度
+      *reinterpret_cast<uint32_t*>(field_ptr + 12) = actual_len;                // 长度
 
       // 5. 保留内联数据（前768字节）
       memcpy(field_ptr + 20, inline_data_backup.get(), inline_len);
       
       // 6. 清空字段剩余空间
       if (field->len() > 20 + inline_len) {
-        memset(field_ptr + 20 + inline_len, 0, field->len() - 20 - inline_len);
+        memset(field_ptr + 16 + inline_len, 0, field->len() - 16 - inline_len);
       }
 
       rewritten = true;  // 标记数据被修改了
@@ -1050,14 +1103,14 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
       *reinterpret_cast<uint32_t*>(field_ptr + 0) = table_meta_->table_id();
       *reinterpret_cast<uint32_t*>(field_ptr + 4) = first_page_num;  // 指向第一个溢出页
       *reinterpret_cast<uint32_t*>(field_ptr + 8) = sizeof(OverflowPageHeader);
-      *reinterpret_cast<uint64_t*>(field_ptr + 12) = actual_len;
+      *reinterpret_cast<uint32_t*>(field_ptr + 12) = actual_len;
       
       // 内联数据
       memcpy(field_ptr + 20, inline_data_backup.get(), inline_len);
       
       // 清空剩余空间
       if (field->len() > 20 + inline_len) {
-        memset(field_ptr + 20 + inline_len, 0, field->len() - 20 - inline_len);
+        memset(field_ptr + 16 + inline_len, 0, field->len() - 16 - inline_len);
       }
       
       rewritten = true;
@@ -1282,11 +1335,16 @@ RC RecordFileHandler::get_record(const RID &rid, Record &record)
     return rc;
   }
 
+  LOG_DEBUG("About to call process_text_fields_on_read for rid=%s", rid.to_string().c_str());
+  
   rc = process_text_fields_on_read(table_meta_, disk_buffer_pool_, inplace_record, record);
   if (OB_FAIL(rc)) {
-    LOG_ERROR("Failed to process TEXT overflow fields. rid=%s", rid.to_string().c_str());
+    LOG_ERROR("Failed to process TEXT overflow fields. rid=%s, RC=%s", 
+             rid.to_string().c_str(), strrc(rc));
     return rc;
   }
+  
+  LOG_DEBUG("process_text_fields_on_read completed successfully for rid=%s", rid.to_string().c_str());
   record.set_rid(rid);
   
   if (record.data() == nullptr) {
