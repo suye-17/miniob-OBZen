@@ -38,3 +38,47 @@ SELECT 'A. Original Query (col1 - col2 > -0)' AS test_name, * FROM exp_table WHE
 SELECT id FROM exp_table WHERE -0 < col1 - col2 ORDER BY id;
 ### 2025-10-13 19:57:31.013
 create table t_test(id int, name char(10), age int);
+### 2025-10-13 20:15:09.232
+delete from t_basic where id=1;
+### 2025-10-13 20:21:24.296
+create table test_del(id int);
+### 2025-10-13 20:22:59.966
+insert into test_del values(1);
+### 2025-10-13 20:24:39.723
+delete from test_del where id=1;
+### 2025-10-13 20:25:30.029
+DELETE FROM test_del WHERE id=1;
+### 2025-10-13 20:26:23.691
+delete from test_del;
+### 2025-10-13 20:26:44.158
+insert into test_del values(2);
+### 2025-10-13 20:26:58.834
+delete from test_del where id = 2;
+### 2025-10-13 20:27:16.976
+select * from test_del where id = 2;
+### 2025-10-13 20:28:14.545
+select id from test_del;
+### 2025-10-13 20:28:58.497
+create table t_test2(id int, name char(10));
+### 2025-10-13 20:29:11.552
+insert into t_test2 values(1, 'test');
+### 2025-10-13 20:31:53.431
+insert into test_del values(3);
+### 2025-10-13 20:32:38.714
+select * from test_del where 1 = 1;
+### 2025-10-13 20:33:21.537
+DELETE FROM test_del WHERE id = 3;
+### 2025-10-13 20:34:09.124
+select * from test_del where id = 3;
+### 2025-10-13 21:07:03.868
+delete from test_del where id = 3;
+### 2025-10-13 21:08:05.020
+insert into test_del values(4); insert into test_del values(5);
+### 2025-10-13 21:08:32.264
+select * from test_del where id > 3;
+### 2025-10-13 21:08:53.778
+select * from test_del where id < 5;
+### 2025-10-13 21:09:10.783
+update test_del set id = 6 where id = 4;
+### 2025-10-13 21:09:27.262
+select * from test_del;

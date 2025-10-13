@@ -162,3 +162,5 @@ select * from t_table;
 select * from t_basic;
 ### 2025-10-13 20:03:31.143
 exit;
+### 2025-10-13 20:13:19.009
+delete from t_basic where id=1;

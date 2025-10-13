@@ -112,21 +112,21 @@ extern int yydebug;
     AVG = 313,                     /* AVG  */
     MAX = 314,                     /* MAX  */
     MIN = 315,                     /* MIN  */
-    EQ = 316,                      /* EQ  */
-    LT = 317,                      /* LT  */
-    GT = 318,                      /* GT  */
-    LE = 319,                      /* LE  */
-    GE = 320,                      /* GE  */
-    NE = 321,                      /* NE  */
-    LIKE = 322,                    /* LIKE  */
-    IN = 323,                      /* IN  */
-    EXISTS = 324,                  /* EXISTS  */
-    INNER = 325,                   /* INNER  */
-    JOIN = 326,                    /* JOIN  */
-    NUMBER = 327,                  /* NUMBER  */
-    FLOAT = 328,                   /* FLOAT  */
-    ID = 329,                      /* ID  */
-    SSS = 330,                     /* SSS  */
+    IN = 316,                      /* IN  */
+    LIKE = 317,                    /* LIKE  */
+    EXISTS = 318,                  /* EXISTS  */
+    INNER = 319,                   /* INNER  */
+    JOIN = 320,                    /* JOIN  */
+    NUMBER = 321,                  /* NUMBER  */
+    FLOAT = 322,                   /* FLOAT  */
+    ID = 323,                      /* ID  */
+    SSS = 324,                     /* SSS  */
+    EQ = 325,                      /* EQ  */
+    NE = 326,                      /* NE  */
+    LT = 327,                      /* LT  */
+    LE = 328,                      /* LE  */
+    GT = 329,                      /* GT  */
+    GE = 330,                      /* GE  */
     UMINUS = 331                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
@@ -136,7 +136,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 164 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 159 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;

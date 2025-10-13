@@ -318,7 +318,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
     return RC::SUCCESS;
   }
 
-  // 如果不是表达式条件，说明有问题（因为现在所有条件都应该是表达式）
+  // 如果不是表达式条件，说明有问题（现在所有条件都应该是表达式）
   LOG_WARN("condition is not an expression condition, this should not happen with unified architecture");
   delete filter_unit;
   return RC::INVALID_ARGUMENT;
