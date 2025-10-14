@@ -1,0 +1,1113 @@
+[2025-10-14 08:08:29.311352 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:08:29.312219 pid:9617 tid:7e8c081607c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:08:29.312966 pid:9617 tid:7e8c03bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:08:29.313816 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.314224 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.314785 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.315160 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.315551 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.315986 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.316484 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.317078 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.317470 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.317860 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.318219 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.318600 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.319122 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.319658 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.320058 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.320583 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.320990 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.321358 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.322039 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.322423 pid:9617 tid:7e8c081607c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.322439 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:29.322449 pid:9617 tid:7e8c081607c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:08:29.322982 pid:9617 tid:7e8c081607c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=15
+[2025-10-14 08:08:29.323090 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:08:29.323870 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:08:29.323959 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x7e8c04ff1808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:29.324042 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:29.324066 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.324092 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:08:29.324288 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:08:29.324339 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=11, hdr_frame=0x7e8c04ff3898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.324473 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:29.324494 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.324511 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:08:29.324679 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:08:29.324843 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=12, hdr_frame=0x7e8c04ff79b8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:29.324870 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:29.324878 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.324893 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:08:29.325043 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:08:29.325085 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=13, hdr_frame=0x7e8c04ff9a48, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.325138 pid:9617 tid:7e8c081607c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:13, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:08:29.325152 pid:9617 tid:7e8c081607c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:08:29.325194 pid:9617 tid:7e8c081607c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:08:29.325209 pid:9617 tid:7e8c081607c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:08:29.325224 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:08:29.325236 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:08:29.325369 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:08:29.325429 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=14, hdr_frame=0x7e8c04ffdb68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.325645 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:29.325663 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.325681 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:08:29.325829 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:08:29.325876 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=15, hdr_frame=0x7e8c05001c88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.325950 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:29.325972 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.325988 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:08:29.326147 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:08:29.326192 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=16, hdr_frame=0x7e8c05005da8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:29.326231 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:29.326240 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.326254 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:08:29.326471 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:08:29.326572 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=18, hdr_frame=0x7e8c05007e38, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.326712 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:29.326725 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.326743 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:08:29.326909 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:08:29.326961 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=19, hdr_frame=0x7e8c0500bf58, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:29.326993 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:29.327002 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.327014 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:08:29.327144 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:08:29.327186 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=21, hdr_frame=0x7e8c0500dfe8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:29.327245 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:29.327265 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.327281 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:08:29.327289 pid:9617 tid:7e8c081607c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=10
+[2025-10-14 08:08:29.329240 pid:9617 tid:7e8c081607c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:08:29.329311 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:08:29.329333 pid:9617 tid:7e8c081607c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:08:29.333323 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.333881 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: create_file@disk_buffer_pool.cpp:840] >> Successfully create miniob/db/sys/test_new.data.
+[2025-10-14 08:08:29.334010 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:08:29.334077 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=25, hdr_frame=0x7e8c05012108, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:29.334134 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:29.334149 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:29.339797 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.340327 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: allocate_page@disk_buffer_pool.cpp:411] >> allocate new page by extending bufferpool. buffer_pool_id=14, pageNum=1, pin=1
+[2025-10-14 08:08:29.340506 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.340722 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.341222 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.341598 pid:9617 tid:7e8c081607c0 ctx:5040000014d0 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:08:29.341681 pid:9617 tid:7e8c081607c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:08:29.341701 pid:9617 tid:7e8c081607c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:08:29.353553 pid:9617 tid:7e8c03bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:08:29.546500 pid:9617 tid:7e8c081607c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:08:29.549994 pid:9617 tid:7e8c081607c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:08:29.550088 pid:9617 tid:7e8c081607c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:08:55.952606 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:08:55.952892 pid:9817 tid:77aed80e67c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:08:55.953466 pid:9817 tid:77aed3bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:08:55.954180 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.954648 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.955042 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.955524 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.955953 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.956345 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.956766 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.957183 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.958136 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.958669 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.959073 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.959549 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.960048 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.960526 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.960937 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.961443 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.961885 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.962318 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.963808 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.964259 pid:9817 tid:77aed80e67c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.964282 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:08:55.964295 pid:9817 tid:77aed80e67c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:08:55.964424 pid:9817 tid:77aed80e67c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=1
+[2025-10-14 08:08:55.964525 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:08:55.965649 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:08:55.965799 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=8, hdr_frame=0x77aed6d6c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:55.965992 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:55.966038 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.966094 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:08:55.966314 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:08:55.966368 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=9, hdr_frame=0x77aed6d6e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.966602 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.966679 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.966730 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:08:55.966974 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:08:55.967060 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=10, hdr_frame=0x77aed6d729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.967177 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.967213 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.967262 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:08:55.967436 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:08:55.967546 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=11, hdr_frame=0x77aed6d76ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:55.967607 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:55.967669 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.967712 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:08:55.967898 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:08:55.967971 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=12, hdr_frame=0x77aed6d78b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.968057 pid:9817 tid:77aed80e67c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:12, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:08:55.968101 pid:9817 tid:77aed80e67c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:08:55.968144 pid:9817 tid:77aed80e67c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:08:55.968207 pid:9817 tid:77aed80e67c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:08:55.968236 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:08:55.968254 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:08:55.968425 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:08:55.968511 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=13, hdr_frame=0x77aed6d7cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.968632 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.968676 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.968696 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:08:55.968862 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:08:55.969536 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=14, hdr_frame=0x77aed6d80da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.969668 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.969685 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.969703 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:08:55.969876 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:08:55.969922 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=15, hdr_frame=0x77aed6d84ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:55.969950 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:55.969962 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.969982 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:08:55.970210 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:08:55.970258 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=16, hdr_frame=0x77aed6d86f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.970349 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.970365 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.970384 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:08:55.970513 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:08:55.970567 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=18, hdr_frame=0x77aed6d8b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:08:55.970596 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:08:55.970608 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.970631 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:08:55.970736 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:08:55.970790 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=19, hdr_frame=0x77aed6d8d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:08:55.970858 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:08:55.970883 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:08:55.970904 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:08:55.970926 pid:9817 tid:77aed80e67c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=11
+[2025-10-14 08:08:55.973096 pid:9817 tid:77aed80e67c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:08:55.973163 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:08:55.973176 pid:9817 tid:77aed80e67c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:09:05.794958 pid:9817 tid:77aed80e67c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:09:42.640146 pid:9817 tid:77aed80e67c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:09:58.696550 pid:9817 tid:77aed80e67c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.592707 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:11:40.592918 pid:10878 tid:71c6f1aec7c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:11:40.593399 pid:10878 tid:71c6ed5ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:11:40.594164 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.594596 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.594999 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.595437 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.595830 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.596266 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.596706 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.597109 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.597540 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.597952 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.598349 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.598905 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.599307 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.599699 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.600108 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.600503 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.600890 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.601298 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.601689 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.602076 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.602102 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:11:40.602114 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:11:40.602226 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=1
+[2025-10-14 08:11:40.602337 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:11:40.603168 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:11:40.603268 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x71c6ee9f1808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:11:40.603351 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:11:40.603376 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.603407 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:11:40.603557 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:11:40.603613 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x71c6ee9f3898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.603877 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.603901 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.603918 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:11:40.604169 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:11:40.604224 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x71c6ee9f79b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.604309 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.604317 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.604330 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:11:40.604478 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:11:40.604517 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x71c6ee9fbad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:11:40.604539 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:11:40.604549 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.604560 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:11:40.604731 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:11:40.604773 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x71c6ee9fdb68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.604845 pid:10878 tid:71c6f1aec7c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:11:40.604866 pid:10878 tid:71c6f1aec7c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:11:40.604895 pid:10878 tid:71c6f1aec7c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:11:40.604909 pid:10878 tid:71c6f1aec7c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:11:40.604918 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:11:40.604931 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:11:40.605086 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:11:40.605139 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x71c6eea01c88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.605248 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.605267 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.605281 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:11:40.605427 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:11:40.605478 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x71c6eea05da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.605571 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.605582 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.605594 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:11:40.605753 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:11:40.605795 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x71c6eea09ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:11:40.605817 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:11:40.605826 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.605838 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:11:40.606037 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:11:40.606110 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x71c6eea0bf58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.606214 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.606240 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.606257 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:11:40.606382 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:11:40.606446 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x71c6eea10078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:11:40.606481 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:11:40.606489 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.606503 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:11:40.606597 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:11:40.606650 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x71c6eea12108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:11:40.606839 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:11:40.606888 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.606915 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:11:40.606924 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=11
+[2025-10-14 08:11:40.608553 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:11:40.608638 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:11:40.608653 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:11:40.612205 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.612867 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: create_file@disk_buffer_pool.cpp:840] >> Successfully create miniob/db/sys/test_delete.data.
+[2025-10-14 08:11:40.612937 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:11:40.614261 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=26, hdr_frame=0x71c6eea16228, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:11:40.614306 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:11:40.614319 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:11:40.620436 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.620909 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: allocate_page@disk_buffer_pool.cpp:411] >> allocate new page by extending bufferpool. buffer_pool_id=15, pageNum=1, pin=1
+[2025-10-14 08:11:40.621038 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.621220 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.621655 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.621793 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.622111 pid:10878 tid:71c6f1aec7c0 ctx:504000001690 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:11:40.622181 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:11:40.622198 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:11:40.633951 pid:10878 tid:71c6ed5ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:11:40.827320 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:11:40.829681 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:11:40.829769 pid:10878 tid:71c6f1aec7c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:12:32.571069 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:12:32.571306 pid:11221 tid:7c225d1987c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:12:32.571903 pid:11221 tid:7c2258bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:12:32.572545 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.572968 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.573583 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.573975 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.574362 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.574862 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.575259 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.575648 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.576063 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.576445 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.576836 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.577396 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.577845 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.578238 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.578652 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.579032 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.579411 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.579853 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.580273 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.580685 pid:11221 tid:7c225d1987c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.580703 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:32.580714 pid:11221 tid:7c225d1987c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:12:32.580905 pid:11221 tid:7c225d1987c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:12:32.581027 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:12:32.581873 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:12:32.581953 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x7c225bd6c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:32.582033 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:32.582069 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.582097 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:12:32.582280 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:12:32.582343 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x7c225bd6e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.582461 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.582482 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.582498 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:12:32.582758 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:12:32.582980 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x7c225bd729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.583077 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.583094 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.583110 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:12:32.583278 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:12:32.583334 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x7c225bd76ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:32.583368 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:32.583377 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.583391 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:12:32.583552 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:12:32.583595 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x7c225bd78b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.583659 pid:11221 tid:7c225d1987c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:12:32.583677 pid:11221 tid:7c225d1987c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:12:32.583714 pid:11221 tid:7c225d1987c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:12:32.583729 pid:11221 tid:7c225d1987c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:12:32.583739 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:12:32.583752 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:12:32.583909 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:12:32.583951 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x7c225bd7cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.584028 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.584037 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.584053 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:12:32.584244 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:12:32.584291 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x7c225bd80da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.584381 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.584396 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.584411 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:12:32.584593 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:12:32.584672 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x7c225bd84ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:32.584706 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:32.584715 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.584729 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:12:32.584934 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:12:32.584989 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x7c225bd86f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.585091 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.585110 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.585129 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:12:32.585260 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:12:32.585302 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x7c225bd8b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:32.585337 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:32.585347 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.585362 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:12:32.585474 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:12:32.585518 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x7c225bd8d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.585594 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.585615 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.585649 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:12:32.585790 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:12:32.585841 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x7c225bd91228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:32.585920 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:32.585939 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:32.585954 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:12:32.585965 pid:11221 tid:7c225d1987c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:12:32.587902 pid:11221 tid:7c225d1987c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:12:32.587978 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:12:32.587996 pid:11221 tid:7c225d1987c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:12:32.592050 pid:11221 tid:7c225d1987c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:12:32.592179 pid:11221 tid:7c225d1987c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:12:32.592202 pid:11221 tid:7c225d1987c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:12:32.602509 pid:11221 tid:7c2258bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:12:32.797468 pid:11221 tid:7c225d1987c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:12:32.802318 pid:11221 tid:7c225d1987c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:12:32.802530 pid:11221 tid:7c225d1987c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:12:58.011479 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:12:58.011704 pid:11389 tid:7ede2ed597c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:12:58.012151 pid:11389 tid:7ede2a7ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:12:58.012864 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.013322 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.013815 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.014270 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.014726 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.015133 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.015762 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.016160 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.016554 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.017041 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.017419 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.017801 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.018170 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.018552 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.019217 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.019731 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.020159 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.020559 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.021012 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.021423 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.021453 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:12:58.021465 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:12:58.021691 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:12:58.021797 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:12:58.022607 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:12:58.022698 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x7ede2d96c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:58.022777 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:58.022808 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.022838 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:12:58.022990 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:12:58.023050 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x7ede2d96e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.023176 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.023198 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.023214 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:12:58.023424 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:12:58.023474 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x7ede2d9729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.023551 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.023561 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.023575 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:12:58.023756 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:12:58.023807 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x7ede2d976ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:58.023832 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:58.023840 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.023854 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:12:58.024003 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:12:58.024047 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x7ede2d978b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.024101 pid:11389 tid:7ede2ed597c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:12:58.024118 pid:11389 tid:7ede2ed597c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:12:58.024153 pid:11389 tid:7ede2ed597c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:12:58.024167 pid:11389 tid:7ede2ed597c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:12:58.024177 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:12:58.024188 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:12:58.024329 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:12:58.024371 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x7ede2d97cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.024445 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.024454 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.024471 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:12:58.024617 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:12:58.024688 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x7ede2d980da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.024777 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.024797 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.024814 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:12:58.024972 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:12:58.025016 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x7ede2d984ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:58.025039 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:58.025047 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.025062 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:12:58.025269 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:12:58.025319 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x7ede2d986f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.025406 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.025420 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.025436 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:12:58.025561 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:12:58.025607 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x7ede2d98b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:12:58.025639 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:12:58.025649 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.025663 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:12:58.025770 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:12:58.025816 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x7ede2d98d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.026026 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.026053 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.026078 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:12:58.026210 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:12:58.026263 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x7ede2d991228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:12:58.026333 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:12:58.026342 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:12:58.026356 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:12:58.026365 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:12:58.029124 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:12:58.029252 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:12:58.029272 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:12:58.034534 pid:11389 tid:7ede2ed597c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:12:58.034680 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:12:58.034706 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:12:58.042686 pid:11389 tid:7ede2a7ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:12:58.239808 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:12:58.243377 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:12:58.243479 pid:11389 tid:7ede2ed597c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:13:21.727465 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:13:21.727684 pid:11660 tid:7b3c7d8f77c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:13:21.728123 pid:11660 tid:7b3c793ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:13:21.728801 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.729184 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.729644 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.730019 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.730390 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.730788 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.731176 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.731591 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.732076 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.732492 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.732904 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.733283 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.733705 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.734167 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.734539 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.734930 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.735305 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.735682 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.736040 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.736517 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.736545 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:13:21.736556 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:13:21.736739 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:13:21.736835 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:13:21.737598 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:13:21.737705 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x7b3c7a7f1808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:13:21.737784 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:13:21.737810 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.737834 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:13:21.737989 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:13:21.738051 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x7b3c7a7f3898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.738160 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.738181 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.738197 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:13:21.738394 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:13:21.738450 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x7b3c7a7f79b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.738522 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.738530 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.738544 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:13:21.738708 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:13:21.738757 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x7b3c7a7fbad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:13:21.738791 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:13:21.738800 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.738814 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:13:21.738964 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:13:21.739017 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x7b3c7a7fdb68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.739089 pid:11660 tid:7b3c7d8f77c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:13:21.739106 pid:11660 tid:7b3c7d8f77c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:13:21.739143 pid:11660 tid:7b3c7d8f77c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:13:21.739157 pid:11660 tid:7b3c7d8f77c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:13:21.739166 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:13:21.739179 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:13:21.739330 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:13:21.739383 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x7b3c7a801c88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.739471 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.739490 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.739506 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:13:21.739667 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:13:21.739718 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x7b3c7a805da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.739814 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.739833 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.739848 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:13:21.739995 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:13:21.740046 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x7b3c7a809ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:13:21.740071 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:13:21.740079 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.740092 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:13:21.740275 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:13:21.740325 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x7b3c7a80bf58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.740401 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.740419 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.740434 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:13:21.740558 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:13:21.740597 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x7b3c7a810078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:13:21.740638 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:13:21.740647 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.740660 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:13:21.740759 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:13:21.740807 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x7b3c7a812108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.740866 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.740885 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.740903 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:13:21.741028 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:13:21.741086 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x7b3c7a816228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:13:21.741160 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:13:21.741178 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:13:21.741193 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:13:21.741202 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:13:21.744603 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:13:21.744715 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:13:21.744737 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:13:21.750300 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.750441 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.751894 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.752028 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.752674 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.752777 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753021 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753164 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753347 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753406 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753737 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753822 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753905 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.753969 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.754296 pid:11660 tid:7b3c7d8f77c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:13:21.754351 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:13:21.754385 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:13:21.768743 pid:11660 tid:7b3c793ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:13:21.959043 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:13:21.961682 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:13:21.961771 pid:11660 tid:7b3c7d8f77c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:15:42.311910 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:15:42.312138 pid:13104 tid:7a5f0d5187c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:15:42.312841 pid:13104 tid:7a5f08fff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:15:42.313598 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.314191 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.314679 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.315290 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.315722 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.316126 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.316543 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.316978 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.317409 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.317877 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.318241 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.318607 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.319062 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.319432 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.319803 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.320195 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.320565 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.320945 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.321286 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.321643 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.321671 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:15:42.321683 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:15:42.321854 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:15:42.321963 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:15:42.322761 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:15:42.322839 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x7a5f0a3f1808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:15:42.322912 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:15:42.322930 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.322957 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:15:42.323102 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:15:42.323163 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x7a5f0a3f3898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.323282 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.323303 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.323318 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:15:42.323501 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:15:42.323557 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x7a5f0a3f79b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.323636 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.323655 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.323669 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:15:42.323815 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:15:42.323856 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x7a5f0a3fbad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:15:42.323890 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:15:42.323898 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.323912 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:15:42.324063 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:15:42.324105 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x7a5f0a3fdb68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.324157 pid:13104 tid:7a5f0d5187c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:15:42.324175 pid:13104 tid:7a5f0d5187c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:15:42.324206 pid:13104 tid:7a5f0d5187c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:15:42.324219 pid:13104 tid:7a5f0d5187c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:15:42.324229 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:15:42.324240 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:15:42.324384 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:15:42.324427 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x7a5f0a401c88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.324577 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.324599 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.324616 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:15:42.324791 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:15:42.324837 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x7a5f0a405da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.324917 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.324927 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.324940 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:15:42.325069 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:15:42.325127 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x7a5f0a409ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:15:42.325149 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:15:42.325158 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.325171 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:15:42.325356 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:15:42.325408 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x7a5f0a40bf58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.325490 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.325509 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.325526 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:15:42.325652 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:15:42.325694 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x7a5f0a410078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:15:42.325720 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:15:42.325728 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.325742 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:15:42.325845 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:15:42.325889 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x7a5f0a412108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.325950 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.325970 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.325986 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:15:42.326105 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:15:42.326141 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x7a5f0a416228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:15:42.326202 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:15:42.326211 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:15:42.326226 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:15:42.326235 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:15:42.525938 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:15:42.526196 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:15:42.526252 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:15:42.533248 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.533715 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.534909 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.535263 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.535499 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.535731 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.535830 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.536543 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.536686 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.536785 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.536842 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.537270 pid:13104 tid:7a5f0d5187c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:15:42.537364 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:15:42.537395 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:15:42.549982 pid:13104 tid:7a5f08fff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:15:42.745422 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:15:42.747761 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:15:42.747845 pid:13104 tid:7a5f0d5187c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:16:34.671566 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:16:34.671781 pid:14087 tid:78299fb3b7c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:16:34.672260 pid:14087 tid:78299b5ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:16:34.672909 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.673294 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.673703 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.674075 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.674432 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.674816 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.675192 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.675545 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.675981 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.676401 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.676881 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.677255 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.677654 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.678026 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.678399 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.678775 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.679162 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.679581 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.680009 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.680388 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.680403 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:16:34.680413 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:16:34.680580 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:16:34.680689 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:16:34.681484 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:16:34.681568 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x78299e76c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:16:34.681694 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:16:34.681722 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.681746 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:16:34.681898 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:16:34.682060 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x78299e76e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.682172 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.682192 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.682208 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:16:34.682403 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:16:34.682457 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x78299e7729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.682541 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.682711 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.682792 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:16:34.682983 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:16:34.683120 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x78299e776ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:16:34.683167 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:16:34.683177 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.683193 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:16:34.683435 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:16:34.683520 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x78299e778b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.683589 pid:14087 tid:78299fb3b7c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:16:34.683612 pid:14087 tid:78299fb3b7c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:16:34.683794 pid:14087 tid:78299fb3b7c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:16:34.683826 pid:14087 tid:78299fb3b7c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:16:34.683843 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:16:34.683862 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:16:34.684051 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:16:34.684113 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x78299e77cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.684202 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.684213 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.684229 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:16:34.684385 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:16:34.684442 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x78299e780da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.684542 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.684553 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.684568 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:16:34.684736 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:16:34.684783 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x78299e784ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:16:34.684806 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:16:34.684814 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.684828 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:16:34.685012 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:16:34.685059 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x78299e786f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.685142 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.685167 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.685186 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:16:34.685324 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:16:34.685357 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x78299e78b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:16:34.685384 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:16:34.685393 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.685407 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:16:34.685511 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:16:34.685547 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x78299e78d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.685610 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.685640 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.685658 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:16:34.685788 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:16:34.685840 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x78299e791228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:16:34.685917 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:16:34.685927 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:16:34.685940 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:16:34.685950 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:16:34.815692 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:16:34.815813 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:16:34.815828 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:16:34.819990 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.820076 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.820847 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.821380 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.821775 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.822065 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.822134 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.822741 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.822861 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.822967 pid:14087 tid:78299fb3b7c0 ctx:504000001850 WARN: create_filter_unit@filter_stmt.cpp:322] >> condition is not an expression condition, this should not happen with unified architecture
+[2025-10-14 08:16:34.822984 pid:14087 tid:78299fb3b7c0 ctx:504000001850 WARN: create@filter_stmt.cpp:47] >> failed to create filter unit. condition index=0
+[2025-10-14 08:16:34.822992 pid:14087 tid:78299fb3b7c0 ctx:504000001850 WARN: create@delete_stmt.cpp:53] >> failed to create filter statement. rc=1:INVALID_ARGUMENT
+[2025-10-14 08:16:34.823001 pid:14087 tid:78299fb3b7c0 ctx:504000001850 WARN: handle_request@resolve_stage.cpp:50] >> failed to create stmt. rc=1:INVALID_ARGUMENT
+[2025-10-14 08:16:34.823023 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.823076 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.823710 pid:14087 tid:78299fb3b7c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:16:34.823812 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:16:34.823834 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:16:34.836613 pid:14087 tid:78299b5ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:16:35.030208 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:16:35.032439 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:16:35.032527 pid:14087 tid:78299fb3b7c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:17:37.806177 pid:15129 tid:750b085067c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:17:37.806955 pid:15129 tid:750b085067c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:17:37.807536 pid:15129 tid:750b03fff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:17:37.809238 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.809887 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.810320 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.810727 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.811111 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.811493 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.811887 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.812305 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.812762 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.813225 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.813632 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.814043 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.814612 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.815043 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.815487 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.815947 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.816376 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.817267 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.817795 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.818269 pid:15129 tid:750b085067c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.818305 pid:15129 tid:750b085067c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:37.818319 pid:15129 tid:750b085067c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:17:37.818536 pid:15129 tid:750b085067c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:17:37.818674 pid:15129 tid:750b085067c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:17:37.819540 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:17:37.819612 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x750b0716c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:37.819709 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:37.819728 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.819766 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:17:37.819920 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:17:37.819968 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x750b0716e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.820080 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.820091 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.820105 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:17:37.820295 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:17:37.820343 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x750b071729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.820422 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.820432 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.820446 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:17:37.820579 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:17:37.820622 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x750b07176ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:37.820655 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:37.820664 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.820677 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:17:37.820967 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:17:37.821043 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x750b07178b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.821106 pid:15129 tid:750b085067c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:17:37.821125 pid:15129 tid:750b085067c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:17:37.821168 pid:15129 tid:750b085067c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:17:37.821182 pid:15129 tid:750b085067c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:17:37.821192 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:17:37.821207 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:17:37.821378 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:17:37.821444 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x750b0717cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.821526 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.821548 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.821565 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:17:37.821877 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:17:37.821944 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x750b07180da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.822043 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.822054 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.822069 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:17:37.822224 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:17:37.822299 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x750b07184ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:37.822325 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:37.822334 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.822348 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:17:37.822565 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:17:37.822609 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x750b07186f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.822735 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.822768 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.822784 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:17:37.822916 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:17:37.822951 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x750b0718b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:37.822976 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:37.822984 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.822997 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:17:37.823126 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:17:37.823161 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x750b0718d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.823235 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.823260 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.823276 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:17:37.823405 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:17:37.823446 pid:15129 tid:750b085067c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x750b07191228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:37.823510 pid:15129 tid:750b085067c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:37.823519 pid:15129 tid:750b085067c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:37.823532 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:17:37.823540 pid:15129 tid:750b085067c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:17:37.892249 pid:15129 tid:750b085067c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:17:37.892372 pid:15129 tid:750b085067c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:17:37.892393 pid:15129 tid:750b085067c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:17:37.896595 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:17:37.897200 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:192] >> COMPARE: left=1(2), right=2(2), cmp_result=-1
+[2025-10-14 08:17:37.897254 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:198] >> EQUAL_TO result: false
+[2025-10-14 08:17:37.897355 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:192] >> COMPARE: left=2(2), right=2(2), cmp_result=0
+[2025-10-14 08:17:37.897370 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:198] >> EQUAL_TO result: true
+[2025-10-14 08:17:37.897476 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:192] >> COMPARE: left=3(2), right=2(2), cmp_result=1
+[2025-10-14 08:17:37.897502 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: compare_value@expression.cpp:198] >> EQUAL_TO result: false
+[2025-10-14 08:17:37.898173 pid:15129 tid:750b085067c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:17:37.898278 pid:15129 tid:750b085067c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:17:37.898292 pid:15129 tid:750b085067c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:17:37.912694 pid:15129 tid:750b03fff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:17:38.103565 pid:15129 tid:750b085067c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:17:38.107490 pid:15129 tid:750b085067c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:17:38.107580 pid:15129 tid:750b085067c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:17:55.425087 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@init.cpp:198] >> Output configuration 
+Begin dump configuration
+[]
+
+Finish dump configuration 
+
+[2025-10-14 08:17:55.425332 pid:15266 tid:79c9c2f377c0 ctx:0 WARN: create_db@default_handler.cpp:92] >> Db already exists: sys
+[2025-10-14 08:17:55.425959 pid:15266 tid:79c9be9ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:118] >> [ObLsmBackground] thread started
+[2025-10-14 08:17:55.426708 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:128, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.427105 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:256, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.427508 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:384, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.427904 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:512, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.428262 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:640, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.428667 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:768, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.429060 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:896, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.429469 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1024, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.429855 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1152, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.430269 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1280, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.430787 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1408, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.431169 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1536, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.431827 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1664, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.432220 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1792, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.432723 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:1920, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.433235 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2048, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.433611 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2176, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.433989 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2304, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.434356 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2432, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.434727 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: extend@mem_pool.h:251] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.434743 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@mem_pool.h:197] >> Extend one pool, this->size:2560, item_num_per_pool:128, this->name:BufPool.
+[2025-10-14 08:17:55.434753 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: BufferPoolManager@disk_buffer_pool.cpp:778] >> buffer pool manager init with memory size 20971520, page num: 2560, pool num: 20
+[2025-10-14 08:17:55.434937 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: load_pages@double_write_buffer.cpp:286] >> double write buffer load pages done. page num=3
+[2025-10-14 08:17:55.435045 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_meta@db.cpp:386] >> Successfully read db meta file. db=sys, file=miniob/db/sys/sys.db, check_point_lsn=0
+[2025-10-14 08:17:55.435853 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test.data.
+[2025-10-14 08:17:55.436053 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test.data. file_desc=10, hdr_frame=0x79c9c1b6c808, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:55.436134 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:55.436153 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.436180 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test, file: t_test.table
+[2025-10-14 08:17:55.436436 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_new.data.
+[2025-10-14 08:17:55.436519 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_new.data. file_desc=11, hdr_frame=0x79c9c1b6e898, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.436685 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.436731 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.436753 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_new, file: test_new.table
+[2025-10-14 08:17:55.436966 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_basic.data.
+[2025-10-14 08:17:55.437022 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_basic.data. file_desc=12, hdr_frame=0x79c9c1b729b8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.437102 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.437112 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.437129 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_basic, file: t_basic.table
+[2025-10-14 08:17:55.437267 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_table.data.
+[2025-10-14 08:17:55.437309 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_table.data. file_desc=13, hdr_frame=0x79c9c1b76ad8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:55.437333 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:55.437341 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.437354 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_table, file: test_table.table
+[2025-10-14 08:17:55.437508 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_like.data.
+[2025-10-14 08:17:55.437569 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_like.data. file_desc=14, hdr_frame=0x79c9c1b78b68, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.437645 pid:15266 tid:79c9c2f377c0 ctx:0 ERROR: load_page@disk_buffer_pool.cpp:756] >> Failed to load page miniob/db/sys/test_like.data, file_desc:14, page num:1, due to failed to read data:File exists, ret=-1, page count=2
+[2025-10-14 08:17:55.437678 pid:15266 tid:79c9c2f377c0 ctx:0 ERROR: get_this_page@disk_buffer_pool.cpp:345] >> Failed to load page miniob/db/sys/test_like.data:1
+[2025-10-14 08:17:55.437721 pid:15266 tid:79c9c2f377c0 ctx:0 ERROR: init@record_manager.cpp:111] >> Failed to get page handle from disk buffer pool. ret=32:IOERR_READ
+[2025-10-14 08:17:55.437744 pid:15266 tid:79c9c2f377c0 ctx:0 WARN: init_free_pages@record_manager.cpp:529] >> failed to init record page handler. page num=1, rc=32:IOERR_READ
+[2025-10-14 08:17:55.437754 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=IOERR_READ
+[2025-10-14 08:17:55.437768 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_like, file: test_like.table
+[2025-10-14 08:17:55.437931 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_select.data.
+[2025-10-14 08:17:55.437985 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_select.data. file_desc=15, hdr_frame=0x79c9c1b7cc88, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.438067 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.438076 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.438093 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_select, file: test_select.table
+[2025-10-14 08:17:55.438246 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/t_test2.data.
+[2025-10-14 08:17:55.438285 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/t_test2.data. file_desc=16, hdr_frame=0x79c9c1b80da8, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.438367 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.438375 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.438406 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: t_test2, file: t_test2.table
+[2025-10-14 08:17:55.438554 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test.data.
+[2025-10-14 08:17:55.438595 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test.data. file_desc=18, hdr_frame=0x79c9c1b84ec8, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:55.438679 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:55.438697 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.438716 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test, file: test.table
+[2025-10-14 08:17:55.438903 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table.data.
+[2025-10-14 08:17:55.438950 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table.data. file_desc=19, hdr_frame=0x79c9c1b86f58, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.439032 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.439041 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.439060 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table, file: exp_table.table
+[2025-10-14 08:17:55.439177 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/exp_table2.data.
+[2025-10-14 08:17:55.439204 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/exp_table2.data. file_desc=21, hdr_frame=0x79c9c1b8b078, file header=pageCount:1, allocatedCount:1
+[2025-10-14 08:17:55.439226 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=0, rc=SUCCESS
+[2025-10-14 08:17:55.439233 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.439246 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: exp_table2, file: exp_table2.table
+[2025-10-14 08:17:55.439345 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_del.data.
+[2025-10-14 08:17:55.439376 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_del.data. file_desc=23, hdr_frame=0x79c9c1b8d108, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.439436 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.439446 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.439460 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_del, file: test_del.table
+[2025-10-14 08:17:55.439580 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:239] >> Successfully open buffer pool file miniob/db/sys/test_delete.data.
+[2025-10-14 08:17:55.439617 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_file@disk_buffer_pool.cpp:277] >> Successfully open miniob/db/sys/test_delete.data. file_desc=24, hdr_frame=0x79c9c1b91228, file header=pageCount:2, allocatedCount:2
+[2025-10-14 08:17:55.439721 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init_free_pages@record_manager.cpp:538] >> record file handler init free pages done. free page num=1, rc=SUCCESS
+[2025-10-14 08:17:55.439729 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@record_manager.cpp:497] >> open record file handle done. rc=SUCCESS
+[2025-10-14 08:17:55.439743 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:266] >> Open table: test_delete, file: test_delete.table
+[2025-10-14 08:17:55.439752 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: open_all_tables@db.cpp:269] >> All table have been opened. num=12
+[2025-10-14 08:17:55.442493 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: recover@db.cpp:350] >> Successfully recover db. db=sys checkpoint_lsn=0
+[2025-10-14 08:17:55.442650 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@default_handler.cpp:68] >> Default handler init with miniob success
+[2025-10-14 08:17:55.442715 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: init@init.cpp:213] >> Successfully init utility
+[2025-10-14 08:17:55.447892 pid:15266 tid:79c9c2f377c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:17:55.448728 pid:15266 tid:79c9c2f377c0 ctx:504000001850 INFO: handle_event@sql_task_handler.cpp:46] >> write result return SUCCESS
+[2025-10-14 08:17:55.448861 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:17:55.448916 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:17:55.456519 pid:15266 tid:79c9be9ff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:17:55.655809 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:17:55.662103 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:17:55.662249 pid:15266 tid:79c9c2f377c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!
+[2025-10-14 08:18:09.359982 pid:9817 tid:77aed80e67c0 ctx:0 INFO: ~CliCommunicator@cli_communicator.cpp:87] >> Command history saved to ./.miniob.history
+[2025-10-14 08:18:09.360073 pid:9817 tid:77aed80e67c0 ctx:0 INFO: main@main.cpp:203] >> Server stopped
+[2025-10-14 08:18:09.374682 pid:9817 tid:77aed3bff6c0 ctx:0 INFO: thread_func@thread_pool_executor.cpp:176] >> [ObLsmBackground] thread exit
+[2025-10-14 08:18:09.566791 pid:9817 tid:77aed80e67c0 ctx:0 INFO: ~Db@db.cpp:49] >> Db has been closed: sys
+[2025-10-14 08:18:09.573073 pid:9817 tid:77aed80e67c0 ctx:0 INFO: cleanup@mem_pool.h:223] >> Successfully do cleanup, this->name:BufPool.
+[2025-10-14 08:18:09.573218 pid:9817 tid:77aed80e67c0 ctx:0 INFO: cleanup_util@init.cpp:227] >> Shutdown Cleanly!

@@ -810,17 +810,41 @@ condition_list:
     }
     | condition {
       $$ = new vector<ConditionSqlNode>;
-      $$->emplace_back(*$1);
+      $$->push_back(*$1);
       delete $1;
     }
     | condition AND condition_list {
-      $$ = $3;
-      $$->emplace_back(*$1);
+      if ($3 == nullptr) {
+        $$ = new vector<ConditionSqlNode>;
+      } else {
+        $$ = $3;
+      }
+      $$->insert($$->begin(), *$1);
       delete $1;
     }
     ;
 condition:
-    expression comp_op expression 
+    rel_attr comp_op value
+    {
+      printf("DEBUG: simple condition rel_attr comp_op value -> converting to expression\n");
+      $$ = new ConditionSqlNode;
+      $$->comp = $2;
+      
+      // 将rel_attr转换为UnboundFieldExpr
+      RelAttrSqlNode *node = $1;
+      $$->left_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      
+      // 将value转换为ValueExpr
+      $$->right_expression = new ValueExpr(*$3);
+      
+      $$->is_expression_condition = true;
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      
+      delete $1;
+      delete $3;
+    }
+    | expression comp_op expression 
     {
       printf("DEBUG: unified condition expression comp_op expression\n");
       $$ = new ConditionSqlNode;
