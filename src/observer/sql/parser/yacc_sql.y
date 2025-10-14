@@ -170,6 +170,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
   vector<ConditionSqlNode> *                 condition_list;
   vector<RelAttrSqlNode> *                   rel_attr_list;
   vector<string> *                           relation_list;
+  vector<JoinSqlNode> *                      join_list;
   vector<string> *                           key_list;
   UpdateList *                               update_list;
   char *                                     cstring;
@@ -249,8 +250,9 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 
 %left '+' '-'
 %left '*' '/'
-%left EQ NE LT LE GT GE
 %right UMINUS
+%left EQ NE LT LE GT GE LIKE
+%left AND
 %%
 
 commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
@@ -467,9 +469,8 @@ attr_def:
     ;
 
 nullable_spec:
-    /* empty */         { $$ = 1; }      // 默认为nullable = true
-    | NULL_T            { $$ = 1; }      // nullable = true
-    | NOT NULL_T        { $$ = 0; }      // nullable = false  
+    NOT NULL_T          { $$ = 0; }      // nullable = false  
+    | /* empty */       { $$ = 1; }      // 默认为nullable = true
     ;
 
 number:
@@ -608,7 +609,43 @@ update_list:
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list where group_by having
+    SELECT expression_list FROM relation INNER JOIN relation ON condition_list where group_by having
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+
+      // 添加主表
+      $$->selection.relations.push_back($4);
+      
+      // 添加JOIN表
+      JoinSqlNode join_node;
+      join_node.type = JoinType::INNER_JOIN;
+      join_node.relation = $7;
+      if ($9 != nullptr) {
+        join_node.conditions.swap(*$9);
+        delete $9;
+      }
+      $$->selection.joins.push_back(join_node);
+
+      if ($10 != nullptr) {
+        $$->selection.conditions.swap(*$10);
+        delete $10;
+      }
+
+      if ($11 != nullptr) {
+        $$->selection.group_by.swap(*$11);
+        delete $11;
+      }
+
+      if ($12 != nullptr) {
+        $$->selection.having.swap(*$12);
+        delete $12;
+      }
+    }
+    | SELECT expression_list FROM rel_list where group_by having
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -720,35 +757,23 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
+    | COUNT LBRACE '*' RBRACE {
+      $$ = create_aggregate_expression("count", new StarExpr(), sql_string, &@$);
+    }
     | COUNT LBRACE expression RBRACE {
       $$ = create_aggregate_expression("count", $3, sql_string, &@$);
-    }
-    | COUNT LBRACE expression_list RBRACE {
-      $$ = create_aggregate_expression_multi("count", $3, sql_string, &@$);
     }
     | SUM LBRACE expression RBRACE {
       $$ = create_aggregate_expression("sum", $3, sql_string, &@$);
     }
-    | SUM LBRACE expression_list RBRACE {
-      $$ = create_aggregate_expression_multi("sum", $3, sql_string, &@$);
-    }
     | AVG LBRACE expression RBRACE {
       $$ = create_aggregate_expression("avg", $3, sql_string, &@$);
-    }
-    | AVG LBRACE expression_list RBRACE {
-      $$ = create_aggregate_expression_multi("avg", $3, sql_string, &@$);
     }
     | MAX LBRACE expression RBRACE {
       $$ = create_aggregate_expression("max", $3, sql_string, &@$);
     }
-    | MAX LBRACE expression_list RBRACE {
-      $$ = create_aggregate_expression_multi("max", $3, sql_string, &@$);
-    }
     | MIN LBRACE expression RBRACE {
       $$ = create_aggregate_expression("min", $3, sql_string, &@$);
-    }
-    | MIN LBRACE expression_list RBRACE {
-      $$ = create_aggregate_expression_multi("min", $3, sql_string, &@$);
     }
     ;
 
@@ -1030,7 +1055,7 @@ comp_op:
     | LIKE { $$ = LIKE_OP; }  // 新增LIKE操作符
     ;
 
-// join functionality removed to eliminate conflicts
+// JOIN functionality integrated into select_stmt directly
 
 group_by:
     /* empty */

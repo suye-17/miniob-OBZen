@@ -121,13 +121,13 @@ extern int yydebug;
     FLOAT = 322,                   /* FLOAT  */
     ID = 323,                      /* ID  */
     SSS = 324,                     /* SSS  */
-    EQ = 325,                      /* EQ  */
-    NE = 326,                      /* NE  */
-    LT = 327,                      /* LT  */
-    LE = 328,                      /* LE  */
-    GT = 329,                      /* GT  */
-    GE = 330,                      /* GE  */
-    UMINUS = 331                   /* UMINUS  */
+    UMINUS = 325,                  /* UMINUS  */
+    EQ = 326,                      /* EQ  */
+    NE = 327,                      /* NE  */
+    LT = 328,                      /* LT  */
+    LE = 329,                      /* LE  */
+    GT = 330,                      /* GT  */
+    GE = 331                       /* GE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -151,13 +151,14 @@ union YYSTYPE
   vector<ConditionSqlNode> *                 condition_list;
   vector<RelAttrSqlNode> *                   rel_attr_list;
   vector<string> *                           relation_list;
+  vector<JoinSqlNode> *                      join_list;
   vector<string> *                           key_list;
   UpdateList *                               update_list;
   char *                                     cstring;
   int                                        number;
   float                                      floats;
 
-#line 161 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
+#line 162 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

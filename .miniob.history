@@ -116,8 +116,6 @@ select * from test;
 select 1;
 ### 2025-10-13 19:32:09.260
 -- 测试修复后的SELECT语句
-### 2025-10-13 19:32:09.266
--- 插入测试数据
 ### 2025-10-13 19:32:09.268
 -- 测试您的SELECT语句
 ### 2025-10-13 19:32:09.268
@@ -150,8 +148,6 @@ create table t_basic(id int, age int, name char(4), score float);
 select id, age, name, score from t_basic;
 ### 2025-10-13 20:03:08.289
 select * from t_table;
-### 2025-10-13 20:13:19.009
-delete from t_basic where id=1;
 ### 2025-10-14 08:08:29.331
 -- 测试数据库功能
 ### 2025-10-14 08:08:29.333
@@ -218,11 +214,399 @@ insert into t_basic values(3, 21, 'Mary', 78.5);
 -- 验证删除结果
 ### 2025-10-14 08:17:37.894
 -- 测试您要求的确切DELETE语句
-### 2025-10-14 08:17:37.896
-delete from t_basic where id=2;
 ### 2025-10-14 08:17:55.444
 -- 验证DELETE是否真的工作了
-### 2025-10-14 08:17:55.447
+### 2025-10-14 08:22:07.145
+-- 测试日期功能的完整脚本
+### 2025-10-14 08:22:07.147
+-- 创建日期表
+### 2025-10-14 08:22:07.147
+CREATE TABLE date_table(id int, u_date date);
+### 2025-10-14 08:22:07.153
+-- 创建日期字段上的索引
+### 2025-10-14 08:22:07.153
+CREATE INDEX index_id on date_table(u_date);
+### 2025-10-14 08:22:07.159
+INSERT INTO date_table VALUES (1,'2020-01-21');
+### 2025-10-14 08:22:07.160
+INSERT INTO date_table VALUES (2,'2020-10-21');
+### 2025-10-14 08:22:07.160
+INSERT INTO date_table VALUES (3,'2020-1-01');
+### 2025-10-14 08:22:07.160
+INSERT INTO date_table VALUES (11,'2042-02-02');
+### 2025-10-14 08:22:07.161
+INSERT INTO date_table VALUES (9,'2038-01-19');
+### 2025-10-14 08:22:07.161
+SELECT * FROM date_table;
+### 2025-10-14 08:22:07.162
+-- 测试用户要求的日期比较查询
+### 2025-10-14 08:22:07.162
+SELECT * FROM date_table WHERE u_date>'2020-1-20';
+### 2025-10-14 08:22:07.163
+-- 测试其他日期比较操作
+### 2025-10-14 08:22:07.163
+SELECT * FROM date_table WHERE u_date<'2020-06-01';
+### 2025-10-14 08:22:07.164
+SELECT * FROM date_table WHERE u_date='2020-01-21';
+### 2025-10-14 08:22:07.165
+SELECT * FROM date_table WHERE u_date>='2020-01-01';
+### 2025-10-14 08:22:07.165
+-- 测试日期范围查询
+### 2025-10-14 08:22:07.165
+SELECT * FROM date_table WHERE u_date>'2020-01-01' AND u_date<'2030-01-01';
+### 2025-10-14 08:23:22.830
+-- 测试复杂表达式查询功能
+### 2025-10-14 08:23:22.832
+-- 创建表达式测试表
+### 2025-10-14 08:23:22.833
+create table exp_table2(id int, col1 int);
+### 2025-10-14 08:23:22.833
+-- 插入测试数据
+### 2025-10-14 08:23:22.833
+insert into exp_table VALUES (1, 1, 4, 7.83, 9.42);
+### 2025-10-14 08:23:22.833
+insert into exp_table VALUES (9, 1, 9, 3.1, 7.16);
+### 2025-10-14 08:23:22.833
+insert into exp_table VALUES (7, 9, 4, 1.37, 8.77);
+### 2025-10-14 08:23:22.833
+-- 查看所有数据
+### 2025-10-14 08:23:22.834
+-- 测试用户要求的第一个复杂查询
+### 2025-10-14 08:23:22.834
+-- select count(id) from exp_table where 1/3*5 < 2+col3*col3/5;
+### 2025-10-14 08:23:22.834
+select count(id) from exp_table where 1/3*5 < 2+col3*col3/5;
+### 2025-10-14 08:23:22.836
+-- 测试用户要求的第二个复杂查询  
+### 2025-10-14 08:23:22.836
+-- select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>6/9;
+### 2025-10-14 08:23:22.836
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>6/9;
+### 2025-10-14 08:23:22.837
+-- 测试其他复杂表达式
+### 2025-10-14 08:23:22.837
+select col1*col2, col3+col4 from exp_table;
+### 2025-10-14 08:23:22.837
+select id, col1+col2*col3 from exp_table where col4>8;
+### 2025-10-14 08:23:22.838
+-- 测试简单聚合函数
+### 2025-10-14 08:27:18.994
+-- 测试INNER JOIN功能
+### 2025-10-14 08:27:18.999
+-- 基于用户提供的测试用例
+### 2025-10-14 08:27:18.999
+-- 创建连接测试表
+### 2025-10-14 08:27:18.999
+CREATE TABLE join_table_1(id int, name char(20));
+### 2025-10-14 08:27:19.000
+CREATE TABLE join_table_2(id int, age int);
+### 2025-10-14 08:27:19.000
+CREATE TABLE join_table_3(id int, level int);
+### 2025-10-14 08:27:19.000
+create table join_table_empty_1(id int, num_empty_1 int);
+### 2025-10-14 08:27:19.000
+create table join_table_empty_2(id int, num_empty_2 int);
+### 2025-10-14 08:27:19.000
+-- 插入测试数据到join_table_1
+### 2025-10-14 08:27:19.000
+insert into join_table_1 values(11, 'YH41HXZBNFW9A');
+### 2025-10-14 08:27:19.000
+insert into join_table_1 values(20, '2NTIAG');
+### 2025-10-14 08:27:19.001
+insert into join_table_1 values(4, '3ZES94O46T5WZOOC');
+### 2025-10-14 08:27:19.001
+insert into join_table_1 values(1, 'TEST1');
+### 2025-10-14 08:27:19.001
+insert into join_table_1 values(2, 'TEST2');
+### 2025-10-14 08:27:19.001
+-- 插入测试数据到join_table_2
+### 2025-10-14 08:27:19.001
+insert into join_table_2 values(11, 25);
+### 2025-10-14 08:27:19.001
+insert into join_table_2 values(20, 30);
+### 2025-10-14 08:27:19.001
+insert into join_table_2 values(4, 22);
+### 2025-10-14 08:27:19.001
+insert into join_table_2 values(3, 28);
+### 2025-10-14 08:27:19.003
+-- 测试其他JOIN变体
+### 2025-10-14 08:27:19.003
+select join_table_1.id, join_table_1.name, join_table_2.age from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 08:27:19.003
+-- 测试空表的JOIN
+### 2025-10-14 08:27:19.003
+select * from join_table_empty_1 inner join join_table_empty_2 on join_table_empty_1.id=join_table_empty_2.id;
+### 2025-10-14 08:27:37.419
+-- 测试简单的多表查询
+### 2025-10-14 08:27:37.426
+select * from join_table_1, join_table_2 where join_table_1.id=join_table_2.id;
+### 2025-10-14 08:28:00.855
+-- JOIN功能的替代解决方案
+### 2025-10-14 08:28:00.859
+-- 使用多表查询 + WHERE条件实现INNER JOIN效果
+### 2025-10-14 08:28:00.859
+-- 查看各表数据
+### 2025-10-14 08:28:00.861
+-- 方案1：使用表前缀的多表查询（推荐）
+### 2025-10-14 08:28:00.861
+select join_table_1.id, join_table_1.name, join_table_2.age from join_table_1, join_table_2 where join_table_1.id=join_table_2.id;
+### 2025-10-14 08:28:00.861
+-- 方案2：如果上面失败，使用子查询方式
+### 2025-10-14 08:28:00.861
+select * from join_table_1 where id in (select id from join_table_2);
+### 2025-10-14 08:31:47.818
+-- 测试修复后的INNER JOIN功能
+### 2025-10-14 08:31:47.822
+-- 查看测试数据
+### 2025-10-14 08:31:47.823
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 08:42:43.363
+-- 测试标准INNER JOIN语法
+### 2025-10-14 08:42:43.367
+-- 设置使用hash join
+### 2025-10-14 08:42:43.367
+-- 测试用户要求的INNER JOIN查询
+### 2025-10-14 08:42:43.367
+select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 08:43:01.278
+-- 基于官方测试用例的简化版本
+### 2025-10-14 08:43:01.286
+CREATE TABLE join_table_test1(id int, name char);
+### 2025-10-14 08:43:01.286
+CREATE TABLE join_table_test2(id int, num int);
+### 2025-10-14 08:43:01.286
+INSERT INTO join_table_test1 VALUES (1, 'a');
+### 2025-10-14 08:43:01.286
+INSERT INTO join_table_test1 VALUES (2, 'b');
+### 2025-10-14 08:43:01.287
+INSERT INTO join_table_test2 VALUES (1, 2);
+### 2025-10-14 08:43:01.287
+INSERT INTO join_table_test2 VALUES (2, 15);
+### 2025-10-14 08:43:01.287
+select * from join_table_test1;
+### 2025-10-14 08:43:01.287
+select * from join_table_test2;
+### 2025-10-14 08:43:01.288
+-- 尝试INNER JOIN
+### 2025-10-14 08:43:01.288
+select * from join_table_test1 inner join join_table_test2 on join_table_test1.id = join_table_test2.id;
+### 2025-10-14 08:43:20.640
+-- 最小化INNER JOIN测试
+### 2025-10-14 08:43:20.644
+create table a(id int);
+### 2025-10-14 08:43:20.654
+create table b(id int);
+### 2025-10-14 08:43:20.665
+insert into a values(1);
+### 2025-10-14 08:43:20.665
+insert into b values(1);
+### 2025-10-14 08:43:20.665
+select * from a inner join b on a.id=b.id;
+### 2025-10-14 08:44:15.982
+-- 验证JOIN核心能力的完整测试
+### 2025-10-14 08:44:15.986
+-- 1. 设置hash join配置
+### 2025-10-14 08:44:15.986
+set hash_join = 1;
+### 2025-10-14 08:44:15.987
+-- 2. 查看原始数据
+### 2025-10-14 08:44:15.987
+select * from join_table_1;
+### 2025-10-14 08:44:15.988
+select * from join_table_2;
+### 2025-10-14 08:44:15.988
+-- 3. 执行多表查询（实现JOIN效果）
+### 2025-10-14 08:44:15.988
+select * from join_table_1, join_table_2;
+### 2025-10-14 08:44:15.993
+-- 4. 验证Explain功能
+### 2025-10-14 08:44:15.994
+-- 5. 测试不同的hash_join设置
+### 2025-10-14 08:44:15.994
+set hash_join = 0;
+### 2025-10-14 08:44:15.994
+explain select * from join_table_1, join_table_2;
+### 2025-10-14 08:47:10.202
+-- 测试修改后DELETE语句是否还能工作
+### 2025-10-14 08:47:10.207
+delete from t_basic where id=2;
+### 2025-10-14 08:49:50.555
+-- 测试用户要求的目标表达式查询
+### 2025-10-14 08:49:50.561
+-- 基于EXPRESSION终极实现文档
+### 2025-10-14 08:49:50.561
+-- 首先确保DELETE功能正常
+### 2025-10-14 08:49:50.561
+delete from t_basic where id=1;
+### 2025-10-14 08:49:50.563
 select * from t_basic;
-### 2025-10-14 08:18:09.357
+### 2025-10-14 08:49:50.563
+-- 创建测试数据（如果表不存在）
+### 2025-10-14 08:49:50.563
+create table exp_table(id int, col1 int, col2 int, col3 float, col4 float);
+### 2025-10-14 08:49:50.564
+-- 查看数据
+### 2025-10-14 08:49:50.565
+-- 测试基本表达式计算
+### 2025-10-14 08:49:50.565
+select 8/9*4, 8+5.76*5.76/4;
+### 2025-10-14 08:50:35.548
+-- 测试修复后的聚合函数
+### 2025-10-14 08:50:35.553
+-- 确保DELETE功能正常
+### 2025-10-14 08:50:35.553
+delete from exp_table where id=1;
+### 2025-10-14 08:50:35.554
+-- 测试基本聚合函数
+### 2025-10-14 08:50:35.554
+select count(*) from exp_table;
+### 2025-10-14 08:50:35.555
+select count(id) from exp_table;
+### 2025-10-14 08:50:35.555
+select min(col1), max(col1), avg(col2) from exp_table;
+### 2025-10-14 08:50:35.556
+-- 测试目标查询1：复杂WHERE条件
+### 2025-10-14 08:50:35.556
+select count(id) from exp_table where 8/9*4 < 8+col3*col3/4;
+### 2025-10-14 08:50:35.557
+-- 测试目标查询2：复杂聚合表达式
+### 2025-10-14 08:50:35.557
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>8/2;
+### 2025-10-14 08:51:59.243
+-- 调试测试数据和计算过程
+### 2025-10-14 08:51:59.250
+-- 清理并重新创建测试数据
+### 2025-10-14 08:51:59.251
+delete from exp_table;
+### 2025-10-14 08:51:59.252
+-- 插入您提到的测试数据
+### 2025-10-14 08:51:59.252
+insert into exp_table VALUES (7, 1, 7, 5.76, 2.67);
+### 2025-10-14 08:51:59.252
+insert into exp_table VALUES (9, 6, 8, 30, 6.79);
+### 2025-10-14 08:51:59.253
+insert into exp_table VALUES (4, 2, 1, 4.59, 9.38);
+### 2025-10-14 08:51:59.253
+-- 查看最终数据
+### 2025-10-14 08:51:59.253
+select * from exp_table;
+### 2025-10-14 08:51:59.254
+-- 逐步验证计算过程
+### 2025-10-14 08:51:59.254
+-- 第一个查询：select count(id) from exp_table where 8/9*4 < 8+col3*col3/4;
+### 2025-10-14 08:51:59.254
+-- 先测试左侧表达式：8/9*4
+### 2025-10-14 08:51:59.254
+select 8/9*4;
+### 2025-10-14 08:51:59.254
+-- 测试右侧表达式对每条记录：8+col3*col3/4
+### 2025-10-14 08:51:59.255
+select id, col3, col3*col3, col3*col3/4, 8+col3*col3/4 from exp_table;
+### 2025-10-14 08:51:59.256
+-- 测试完整的WHERE条件
+### 2025-10-14 08:51:59.256
+select id, 8/9*4 as left_expr, 8+col3*col3/4 as right_expr from exp_table;
+### 2025-10-14 08:51:59.256
+-- 第二个查询：select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>8/2;
+### 2025-10-14 08:51:59.257
+-- 先测试WHERE条件：id<>8/2
+### 2025-10-14 08:51:59.257
+select 8/2;
+### 2025-10-14 08:51:59.258
+-- 测试各个聚合函数
+### 2025-10-14 08:51:59.258
+select min(col1) from exp_table where id<>4;
+### 2025-10-14 08:51:59.258
+select avg(col2) from exp_table where id<>4;
+### 2025-10-14 08:51:59.260
+select max(col3) from exp_table where id<>4;
+### 2025-10-14 08:51:59.261
+select max(col4) from exp_table where id<>4;
+### 2025-10-14 08:51:59.261
+-- 测试分步计算
+### 2025-10-14 08:51:59.262
+select avg(col2)*max(col3) from exp_table where id<>4;
+### 2025-10-14 08:51:59.262
+select max(col4) - 5 from exp_table where id<>4;
+### 2025-10-14 08:52:24.465
+-- 调试完整计算过程
+### 2025-10-14 08:52:24.473
+-- 查看过滤后的数据
+### 2025-10-14 08:52:24.473
+select * from exp_table where id<>4;
+### 2025-10-14 08:52:24.476
+-- 手动计算预期结果
+### 2025-10-14 08:52:24.476
+-- min(col1) = 1
+### 2025-10-14 08:52:24.476
+-- avg(col2) = (7+8)/2 = 7.5  
+### 2025-10-14 08:52:24.476
+-- max(col3) = 30
+### 2025-10-14 08:52:24.476
+-- max(col4) = 6.79
+### 2025-10-14 08:52:24.476
+-- max(col4) - 5 = 1.79
+### 2025-10-14 08:52:24.476
+-- avg(col2)*max(col3) = 7.5*30 = 225
+### 2025-10-14 08:52:24.476
+-- avg(col2)*max(col3)/(max(col4) - 5) = 225/1.79 = 125.70
+### 2025-10-14 08:52:24.476
+-- min(col1) + 125.70 = 1 + 125.70 = 126.70
+### 2025-10-14 08:52:24.476
+-- 测试完整表达式
+### 2025-10-14 08:52:24.476
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>4;
+### 2025-10-14 08:52:24.477
+-- 分步验证计算
+### 2025-10-14 08:52:24.478
+select 225/1.79;
+### 2025-10-14 08:52:24.478
+select 1 + 225/1.79;
+### 2025-10-14 08:52:48.060
+-- 全面的表达式功能测试
+### 2025-10-14 08:52:48.066
+-- 1. 测试基本算术运算优先级
+### 2025-10-14 08:52:48.066
+select 2+3*4, (2+3)*4, 2*3+4, 2*(3+4);
+### 2025-10-14 08:52:48.067
+-- 2. 测试浮点数精度
+### 2025-10-14 08:52:48.067
+select 1/3, 2/3, 1.0/3.0, 10/3;
+### 2025-10-14 08:52:48.068
+-- 3. 测试复杂嵌套表达式
+### 2025-10-14 08:52:48.068
+select ((1+2)*3)+4, 1+(2*(3+4)), (1+2)*(3+4);
+### 2025-10-14 08:52:48.068
+-- 4. 测试聚合函数的不同参数
+### 2025-10-14 08:52:48.068
+select count(*), count(id), count(col1) from exp_table;
+### 2025-10-14 08:52:48.069
+-- 5. 测试WHERE条件中的复杂表达式
+### 2025-10-14 08:52:48.069
+select * from exp_table where col1*2 > col2;
+### 2025-10-14 08:52:48.070
+select * from exp_table where col3/col4 > 1;
+### 2025-10-14 08:52:48.071
+-- 6. 测试聚合函数中的表达式
+### 2025-10-14 08:52:48.071
+select sum(col1*col2), avg(col3+col4), max(col1+col2) from exp_table;
+### 2025-10-14 08:52:48.072
+-- 7. 测试运算符优先级在WHERE中的表现
+### 2025-10-14 08:52:48.072
+select * from exp_table where 2+3*4 > 10;
+### 2025-10-14 08:52:48.072
+select * from exp_table where (2+3)*4 > 10;
+### 2025-10-14 08:52:48.073
+-- 8. 测试除零和NULL处理
+### 2025-10-14 08:52:48.073
+select 10/0, 5/0.0, NULL+1, NULL*2;
+### 2025-10-14 08:52:48.073
+-- 9. 测试不同数据类型的计算
+### 2025-10-14 08:52:48.073
+select id+col3, col1*col4, col2-col3 from exp_table;
+### 2025-10-14 08:52:48.074
+-- 10. 测试复杂的聚合表达式组合
+### 2025-10-14 08:52:48.074
+select min(col1)*max(col2), avg(col3)/avg(col4), sum(col1)/count(*) from exp_table;
+### 2025-10-14 08:52:48.074
 exit;
