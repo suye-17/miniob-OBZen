@@ -92,8 +92,6 @@ SELECT 'A. Original Query (col1 - col2 > -0)' AS test_name, *FROM exp_tableWHERE
 SELECT id FROM exp_table WHERE -0 < col1 - col2 ORDER BY id;
 ### 2025-10-13 17:46:25.401
 CREATE TABLE exp_table (id INT, col1 INT, col2 INT, col3 FLOAT, col4 FLOAT);
-### 2025-10-13 17:48:56.711
-SELECT * FROM exp_table;
 ### 2025-10-13 17:52:56.819
 -- 测试基本SELECT语句
 ### 2025-10-13 17:52:56.819
@@ -661,11 +659,7 @@ insert into exp_table VALUES (4, 7, 4, 6.71, 6.92);
 ### 2025-10-14 09:07:44.750
 insert into exp_table VALUES (2, 2, 9, 8.28, 7.46);
 ### 2025-10-14 09:07:44.751
--- 测试第一个查询
-### 2025-10-14 09:07:44.751
 select count(id) from exp_table where 7/8*7 < 5+col3*col3/1;
-### 2025-10-14 09:07:44.752
--- 测试第二个查询
 ### 2025-10-14 09:07:44.753
 select min(col1)+avg(col2)*max(col3)/(max(col4) - 8) from exp_table where id<>7/6;
 ### 2025-10-14 09:07:44.754
@@ -688,8 +682,6 @@ insert into like_table VALUES (2, 'orange');
 insert into like_table VALUES (3, 'pineapple');
 ### 2025-10-14 09:08:52.869
 insert into like_table VALUES (6, 'lemon');
-### 2025-10-14 09:08:52.869
--- 查看数据
 ### 2025-10-14 09:08:52.869
 select * from like_table;
 ### 2025-10-14 09:08:52.870
@@ -764,8 +756,6 @@ SET hash_join = 1;
 EXPLAIN SELECT * FROM join_table_1, join_table_2;
 ### 2025-10-14 09:23:30.019
 -- 简单的JOIN功能测试
-### 2025-10-14 09:23:30.026
--- 查看当前数据
 ### 2025-10-14 09:23:30.027
 -- 执行笛卡尔积查询（这个应该工作）
 ### 2025-10-14 09:25:45.973
@@ -894,5 +884,103 @@ SELECT table2_age FROM join_result_table;
 SELECT * FROM join_table_1
 ### 2025-10-14 09:40:11.664
 SELECT * FROM join_table_2
-### 2025-10-14 09:40:11.673
+### 2025-10-14 10:08:27.521
+-- 测试表达式功能是否正常
+### 2025-10-14 10:08:27.529
+-- 查看表数据
+### 2025-10-14 10:08:27.530
+-- 测试第一个查询
+### 2025-10-14 10:08:27.530
+select count(id) from exp_table where 1/5*8 < 4+col3*col3/8;
+### 2025-10-14 10:08:27.532
+-- 测试第二个查询
+### 2025-10-14 10:08:48.009
+-- 调试表达式数据问题
+### 2025-10-14 10:08:48.017
+-- 查看完整的exp_table数据
+### 2025-10-14 10:08:48.017
+-- 测试WHERE条件
+### 2025-10-14 10:08:48.017
+SELECT * FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:08:48.018
+-- 分步计算聚合值
+### 2025-10-14 10:09:08.893
+-- 恢复原始测试数据
+### 2025-10-14 10:09:08.900
+-- 清空现有数据
+### 2025-10-14 10:09:08.900
+DELETE FROM exp_table;
+### 2025-10-14 10:09:08.901
+-- 插入您提到的原始数据
+### 2025-10-14 10:09:08.901
+INSERT INTO exp_table VALUES (1, 7, 2, 6.52, 9.08);
+### 2025-10-14 10:09:08.901
+INSERT INTO exp_table VALUES (1, 9, 7, 8.34, 5.0);
+### 2025-10-14 10:09:08.901
+INSERT INTO exp_table VALUES (1, 6, 4, 5.77, 8.55);
+### 2025-10-14 10:09:08.901
+-- 查看恢复的数据
+### 2025-10-14 10:09:08.902
+-- 重新测试查询
+### 2025-10-14 10:09:08.902
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 4) from exp_table where id<>5/2;
+### 2025-10-14 10:11:54.007
+-- 手动验证每一步计算
+### 2025-10-14 10:11:54.015
+-- 查看当前数据
+### 2025-10-14 10:11:54.015
+-- 验证WHERE条件：id<>5/2 即 id<>2.5
+### 2025-10-14 10:11:54.016
+SELECT 5/2;
+### 2025-10-14 10:11:54.016
+SELECT * FROM exp_table WHERE id<>2.5;
+### 2025-10-14 10:11:54.017
+-- 分别计算每个聚合函数
+### 2025-10-14 10:11:54.020
+-- 计算分母
+### 2025-10-14 10:11:54.020
+SELECT max(col4) - 4 FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:11:54.020
+-- 完整计算
+### 2025-10-14 10:13:12.919
+-- 测试运算符优先级问题
+### 2025-10-14 10:13:12.927
+-- 查看数据
+### 2025-10-14 10:13:12.927
+SELECT * FROM exp_table;
+### 2025-10-14 10:13:12.927
+-- 分步计算，检查优先级
+### 2025-10-14 10:13:12.927
+-- 原表达式：min(col1)+avg(col2)*max(col3)/(max(col4) - 4)
+### 2025-10-14 10:13:12.927
+-- 步骤1：计算各个聚合函数
+### 2025-10-14 10:13:12.927
+SELECT min(col1) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.928
+SELECT avg(col2) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.929
+SELECT max(col3) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.929
+SELECT max(col4) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.930
+-- 步骤2：测试乘法和除法的优先级
+### 2025-10-14 10:13:12.930
+-- avg(col2)*max(col3) 应该先算
+### 2025-10-14 10:13:12.930
+SELECT avg(col2)*max(col3) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.931
+-- 步骤3：测试除法
+### 2025-10-14 10:13:12.931
+-- (avg(col2)*max(col3))/(max(col4) - 4)
+### 2025-10-14 10:13:12.931
+SELECT avg(col2)*max(col3)/(max(col4) - 4) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.931
+-- 步骤4：最终加法
+### 2025-10-14 10:13:12.931
+SELECT min(col1)+avg(col2)*max(col3)/(max(col4) - 4) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.932
+-- 测试可能的错误理解：是否是 (min(col1)+avg(col2))*max(col3)/(max(col4) - 4)
+### 2025-10-14 10:13:12.932
+SELECT (min(col1)+avg(col2))*max(col3)/(max(col4) - 4) FROM exp_table WHERE id<>5/2;
+### 2025-10-14 10:13:12.933
 exit;
