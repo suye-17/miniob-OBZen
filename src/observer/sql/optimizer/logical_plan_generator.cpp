@@ -118,21 +118,46 @@ RC bind_comparison_expression(unique_ptr<Expression> &expr, const vector<Table *
 {
   auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
 
-  // 获取并绑定左右子表达式
-  auto left  = comparison_expr->left()->copy();
-  auto right = comparison_expr->right()->copy();
+  // 特殊处理：IN/NOT IN操作可能没有right表达式（使用值列表）
+  if (comparison_expr->comp() == IN_OP || comparison_expr->comp() == NOT_IN_OP) {
+    // IN操作只需要绑定左侧表达式
+    if (comparison_expr->left() != nullptr) {
+      auto left = comparison_expr->left()->copy();
+      RC rc = bind_expression_fields(left, tables);
+      if (rc != RC::SUCCESS)
+        return rc;
+      // 不需要重新构造，IN操作的值列表已经在ComparisonExpr中
+    }
+    return RC::SUCCESS;
+  }
+
+  // 特殊处理：EXISTS/NOT EXISTS操作没有左侧表达式，只有子查询
+  if (comparison_expr->comp() == EXISTS_OP || comparison_expr->comp() == NOT_EXISTS_OP) {
+    // EXISTS操作不需要绑定任何表达式，子查询会在执行时处理
+    return RC::SUCCESS;
+  }
+
+  // 获取并绑定左右子表达式  
+  // 检查right是否为nullptr
+  if (!comparison_expr->right()) {
+    LOG_WARN("Comparison expression has no right side");
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  unique_ptr<Expression> left = comparison_expr->left()->copy();
+  unique_ptr<Expression> right_copy = comparison_expr->right()->copy();
 
   RC rc = bind_expression_fields(left, tables);
   if (rc != RC::SUCCESS)
     return rc;
 
-  rc = bind_expression_fields(right, tables);
+  rc = bind_expression_fields(right_copy, tables);
   if (rc != RC::SUCCESS)
     return rc;
 
   // 重新构造比较表达式
   CompOp comp_op = comparison_expr->comp();
-  expr           = make_unique<ComparisonExpr>(comp_op, std::move(left), std::move(right));
+  expr           = make_unique<ComparisonExpr>(comp_op, std::move(left), std::move(right_copy));
   return RC::SUCCESS;
 }
 

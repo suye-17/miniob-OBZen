@@ -100,6 +100,11 @@ ConditionSqlNode::ConditionSqlNode(const ConditionSqlNode& other) {
   right_value = other.right_value;
   is_expression_condition = other.is_expression_condition;
   
+  // 拷贝值列表（用于IN操作）
+  right_values = other.right_values;
+  has_subquery = other.has_subquery;
+  subquery = other.subquery;  // 注意：这是浅拷贝，如果需要深拷贝请修改
+  
   // 深拷贝表达式
   if (other.left_expression) {
     left_expression = other.left_expression->copy().release();
@@ -135,6 +140,11 @@ ConditionSqlNode& ConditionSqlNode::operator=(const ConditionSqlNode& other) {
     right_attr = other.right_attr;
     right_value = other.right_value;
     is_expression_condition = other.is_expression_condition;
+    
+    // 拷贝值列表（用于IN操作）
+    right_values = other.right_values;
+    has_subquery = other.has_subquery;
+    subquery = other.subquery;  // 注意：这是浅拷贝
     
     // 深拷贝表达式
     if (other.left_expression) {

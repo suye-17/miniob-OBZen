@@ -272,6 +272,113 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, unordered_map<st
 
   filter_unit = new FilterUnit;
 
+  // 优先处理IN/NOT IN操作（可能使用旧架构）
+  if (comp == IN_OP || comp == NOT_IN_OP) {
+    LOG_INFO("Detected IN/NOT IN operation: comp=%d, left_is_attr=%d, right_values_size=%zu, has_subquery=%d", 
+            static_cast<int>(comp), condition.left_is_attr, condition.right_values.size(), condition.has_subquery);
+    
+    // IN/NOT IN操作使用旧的架构（left_is_attr, right_values或subquery）
+    if (condition.left_is_attr) {
+      // 创建左侧字段对象
+      FilterObj left_obj;
+      const char *table_name = condition.left_attr.relation_name.c_str();
+      const char *field_name = condition.left_attr.attribute_name.c_str();
+      
+      LOG_INFO("IN operation field: table=%s, field=%s", table_name, field_name);
+      
+      Table *table = nullptr;
+      const FieldMeta *field = nullptr;
+      RelAttrSqlNode attr_node;
+      attr_node.relation_name = table_name;
+      attr_node.attribute_name = field_name;
+      rc = get_table_and_field(db, default_table, tables, attr_node, table, field);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("cannot find attr for IN operation");
+        delete filter_unit;
+        return rc;
+      }
+      
+      Field filter_field(table, field);
+      
+      // 创建IN表达式：区分值列表形式和子查询形式
+      Expression* in_expr = nullptr;
+      
+      if (condition.has_subquery && condition.subquery != nullptr) {
+        // 子查询形式的IN操作
+        LOG_INFO("Creating IN/NOT IN with subquery: field=%s.%s", table->name(), field->name());
+        
+        // 创建子查询的副本
+        unique_ptr<SelectSqlNode> subquery_copy = SelectSqlNode::create_copy(condition.subquery);
+        
+        in_expr = new ComparisonExpr(comp, 
+                                    unique_ptr<Expression>(new FieldExpr(filter_field)),
+                                    std::move(subquery_copy));
+      } else {
+        // 值列表形式的IN操作
+        LOG_INFO("Creating IN/NOT IN with value list: field=%s.%s, value_list_size=%zu", 
+                table->name(), field->name(), condition.right_values.size());
+        for (size_t i = 0; i < condition.right_values.size() && i < 5; i++) {
+          LOG_INFO("  value[%zu] = %s (type=%d)", i, 
+                  condition.right_values[i].to_string().c_str(), 
+                  static_cast<int>(condition.right_values[i].attr_type()));
+        }
+        
+        in_expr = new ComparisonExpr(comp, 
+                                    unique_ptr<Expression>(new FieldExpr(filter_field)),
+                                    condition.right_values);
+      }
+      
+      // 将IN表达式包装为一个NO_OP条件（单表达式条件）
+      FilterObj in_obj;
+      in_obj.init_expression(in_expr);
+      
+      // 使用handle_single_expression_condition来处理
+      FilterObj dummy_right;
+      rc = handle_single_expression_condition(in_obj, dummy_right, filter_unit);
+      if (rc != RC::SUCCESS) {
+        delete filter_unit;
+        return rc;
+      }
+      
+      return RC::SUCCESS;
+    }
+  }
+
+  // 处理EXISTS/NOT EXISTS操作
+  if (comp == EXISTS_OP || comp == NOT_EXISTS_OP) {
+    LOG_INFO("Detected EXISTS/NOT EXISTS operation: comp=%d, has_subquery=%d", 
+            static_cast<int>(comp), condition.has_subquery);
+    
+    if (condition.has_subquery && condition.subquery != nullptr) {
+      // 创建EXISTS表达式
+      LOG_INFO("Creating EXISTS/NOT EXISTS with subquery");
+      
+      // 创建子查询的副本
+      unique_ptr<SelectSqlNode> subquery_copy = SelectSqlNode::create_copy(condition.subquery);
+      
+      // EXISTS操作不需要左侧表达式，直接创建ComparisonExpr
+      Expression* exists_expr = new ComparisonExpr(comp, nullptr, std::move(subquery_copy));
+      
+      // 将EXISTS表达式包装为一个NO_OP条件（单表达式条件）
+      FilterObj exists_obj;
+      exists_obj.init_expression(exists_expr);
+      
+      // 使用handle_single_expression_condition来处理
+      FilterObj dummy_right;
+      rc = handle_single_expression_condition(exists_obj, dummy_right, filter_unit);
+      if (rc != RC::SUCCESS) {
+        delete filter_unit;
+        return rc;
+      }
+      
+      return RC::SUCCESS;
+    } else {
+      LOG_WARN("EXISTS/NOT EXISTS operation without subquery");
+      delete filter_unit;
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+
   // 统一架构：所有条件都是表达式条件
   if (condition.is_expression_condition) {
     FilterObj left_obj, right_obj;

@@ -763,6 +763,12 @@ expression:
     | MIN LBRACE expression RBRACE {
       $$ = create_aggregate_expression("min", $3, sql_string, &@$);
     }
+    | LBRACE select_stmt RBRACE {
+      // 子查询表达式
+      $$ = new SubqueryExpr(SelectSqlNode::create_copy(&($2->selection)));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $2;
+    }
     ;
 
 rel_attr:
@@ -916,7 +922,12 @@ condition:
       $$->left_attr = *$1;
       $$->right_is_attr = 0;
       $$->comp = IN_OP;
-      $$->right_values = *$4;
+      
+      // 复制值列表
+      if ($4 != nullptr) {
+        $$->right_values = *$4;
+        printf("DEBUG: IN operation parsed with %zu values\n", $$->right_values.size());
+      }
 
       delete $1;
       delete $4;
@@ -928,7 +939,12 @@ condition:
       $$->left_attr = *$1;
       $$->right_is_attr = 0;
       $$->comp = NOT_IN_OP;
-      $$->right_values = *$5;
+      
+      // 复制值列表
+      if ($5 != nullptr) {
+        $$->right_values = *$5;
+        printf("DEBUG: NOT IN operation parsed with %zu values\n", $$->right_values.size());
+      }
 
       delete $1;
       delete $5;
@@ -1020,13 +1036,20 @@ condition:
     }
     | rel_attr comp_op LBRACE select_stmt RBRACE
     {
+      printf("DEBUG: scalar subquery condition rel_attr comp_op (SELECT ...)\n");
       $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
       $$->comp = $2;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
+      
+      // 转换为统一的表达式架构
+      RelAttrSqlNode *node = $1;
+      $$->left_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      $$->right_expression = new SubqueryExpr(SelectSqlNode::create_copy(&($4->selection)));
+      $$->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      $$->has_subquery = false;  // 现在使用表达式架构，不需要这个标志
 
       delete $1;
       delete $4;

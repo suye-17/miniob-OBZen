@@ -286,6 +286,11 @@ RC ComparisonExpr::compare_with_value_list(const Value &left, const vector<Value
 
 RC ComparisonExpr::try_get_value(Value &cell) const
 {
+  // EXISTS/NOT EXISTS操作不能在编译时求值，因为需要执行子查询
+  if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+    return RC::INVALID_ARGUMENT;
+  }
+
   // 尝试计算常量表达式的值
   Value left_value, right_value;
 
@@ -325,8 +330,42 @@ RC ComparisonExpr::try_get_value(Value &cell) const
 
 RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
+  LOG_DEBUG("ComparisonExpr::get_value - comp_=%d, has_value_list_=%d, has_subquery_=%d", 
+           static_cast<int>(comp_), has_value_list_, has_subquery_);
+  
   Value left_value;
   Value right_value;
+
+  // EXISTS/NOT EXISTS操作不需要左侧表达式
+  if (comp_ == EXISTS_OP || comp_ == NOT_EXISTS_OP) {
+    // 直接跳到子查询处理逻辑
+    bool bool_value = false;
+    
+    if (has_subquery_) {
+      // 处理子查询
+      vector<Value> subquery_results;
+      
+      // 实际执行子查询
+      RC subquery_rc = execute_subquery(subquery_results);
+      if (subquery_rc != RC::SUCCESS) {
+        LOG_ERROR("子查询执行失败! rc=%s", strrc(subquery_rc));
+        return subquery_rc;
+      }
+      
+      // EXISTS/NOT_EXISTS 子查询：只检查结果集是否为空
+      LOG_DEBUG("Processing EXISTS/NOT_EXISTS subquery, result count=%zu", subquery_results.size());
+      bool exists = !subquery_results.empty();
+      bool_value = (comp_ == EXISTS_OP) ? exists : !exists;
+      LOG_DEBUG("EXISTS result: exists=%s, final_result=%s", 
+               exists ? "TRUE" : "FALSE", bool_value ? "TRUE" : "FALSE");
+    } else {
+      LOG_WARN("EXISTS/NOT EXISTS operation without subquery");
+      return RC::INVALID_ARGUMENT;
+    }
+    
+    value.set_boolean(bool_value);
+    return RC::SUCCESS;
+  }
 
   RC rc = left_->get_value(tuple, left_value);
   if (rc != RC::SUCCESS) {
@@ -341,22 +380,16 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     return RC::SUCCESS;
   }
 
-  // 对于其他比较操作，需要获取右操作数
-  rc = right_->get_value(tuple, right_value);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
-    return rc;
-  }
-
-  // SQL标准：NULL与任何值比较都返回NULL
-  if (left_value.is_null() || right_value.is_null()) {
-    value.set_null();
-    return RC::SUCCESS;
-  }
-
   bool bool_value = false;
 
-  if (has_subquery_) {
+  // 优先处理IN/NOT IN的值列表形式
+  if (has_value_list_) {
+    // 使用值列表进行比较（IN/NOT IN操作）
+    LOG_DEBUG("Processing IN/NOT IN with value list, left_value=%s, value_list_size=%zu", 
+             left_value.to_string().c_str(), right_values_.size());
+    rc = compare_with_value_list(left_value, right_values_, bool_value);
+    LOG_DEBUG("IN/NOT IN result: %s", bool_value ? "TRUE" : "FALSE");
+  } else if (has_subquery_) {
     // 处理子查询
     vector<Value> subquery_results;
     
@@ -437,15 +470,6 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
         }
       }
     }
-  } else if (has_value_list_) {
-    // 使用值列表进行比较（IN/NOT IN操作）
-    Value left_value;
-    rc = left_->get_value(tuple, left_value);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
-      return rc;
-    }
-    rc = compare_with_value_list(left_value, right_values_, bool_value);
   } else if (right_) {
     // 使用右侧表达式进行比较
     Value left_value;
@@ -1171,9 +1195,31 @@ AttrType SubqueryExpr::value_type() const
   if (subquery_ && !subquery_->expressions.empty()) {
     const auto& first_expr = subquery_->expressions[0];
     
+    // 处理聚合函数表达式
+    if (first_expr->type() == ExprType::UNBOUND_AGGREGATION) {
+      const UnboundAggregateExpr* agg_expr = static_cast<const UnboundAggregateExpr*>(first_expr.get());
+      
+      // 根据聚合函数类型确定返回类型
+      string agg_name = agg_expr->aggregate_name();
+      if (agg_name == "count") {
+        cached_value_type_ = AttrType::INTS;
+      } else if (agg_name == "avg") {
+        cached_value_type_ = AttrType::FLOATS;
+      } else if (agg_name == "sum") {
+        // SUM的类型取决于输入类型，但通常是数值类型
+        cached_value_type_ = AttrType::FLOATS;  // 默认为FLOATS以支持更广泛的数值
+      } else if (agg_name == "max" || agg_name == "min") {
+        // MAX/MIN的类型与输入字段类型相同，需要进一步分析
+        // 暂时返回FLOATS作为通用数值类型
+        cached_value_type_ = AttrType::FLOATS;
+      } else {
+        cached_value_type_ = AttrType::FLOATS;  // 默认数值类型
+      }
+      type_cached_ = true;
+      return cached_value_type_;
+    }
     // 如果是UnboundFieldExpr，需要绑定后才能确定类型
-    // 这里我们暂时返回UNDEFINED，实际类型会在绑定后确定
-    if (first_expr->type() == ExprType::UNBOUND_FIELD) {
+    else if (first_expr->type() == ExprType::UNBOUND_FIELD) {
       const UnboundFieldExpr* field_expr = static_cast<const UnboundFieldExpr*>(first_expr.get());
       
       // 如果有session上下文，尝试获取实际类型
@@ -1192,15 +1238,25 @@ AttrType SubqueryExpr::value_type() const
           }
         }
       }
-    } else {
-      // 对于其他类型的表达式，直接获取其类型
-      cached_value_type_ = first_expr->value_type();
+      // 如果无法确定具体类型，返回通用数值类型
+      cached_value_type_ = AttrType::FLOATS;
       type_cached_ = true;
       return cached_value_type_;
+    } else {
+      // 对于其他类型的表达式，直接获取其类型
+      AttrType expr_type = first_expr->value_type();
+      if (expr_type != AttrType::UNDEFINED) {
+        cached_value_type_ = expr_type;
+        type_cached_ = true;
+        return cached_value_type_;
+      }
     }
   }
   
-  return AttrType::UNDEFINED;
+  // 如果无法确定类型，返回通用数值类型而不是UNDEFINED
+  cached_value_type_ = AttrType::FLOATS;
+  type_cached_ = true;
+  return cached_value_type_;
 }
 
 int SubqueryExpr::value_length() const

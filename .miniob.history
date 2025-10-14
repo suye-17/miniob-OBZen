@@ -348,8 +348,6 @@ select join_table_1.id, join_table_1.name, join_table_2.age from join_table_1, j
 select * from join_table_1 where id in (select id from join_table_2);
 ### 2025-10-14 08:31:47.818
 -- 测试修复后的INNER JOIN功能
-### 2025-10-14 08:31:47.822
--- 查看测试数据
 ### 2025-10-14 08:42:43.363
 -- 测试标准INNER JOIN语法
 ### 2025-10-14 08:42:43.367
@@ -434,8 +432,6 @@ select 8/9*4, 8+5.76*5.76/4;
 -- 确保DELETE功能正常
 ### 2025-10-14 08:50:35.553
 delete from exp_table where id=1;
-### 2025-10-14 08:50:35.554
--- 测试基本聚合函数
 ### 2025-10-14 08:50:35.554
 select count(*) from exp_table;
 ### 2025-10-14 08:50:35.555
@@ -783,8 +779,6 @@ SELECT * FROM join_table_1, join_table_2;
 ### 2025-10-14 09:32:56.755
 CREATE TABLE test_delete_check(id int, name char(20));
 ### 2025-10-14 09:32:56.764
--- 插入测试数据
-### 2025-10-14 09:32:56.764
 INSERT INTO test_delete_check VALUES (1, 'test1');
 ### 2025-10-14 09:32:56.765
 INSERT INTO test_delete_check VALUES (2, 'test2');
@@ -804,8 +798,6 @@ DELETE FROM test_delete_check WHERE id = 2;
 DELETE FROM test_delete_check WHERE name = 'test3';
 ### 2025-10-14 09:32:56.767
 -- 查看最终结果
-### 2025-10-14 09:32:56.767
-SELECT * FROM test_delete_check;
 ### 2025-10-14 09:36:30.963
 -- 测试正确的JOIN查询
 ### 2025-10-14 09:36:30.969
@@ -937,8 +929,6 @@ SELECT max(col4) - 4 FROM exp_table WHERE id<>5/2;
 ### 2025-10-14 10:13:12.919
 -- 测试运算符优先级问题
 ### 2025-10-14 10:13:12.927
--- 查看数据
-### 2025-10-14 10:13:12.927
 SELECT * FROM exp_table;
 ### 2025-10-14 10:13:12.927
 -- 分步计算，检查优先级
@@ -1026,5 +1016,383 @@ Select join_table_2.age from join_table_1 inner join join_table_2 on join_table_
 -- 测试完整查询
 ### 2025-10-14 10:31:16.945
 Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
-### 2025-10-14 10:31:16.945
+### 2025-10-14 10:35:52.289
+-- 测试IN操作是否正常工作
+### 2025-10-14 10:35:52.302
+-- 查看ssq_1表的数据
+### 2025-10-14 10:35:52.302
+-- 测试简单的IN操作
+### 2025-10-14 10:36:13.443
+-- 创建子查询测试表
+### 2025-10-14 10:36:13.456
+CREATE TABLE ssq_1(id int, col1 int, feat1 float);
+### 2025-10-14 10:36:13.471
+CREATE TABLE ssq_2(id int, col2 int, feat2 float);
+### 2025-10-14 10:36:13.488
+-- 插入测试数据
+### 2025-10-14 10:36:13.488
+INSERT INTO ssq_1 VALUES (78, 33, 6.63);
+### 2025-10-14 10:36:13.489
+INSERT INTO ssq_1 VALUES (35, 74, 36.65);
+### 2025-10-14 10:36:13.490
+INSERT INTO ssq_1 VALUES (62, 6, 13.51);
+### 2025-10-14 10:36:13.490
+INSERT INTO ssq_1 VALUES (2, 39, 4.57);
+### 2025-10-14 10:36:13.490
+INSERT INTO ssq_2 VALUES (1, 1, 5.5);
+### 2025-10-14 10:36:13.490
+INSERT INTO ssq_2 VALUES (2, 2, 10.2);
+### 2025-10-14 10:36:13.491
+-- 查看创建的数据
+### 2025-10-14 10:36:13.491
+SELECT * FROM ssq_2;
+### 2025-10-14 11:02:33.020
+-- 测试CALC表达式功能
+### 2025-10-14 11:02:33.031
+-- 测试基本算术表达式
+### 2025-10-14 11:02:33.031
+CALC 1+2;
+### 2025-10-14 11:02:33.031
+CALC 3*(10-3);
+### 2025-10-14 11:02:33.032
+CALC 1+2, 3*4, 5-1;
+### 2025-10-14 11:02:33.032
+-- 测试负号
+### 2025-10-14 11:02:33.032
+CALC -5;
+### 2025-10-14 11:02:33.032
+CALC -(1+2);
+### 2025-10-14 11:02:55.617
+-- 测试SELECT中的表达式支持
+### 2025-10-14 11:02:55.636
+-- 测试常量表达式
+### 2025-10-14 11:02:55.636
+SELECT 1+2;
+### 2025-10-14 11:02:55.637
+SELECT 3*4, 5-1;
+### 2025-10-14 11:02:55.637
+-- 测试字段表达式
+### 2025-10-14 11:02:55.637
+SELECT id, col1 FROM ssq_1;
+### 2025-10-14 11:02:55.638
+-- 测试混合表达式
+### 2025-10-14 11:02:55.638
+SELECT id+1, col1*2 FROM ssq_1;
+### 2025-10-14 11:03:31.314
+-- 测试简单的WHERE条件（应该工作）
+### 2025-10-14 11:03:31.314
+SELECT * FROM ssq_1 WHERE id = 78;
+### 2025-10-14 11:03:31.316
+-- 测试IN操作（问题所在）
+### 2025-10-14 11:09:48.092
+-- 调试IN操作的语法解析
+### 2025-10-14 12:09:17.272
+-- 调试IN表达式的执行
+### 2025-10-14 12:09:17.284
+SELECT * FROM ssq_1;
+### 2025-10-14 12:09:17.285
+-- 测试一个肯定存在的值
+### 2025-10-14 12:09:17.285
+SELECT * FROM ssq_1 WHERE id IN (78);
+### 2025-10-14 12:09:17.288
+-- 测试多个值，包含存在的
+### 2025-10-14 12:09:17.288
+SELECT * FROM ssq_1 WHERE id IN (35, 78, 62, 2, 62);
+### 2025-10-14 12:11:08.935
+-- 测试IN功能
+### 2025-10-14 12:11:08.949
+-- 测试您的具体查询
+### 2025-10-14 12:11:08.949
+select * from ssq_1 where id in (35,78,62,2,62);
+### 2025-10-14 12:11:48.767
+-- 完整的子查询功能测试
+### 2025-10-14 12:11:48.781
+-- 1. 测试IN操作
+### 2025-10-14 12:11:48.781
+SELECT * FROM ssq_1 WHERE id IN (35,78,62,2,62);
+### 2025-10-14 12:11:48.784
+-- 2. 测试NOT IN操作
+### 2025-10-14 12:11:48.784
+SELECT * FROM ssq_1 WHERE id NOT IN (35, 78);
+### 2025-10-14 12:11:48.787
+-- 3. 测试DELETE功能（确保没有被破坏）
+### 2025-10-14 12:11:48.787
+DELETE FROM test_delete_check WHERE id = 1;
+### 2025-10-14 12:11:48.788
+SELECT * FROM test_delete_check;
+### 2025-10-14 12:11:48.788
+-- 4. 测试复杂表达式（确保没有被破坏）
+### 2025-10-14 12:11:48.788
+SELECT id+1, col1*2 FROM ssq_1 WHERE id > 30;
+### 2025-10-14 12:11:48.789
+-- 5. 测试LIKE功能（确保没有被破坏）
+### 2025-10-14 12:11:48.789
+SELECT * FROM like_table WHERE name LIKE '%a%';
+### 2025-10-14 12:13:41.359
+-- 简单子查询完整功能测试
+### 2025-10-14 12:13:41.359
+-- 准备测试数据
+### 2025-10-14 12:13:41.359
+CREATE TABLE subq_main(id int, name char(20), score float);
+### 2025-10-14 12:13:41.378
+CREATE TABLE subq_ref(ref_id int, value int);
+### 2025-10-14 12:13:41.392
+INSERT INTO subq_main VALUES (1, 'Alice', 85.5);
+### 2025-10-14 12:13:41.392
+INSERT INTO subq_main VALUES (2, 'Bob', 92.0);
+### 2025-10-14 12:13:41.393
+INSERT INTO subq_main VALUES (3, 'Charlie', 78.5);
+### 2025-10-14 12:13:41.393
+INSERT INTO subq_main VALUES (4, 'David', 88.0);
+### 2025-10-14 12:13:41.393
+INSERT INTO subq_main VALUES (5, 'Eve', 95.5);
+### 2025-10-14 12:13:41.394
+INSERT INTO subq_ref VALUES (1, 100);
+### 2025-10-14 12:13:41.394
+INSERT INTO subq_ref VALUES (2, 200);
+### 2025-10-14 12:13:41.394
+INSERT INTO subq_ref VALUES (3, 300);
+### 2025-10-14 12:13:41.394
+-- 功能1: 测试IN操作（值列表形式）
+### 2025-10-14 12:13:41.394
+SELECT * FROM subq_main WHERE id IN (1, 3, 5);
+### 2025-10-14 12:13:41.396
+-- 功能2: 测试NOT IN操作（值列表形式）
+### 2025-10-14 12:13:41.396
+SELECT * FROM subq_main WHERE id NOT IN (2, 4);
+### 2025-10-14 12:13:41.397
+-- 功能3: 测试IN操作（子查询形式）
+### 2025-10-14 12:13:41.398
+-- 功能4: 测试NOT IN操作（子查询形式）
+### 2025-10-14 12:13:41.398
+SELECT * FROM subq_main WHERE id NOT IN (SELECT ref_id FROM subq_ref);
+### 2025-10-14 12:13:41.399
+-- 功能5: 测试标量子查询比较运算
+### 2025-10-14 12:13:41.399
+SELECT * FROM subq_main WHERE score > (SELECT 80.0);
+### 2025-10-14 12:13:41.399
+-- 功能6: 测试子查询中的聚合函数
+### 2025-10-14 12:13:41.400
+SELECT * FROM subq_main WHERE score > (SELECT MIN(score) FROM subq_main);
+### 2025-10-14 12:13:41.400
+-- ========================================
+### 2025-10-14 12:13:41.400
+-- 功能7: 测试子查询返回单个值的比较
+### 2025-10-14 12:13:41.400
+-- ========================================  
+### 2025-10-14 12:13:41.400
+SELECT * FROM subq_main WHERE id = (SELECT ref_id FROM subq_ref WHERE value = 200);
+### 2025-10-14 16:41:27.823
+-- 测试子查询形式的IN操作
+### 2025-10-14 16:41:27.871
+-- 查看数据
+### 2025-10-14 16:41:27.890
+-- 测试IN子查询
+### 2025-10-14 16:41:27.906
 exit;
+### 2025-10-14 16:43:15.136
+-- 测试EXISTS和NOT EXISTS功能
+### 2025-10-14 16:50:07.282
+-- 简单测试EXISTS功能
+### 2025-10-14 16:54:55.949
+-- 测试标量子查询功能
+### 2025-10-14 16:54:55.967
+-- 测试标量子查询：查找id等于子查询返回值的记录
+### 2025-10-14 16:54:55.967
+SELECT * FROM subq_main WHERE id = (SELECT ref_id FROM subq_ref WHERE value = 100);
+### 2025-10-14 16:54:55.968
+-- 测试标量子查询：查找score大于子查询返回的平均值的记录
+### 2025-10-14 16:54:55.968
+-- 测试标量子查询：查找id小于子查询返回的最大值的记录
+### 2025-10-14 16:54:55.968
+SELECT * FROM subq_main WHERE id < (SELECT MAX(ref_id) FROM subq_ref);
+### 2025-10-14 16:56:35.714
+-- 综合测试所有子查询功能
+### 2025-10-14 16:56:35.730
+-- 1. IN操作（值列表形式）✅
+### 2025-10-14 16:56:35.730
+SELECT * FROM subq_main WHERE id IN (1, 2, 3);
+### 2025-10-14 16:56:35.732
+-- 2. NOT IN操作（值列表形式）✅
+### 2025-10-14 16:56:35.732
+SELECT * FROM subq_main WHERE id NOT IN (4, 5);
+### 2025-10-14 16:56:35.733
+-- 3. IN操作（子查询形式）✅
+### 2025-10-14 16:56:35.733
+SELECT * FROM subq_main WHERE id IN (SELECT ref_id FROM subq_ref);
+### 2025-10-14 16:56:35.735
+-- 4. NOT IN操作（子查询形式）✅
+### 2025-10-14 16:56:35.735
+SELECT * FROM subq_main WHERE id NOT IN (SELECT ref_id FROM subq_ref WHERE ref_id > 2);
+### 2025-10-14 16:56:35.736
+-- 5. EXISTS操作✅
+### 2025-10-14 16:56:35.738
+-- 6. NOT EXISTS操作✅
+### 2025-10-14 16:56:35.738
+SELECT * FROM subq_main WHERE NOT EXISTS (SELECT 1 FROM subq_ref WHERE ref_id = 999);
+### 2025-10-14 16:57:19.721
+-- 最终功能验证
+### 2025-10-14 16:57:19.743
+SELECT * FROM subq_main WHERE id IN (1, 2);
+### 2025-10-14 16:57:19.746
+SELECT * FROM subq_main WHERE EXISTS (SELECT 1 FROM subq_ref WHERE ref_id = 1);
+### 2025-10-14 17:01:22.274
+-- 测试简单的标量子查询
+### 2025-10-14 17:02:32.479
+-- 测试解析调试
+### 2025-10-14 17:02:32.500
+SELECT * FROM subq_main WHERE 1 = 1;
+### 2025-10-14 17:04:17.591
+-- 测试子查询表达式解析
+### 2025-10-14 17:04:17.618
+SELECT * FROM subq_main WHERE id = (SELECT 1);
+### 2025-10-14 17:04:43.390
+-- 测试基本聚合函数
+### 2025-10-14 17:04:43.393
+-- 测试聚合函数子查询
+### 2025-10-14 17:04:43.395
+SELECT * FROM subq_main WHERE id < (SELECT MIN(ref_id) FROM subq_ref);
+### 2025-10-14 17:07:03.287
+-- 测试聚合函数子查询功能
+### 2025-10-14 17:08:02.984
+-- 全面测试聚合函数子查询功能
+### 2025-10-14 17:08:03.002
+-- 查看测试数据
+### 2025-10-14 17:08:03.006
+-- 测试所有聚合函数的基本功能
+### 2025-10-14 17:08:03.006
+SELECT COUNT(*) FROM subq_ref;
+### 2025-10-14 17:08:03.007
+SELECT SUM(value) FROM subq_ref;
+### 2025-10-14 17:08:03.007
+SELECT AVG(value) FROM subq_ref;
+### 2025-10-14 17:08:03.008
+SELECT MAX(ref_id) FROM subq_ref;
+### 2025-10-14 17:08:03.009
+SELECT MIN(ref_id) FROM subq_ref;
+### 2025-10-14 17:08:03.009
+-- 测试聚合函数子查询 - COUNT
+### 2025-10-14 17:08:03.009
+SELECT * FROM subq_main WHERE id <= (SELECT COUNT(*) FROM subq_ref);
+### 2025-10-14 17:08:03.012
+-- 测试聚合函数子查询 - SUM
+### 2025-10-14 17:08:03.012
+SELECT * FROM subq_main WHERE score < (SELECT SUM(value) FROM subq_ref);
+### 2025-10-14 17:08:03.014
+-- 测试聚合函数子查询 - AVG
+### 2025-10-14 17:08:03.014
+SELECT * FROM subq_main WHERE score > (SELECT AVG(value) FROM subq_ref);
+### 2025-10-14 17:08:03.016
+-- 测试聚合函数子查询 - MAX
+### 2025-10-14 17:08:03.016
+SELECT * FROM subq_main WHERE id = (SELECT MAX(ref_id) FROM subq_ref);
+### 2025-10-14 17:08:03.018
+-- 测试聚合函数子查询 - MIN
+### 2025-10-14 17:08:03.018
+SELECT * FROM subq_main WHERE id >= (SELECT MIN(ref_id) FROM subq_ref);
+### 2025-10-14 17:08:03.021
+-- 测试复杂聚合函数子查询
+### 2025-10-14 17:08:03.021
+SELECT * FROM subq_main WHERE score BETWEEN (SELECT MIN(value) FROM subq_ref) AND (SELECT MAX(value) FROM subq_ref);
+### 2025-10-14 17:11:10.525
+-- 测试不同类型值的比较
+### 2025-10-14 17:11:10.569
+-- 查看测试数据和类型
+### 2025-10-14 17:11:10.570
+SELECT * FROM subq_ref;
+### 2025-10-14 17:11:10.570
+-- 测试整数与浮点数比较
+### 2025-10-14 17:11:10.571
+SELECT * FROM subq_main WHERE id = 1.0;
+### 2025-10-14 17:11:10.571
+SELECT * FROM subq_main WHERE score = 85;
+### 2025-10-14 17:11:10.572
+-- 测试聚合函数返回类型与字段类型比较
+### 2025-10-14 17:11:10.574
+SELECT * FROM subq_main WHERE score = (SELECT AVG(value) FROM subq_ref);  -- FLOAT vs FLOAT
+### 2025-10-14 17:11:10.575
+SELECT * FROM subq_main WHERE id = (SELECT AVG(value) FROM subq_ref);  -- INT vs FLOAT
+### 2025-10-14 17:11:10.586
+-- 测试字符串与数值比较（如果支持）
+### 2025-10-14 17:11:10.586
+SELECT * FROM subq_main WHERE name = '1';
+### 2025-10-14 17:11:10.587
+SELECT * FROM subq_main WHERE id = '1';
+### 2025-10-14 17:15:19.721
+-- 全面测试类型转换功能
+### 2025-10-14 17:15:19.743
+-- 查看测试数据和字段类型
+### 2025-10-14 17:15:19.744
+SELECT * FROM subq_main;  -- id(INT), name(CHARS), score(FLOAT)
+### 2025-10-14 17:15:19.746
+SELECT * FROM subq_ref;   -- ref_id(INT), value(INT)
+### 2025-10-14 17:15:19.747
+-- 1. 数值类型之间的转换测试
+### 2025-10-14 17:15:19.748
+-- INT vs FLOAT
+### 2025-10-14 17:15:19.748
+SELECT * FROM subq_main WHERE id = 1.0;        -- INT字段 vs FLOAT常量
+### 2025-10-14 17:15:19.751
+SELECT * FROM subq_main WHERE score = 85;      -- FLOAT字段 vs INT常量
+### 2025-10-14 17:15:19.752
+SELECT * FROM subq_main WHERE id = 1.5;        -- INT字段 vs FLOAT常量（应该无匹配）
+### 2025-10-14 17:15:19.754
+-- 2. 字符串与数值类型转换测试
+### 2025-10-14 17:15:19.754
+SELECT * FROM subq_main WHERE id = '1';        -- INT字段 vs STRING常量
+### 2025-10-14 17:15:19.755
+SELECT * FROM subq_main WHERE score = '85.5';  -- FLOAT字段 vs STRING常量
+### 2025-10-14 17:15:19.757
+SELECT * FROM subq_main WHERE name = '1';      -- STRING字段 vs STRING常量
+### 2025-10-14 17:15:19.759
+-- 3. 聚合函数结果类型转换测试
+### 2025-10-14 17:15:19.760
+-- COUNT(INT) vs INT字段
+### 2025-10-14 17:15:19.760
+SELECT * FROM subq_main WHERE id = (SELECT COUNT(*) FROM subq_ref);
+### 2025-10-14 17:15:19.762
+-- AVG(FLOAT) vs FLOAT字段  
+### 2025-10-14 17:15:19.762
+SELECT * FROM subq_main WHERE score = (SELECT AVG(value) FROM subq_ref);
+### 2025-10-14 17:15:19.764
+-- AVG(FLOAT) vs INT字段
+### 2025-10-14 17:15:19.764
+SELECT * FROM subq_main WHERE id = (SELECT AVG(value) FROM subq_ref);
+### 2025-10-14 17:15:19.766
+-- COUNT(INT) vs FLOAT字段
+### 2025-10-14 17:15:19.766
+SELECT * FROM subq_main WHERE score = (SELECT COUNT(*) FROM subq_ref);
+### 2025-10-14 17:15:19.766
+-- 4. 复杂类型转换测试
+### 2025-10-14 17:15:19.766
+-- 字符串字段与数值子查询比较
+### 2025-10-14 17:15:19.766
+SELECT * FROM subq_main WHERE name = (SELECT CAST(ref_id AS CHAR) FROM subq_ref WHERE ref_id = 1);
+### 2025-10-14 17:15:19.766
+-- 5. 边界情况测试
+### 2025-10-14 17:15:19.766
+SELECT * FROM subq_main WHERE id > 0.5;        -- INT vs 小数
+### 2025-10-14 17:15:19.767
+SELECT * FROM subq_main WHERE score < 100;     -- FLOAT vs INT
+### 2025-10-14 17:15:59.899
+-- 简化的类型转换测试
+### 2025-10-14 17:15:59.919
+-- 基础数据
+### 2025-10-14 17:15:59.919
+SELECT * FROM subq_main;
+### 2025-10-14 17:15:59.920
+-- 测试数值类型转换
+### 2025-10-14 17:15:59.920
+SELECT * FROM subq_main WHERE id = 1.0;        -- INT vs FLOAT
+### 2025-10-14 17:15:59.923
+SELECT * FROM subq_main WHERE score = 85;      -- FLOAT vs INT
+### 2025-10-14 17:15:59.926
+SELECT * FROM subq_main WHERE id = '1';        -- INT vs STRING
+### 2025-10-14 17:15:59.927
+SELECT * FROM subq_main WHERE score = '85.5';  -- FLOAT vs STRING
+### 2025-10-14 17:15:59.928
+-- 测试聚合函数类型转换
+### 2025-10-14 17:15:59.928
+SELECT * FROM subq_main WHERE id = (SELECT COUNT(*) FROM subq_ref);  -- INT vs INT
+### 2025-10-14 17:15:59.930
+SELECT * FROM subq_main WHERE score = (SELECT COUNT(*) FROM subq_ref);  -- FLOAT vs INT
