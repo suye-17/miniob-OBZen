@@ -356,8 +356,6 @@ select * from join_table_1 where id in (select id from join_table_2);
 -- 测试修复后的INNER JOIN功能
 ### 2025-10-14 08:31:47.822
 -- 查看测试数据
-### 2025-10-14 08:31:47.823
-Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
 ### 2025-10-14 08:42:43.363
 -- 测试标准INNER JOIN语法
 ### 2025-10-14 08:42:43.367
@@ -408,10 +406,6 @@ select * from a inner join b on a.id=b.id;
 set hash_join = 1;
 ### 2025-10-14 08:44:15.987
 -- 2. 查看原始数据
-### 2025-10-14 08:44:15.987
-select * from join_table_1;
-### 2025-10-14 08:44:15.988
-select * from join_table_2;
 ### 2025-10-14 08:44:15.988
 -- 3. 执行多表查询（实现JOIN效果）
 ### 2025-10-14 08:44:15.993
@@ -430,8 +424,6 @@ delete from t_basic where id=2;
 -- 测试用户要求的目标表达式查询
 ### 2025-10-14 08:49:50.561
 -- 基于EXPRESSION终极实现文档
-### 2025-10-14 08:49:50.561
--- 首先确保DELETE功能正常
 ### 2025-10-14 08:49:50.561
 delete from t_basic where id=1;
 ### 2025-10-14 08:49:50.563
@@ -464,10 +456,6 @@ select min(col1), max(col1), avg(col2) from exp_table;
 select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>8/2;
 ### 2025-10-14 08:51:59.243
 -- 调试测试数据和计算过程
-### 2025-10-14 08:51:59.250
--- 清理并重新创建测试数据
-### 2025-10-14 08:51:59.251
-delete from exp_table;
 ### 2025-10-14 08:51:59.252
 -- 插入您提到的测试数据
 ### 2025-10-14 08:51:59.252
@@ -478,8 +466,6 @@ insert into exp_table VALUES (9, 6, 8, 30, 6.79);
 insert into exp_table VALUES (4, 2, 1, 4.59, 9.38);
 ### 2025-10-14 08:51:59.253
 -- 查看最终数据
-### 2025-10-14 08:51:59.253
-select * from exp_table;
 ### 2025-10-14 08:51:59.254
 -- 逐步验证计算过程
 ### 2025-10-14 08:51:59.254
@@ -544,8 +530,6 @@ select * from exp_table where id<>4;
 -- min(col1) + 125.70 = 1 + 125.70 = 126.70
 ### 2025-10-14 08:52:24.476
 -- 测试完整表达式
-### 2025-10-14 08:52:24.477
--- 分步验证计算
 ### 2025-10-14 08:52:24.478
 select 225/1.79;
 ### 2025-10-14 08:52:24.478
@@ -612,10 +596,6 @@ insert into like_table VALUES (3, 'fig');
 -- 测试LIKE语句
 ### 2025-10-14 08:57:48.637
 -- 全面测试LIKE功能
-### 2025-10-14 08:57:48.643
--- 查看数据
-### 2025-10-14 08:57:48.644
-select * from like_table;
 ### 2025-10-14 08:57:48.644
 -- 测试各种LIKE模式
 ### 2025-10-14 08:57:48.645
@@ -666,5 +646,79 @@ SELECT * FROM date_table WHERE u_date>'2020-1-20';
 -- 6. 多表查询验证
 ### 2025-10-14 08:58:14.352
 select * from join_table_1, join_table_2;
-### 2025-10-14 08:58:14.354
+### 2025-10-14 09:03:49.707
+-- 调试INNER JOIN解析问题
+### 2025-10-14 09:03:49.714
+-- 首先确保DELETE功能正常
+### 2025-10-14 09:03:49.714
+delete from exp_table where id=7;
+### 2025-10-14 09:03:49.715
+-- 查看JOIN表数据
+### 2025-10-14 09:03:49.715
+select * from join_table_1;
+### 2025-10-14 09:03:49.716
+select * from join_table_2;
+### 2025-10-14 09:03:49.717
+-- 测试INNER JOIN语句
+### 2025-10-14 09:06:01.544
+-- 测试INNER JOIN和DELETE功能
+### 2025-10-14 09:06:01.552
+-- 1. 首先确保DELETE功能正常
+### 2025-10-14 09:06:01.552
+delete from exp_table where id=9;
+### 2025-10-14 09:06:01.553
+-- 2. 测试INNER JOIN语句
+### 2025-10-14 09:06:01.554
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 09:07:44.742
+-- 测试您提到的新表达式查询
+### 2025-10-14 09:07:44.749
+-- 清理并重新创建测试数据
+### 2025-10-14 09:07:44.749
+delete from exp_table;
+### 2025-10-14 09:07:44.750
+insert into exp_table VALUES (7, 8, 4, 9.61, 8.9);
+### 2025-10-14 09:07:44.750
+insert into exp_table VALUES (4, 7, 4, 6.71, 6.92);
+### 2025-10-14 09:07:44.750
+insert into exp_table VALUES (2, 2, 9, 8.28, 7.46);
+### 2025-10-14 09:07:44.750
+select * from exp_table;
+### 2025-10-14 09:07:44.751
+-- 测试第一个查询
+### 2025-10-14 09:07:44.751
+select count(id) from exp_table where 7/8*7 < 5+col3*col3/1;
+### 2025-10-14 09:07:44.752
+-- 测试第二个查询
+### 2025-10-14 09:07:44.753
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 8) from exp_table where id<>7/6;
+### 2025-10-14 09:07:44.754
+-- 分步验证计算
+### 2025-10-14 09:07:44.754
+select 7/8*7;
+### 2025-10-14 09:07:44.754
+select 7/6;
+### 2025-10-14 09:08:52.867
+-- 重新创建like_table数据
+### 2025-10-14 09:08:52.867
+delete from like_table;
+### 2025-10-14 09:08:52.868
+insert into like_table VALUES (0, 'fig');
+### 2025-10-14 09:08:52.868
+insert into like_table VALUES (1, 'apple');
+### 2025-10-14 09:08:52.868
+insert into like_table VALUES (2, 'orange');
+### 2025-10-14 09:08:52.868
+insert into like_table VALUES (3, 'pineapple');
+### 2025-10-14 09:08:52.869
+insert into like_table VALUES (6, 'lemon');
+### 2025-10-14 09:08:52.869
+-- 查看数据
+### 2025-10-14 09:08:52.869
+select * from like_table;
+### 2025-10-14 09:08:52.870
+-- 测试NOT LIKE功能
+### 2025-10-14 09:08:52.870
+SELECT * FROM like_table WHERE name NOT LIKE '%a%';
+### 2025-10-14 09:08:52.870
 exit;

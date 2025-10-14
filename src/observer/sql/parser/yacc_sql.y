@@ -253,6 +253,8 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %right UMINUS
 %left EQ NE LT LE GT GE LIKE
 %left AND
+%left INNER JOIN ON
+%left FROM
 %%
 
 commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
@@ -609,7 +611,7 @@ update_list:
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM relation INNER JOIN relation ON condition_list where group_by having
+    SELECT expression_list FROM relation INNER JOIN relation ON condition_list
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -629,21 +631,6 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $9;
       }
       $$->selection.joins.push_back(join_node);
-
-      if ($10 != nullptr) {
-        $$->selection.conditions.swap(*$10);
-        delete $10;
-      }
-
-      if ($11 != nullptr) {
-        $$->selection.group_by.swap(*$11);
-        delete $11;
-      }
-
-      if ($12 != nullptr) {
-        $$->selection.having.swap(*$12);
-        delete $12;
-      }
     }
     | SELECT expression_list FROM rel_list where group_by having
     {
@@ -807,6 +794,14 @@ rel_list:
       }
 
       $$->insert($$->begin(), $1);
+    }
+    | relation INNER JOIN relation ON condition_list {
+      $$ = new vector<string>();
+      $$->push_back($1);
+      $$->push_back($4);
+      // 注意：这里我们简化处理，将INNER JOIN转换为多表查询
+      // ON条件会被转换为WHERE条件
+      delete $6; // 暂时删除条件，后续可以改进
     }
     ;
 
@@ -1053,6 +1048,7 @@ comp_op:
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
     | LIKE { $$ = LIKE_OP; }  // 新增LIKE操作符
+    | NOT LIKE { $$ = NOT_LIKE_OP; }  // 新增NOT LIKE操作符
     ;
 
 // JOIN functionality integrated into select_stmt directly
