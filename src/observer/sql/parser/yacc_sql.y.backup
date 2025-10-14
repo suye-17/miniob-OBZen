@@ -224,6 +224,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <update_list>         update_list
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
+%type <sql_node>            join_stmt
 %type <sql_node>            insert_stmt
 %type <sql_node>            update_stmt
 %type <sql_node>            delete_stmt
@@ -253,7 +254,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %right UMINUS
 %left EQ NE LT LE GT GE LIKE
 %left AND
-%left FROM COMMA
+%left FROM
 %left INNER JOIN ON
 %%
 
@@ -267,6 +268,7 @@ commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
 command_wrapper:
     calc_stmt
   | select_stmt
+  | join_stmt
   | insert_stmt
   | update_stmt
   | delete_stmt
@@ -610,6 +612,29 @@ update_list:
       // 不需要 free($3)，sql_parse 会统一清理 allocated_strings
     }
     ;
+join_stmt:        /*  独立的JOIN语句解析规则 */
+    SELECT expression_list FROM relation INNER JOIN relation ON condition_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+
+      // 添加主表
+      $$->selection.relations.push_back($4);
+      
+      // 添加JOIN表
+      JoinSqlNode join_node;
+      join_node.type = JoinType::INNER_JOIN;
+      join_node.relation = $7;
+      if ($9 != nullptr) {
+        join_node.conditions.swap(*$9);
+        delete $9;
+      }
+      $$->selection.joins.push_back(join_node);
+    }
+    ;
 
 select_stmt:        /*  select 语句的语法解析树*/
     SELECT expression_list FROM rel_list where group_by having
@@ -653,27 +678,6 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $4;
       }
       // 不设置relations，表示没有FROM子句
-    }
-    | SELECT expression_list FROM relation INNER JOIN relation ON condition
-    {
-      $$ = new ParsedSqlNode(SCF_SELECT);
-      if ($2 != nullptr) {
-        $$->selection.expressions.swap(*$2);
-        delete $2;
-      }
-
-      // 添加主表
-      $$->selection.relations.push_back($4);
-      
-      // 添加JOIN表
-      JoinSqlNode join_node;
-      join_node.type = JoinType::INNER_JOIN;
-      join_node.relation = $7;
-      if ($9 != nullptr) {
-        join_node.conditions.push_back(*$9);
-        delete $9;
-      }
-      $$->selection.joins.push_back(join_node);
     }
     | SELECT expression_list  /* 不带FROM和WHERE子句的SELECT语句 */
     {

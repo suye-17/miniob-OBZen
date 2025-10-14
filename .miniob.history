@@ -762,8 +762,6 @@ EXPLAIN SELECT * FROM join_table_1, join_table_2;
 -- 最终测试INNER JOIN语法
 ### 2025-10-14 09:25:45.989
 -- 测试独立的INNER JOIN语句
-### 2025-10-14 09:25:45.989
-Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
 ### 2025-10-14 09:26:46.186
 SELECT * FROM join_table_1, join_table_2 WHERE join_table_1.id=join_table_2.id;
 ### 2025-10-14 09:26:59.913
@@ -835,8 +833,6 @@ SELECT join_table_2.age FROM join_table_2;
 ### 2025-10-14 09:37:59.180
 -- 测试1：选择只存在于一个表中的字段
 ### 2025-10-14 09:37:59.180
-SELECT age FROM join_table_1, join_table_2;
-### 2025-10-14 09:37:59.180
 -- 测试2：选择存在于两个表中的字段（应该会有歧义）
 ### 2025-10-14 09:37:59.180
 SELECT id FROM join_table_1, join_table_2;
@@ -880,10 +876,6 @@ SELECT * FROM join_result_table;
 -- 查询特定字段（模拟您的原始查询）
 ### 2025-10-14 09:39:15.035
 SELECT table2_age FROM join_result_table;
-### 2025-10-14 09:40:11.395
-SELECT * FROM join_table_1
-### 2025-10-14 09:40:11.664
-SELECT * FROM join_table_2
 ### 2025-10-14 10:08:27.521
 -- 测试表达式功能是否正常
 ### 2025-10-14 10:08:27.529
@@ -982,5 +974,57 @@ SELECT min(col1)+avg(col2)*max(col3)/(max(col4) - 4) FROM exp_table WHERE id<>5/
 -- 测试可能的错误理解：是否是 (min(col1)+avg(col2))*max(col3)/(max(col4) - 4)
 ### 2025-10-14 10:13:12.932
 SELECT (min(col1)+avg(col2))*max(col3)/(max(col4) - 4) FROM exp_table WHERE id<>5/2;
-### 2025-10-14 10:13:12.933
+### 2025-10-14 10:15:54.481
+-- 测试预处理器是否正常工作
+### 2025-10-14 10:15:54.489
+SELECT age FROM join_table_1, join_table_2;
+### 2025-10-14 10:16:42.234
+SELECT * FROM join_table_1
+### 2025-10-14 10:16:42.511
+SELECT * FROM join_table_2
+### 2025-10-14 10:24:11.721
+-- 检查表结构
+### 2025-10-14 10:24:11.729
+SELECT * FROM join_table_1 LIMIT 1;
+### 2025-10-14 10:24:11.730
+SELECT * FROM join_table_2 LIMIT 1;
+### 2025-10-14 10:27:48.646
+-- 测试官方的INNER JOIN用例
+### 2025-10-14 10:27:48.662
+-- 创建官方测试表结构
+### 2025-10-14 10:27:48.662
+CREATE TABLE test_join_1(id int, name char);
+### 2025-10-14 10:27:48.677
+CREATE TABLE test_join_2(id int, num int);
+### 2025-10-14 10:27:48.691
+-- 插入官方测试数据
+### 2025-10-14 10:27:48.691
+INSERT INTO test_join_1 VALUES (1, 'a');
+### 2025-10-14 10:27:48.693
+INSERT INTO test_join_1 VALUES (2, 'b');
+### 2025-10-14 10:27:48.693
+INSERT INTO test_join_1 VALUES (3, 'c');
+### 2025-10-14 10:27:48.694
+INSERT INTO test_join_2 VALUES (1, 2);
+### 2025-10-14 10:27:48.694
+INSERT INTO test_join_2 VALUES (2, 15);
+### 2025-10-14 10:27:48.694
+-- 测试官方的INNER JOIN语法
+### 2025-10-14 10:27:48.694
+Select * from test_join_1 inner join test_join_2 on test_join_1.id=test_join_2.id;
+### 2025-10-14 10:31:16.932
+-- 最终测试INNER JOIN
+### 2025-10-14 10:31:16.945
+-- 测试您的原始查询
+### 2025-10-14 10:31:16.945
+Select join_table_1.age from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 10:31:16.945
+-- 测试正确的查询
+### 2025-10-14 10:31:16.945
+Select join_table_2.age from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 10:31:16.945
+-- 测试完整查询
+### 2025-10-14 10:31:16.945
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 10:31:16.945
 exit;
