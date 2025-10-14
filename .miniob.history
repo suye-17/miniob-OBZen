@@ -240,8 +240,6 @@ INSERT INTO date_table VALUES (9,'2038-01-19');
 SELECT * FROM date_table;
 ### 2025-10-14 08:22:07.162
 -- 测试用户要求的日期比较查询
-### 2025-10-14 08:22:07.162
-SELECT * FROM date_table WHERE u_date>'2020-1-20';
 ### 2025-10-14 08:22:07.163
 -- 测试其他日期比较操作
 ### 2025-10-14 08:22:07.163
@@ -416,8 +414,6 @@ select * from join_table_1;
 select * from join_table_2;
 ### 2025-10-14 08:44:15.988
 -- 3. 执行多表查询（实现JOIN效果）
-### 2025-10-14 08:44:15.988
-select * from join_table_1, join_table_2;
 ### 2025-10-14 08:44:15.993
 -- 4. 验证Explain功能
 ### 2025-10-14 08:44:15.994
@@ -439,13 +435,9 @@ delete from t_basic where id=2;
 ### 2025-10-14 08:49:50.561
 delete from t_basic where id=1;
 ### 2025-10-14 08:49:50.563
-select * from t_basic;
-### 2025-10-14 08:49:50.563
 -- 创建测试数据（如果表不存在）
 ### 2025-10-14 08:49:50.563
 create table exp_table(id int, col1 int, col2 int, col3 float, col4 float);
-### 2025-10-14 08:49:50.564
--- 查看数据
 ### 2025-10-14 08:49:50.565
 -- 测试基本表达式计算
 ### 2025-10-14 08:49:50.565
@@ -466,8 +458,6 @@ select count(id) from exp_table;
 select min(col1), max(col1), avg(col2) from exp_table;
 ### 2025-10-14 08:50:35.556
 -- 测试目标查询1：复杂WHERE条件
-### 2025-10-14 08:50:35.556
-select count(id) from exp_table where 8/9*4 < 8+col3*col3/4;
 ### 2025-10-14 08:50:35.557
 -- 测试目标查询2：复杂聚合表达式
 ### 2025-10-14 08:50:35.557
@@ -554,8 +544,6 @@ select * from exp_table where id<>4;
 -- min(col1) + 125.70 = 1 + 125.70 = 126.70
 ### 2025-10-14 08:52:24.476
 -- 测试完整表达式
-### 2025-10-14 08:52:24.476
-select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>4;
 ### 2025-10-14 08:52:24.477
 -- 分步验证计算
 ### 2025-10-14 08:52:24.478
@@ -608,5 +596,75 @@ select id+col3, col1*col4, col2-col3 from exp_table;
 -- 10. 测试复杂的聚合表达式组合
 ### 2025-10-14 08:52:48.074
 select min(col1)*max(col2), avg(col3)/avg(col4), sum(col1)/count(*) from exp_table;
-### 2025-10-14 08:52:48.074
+### 2025-10-14 08:57:14.189
+-- 测试LIKE功能
+### 2025-10-14 08:57:14.195
+CREATE TABLE like_table(id int, name char(30));
+### 2025-10-14 08:57:14.195
+insert into like_table VALUES (0, 'apple');
+### 2025-10-14 08:57:14.195
+insert into like_table VALUES (1, 'banana');
+### 2025-10-14 08:57:14.195
+insert into like_table VALUES (2, 'coconut');
+### 2025-10-14 08:57:14.195
+insert into like_table VALUES (3, 'fig');
+### 2025-10-14 08:57:14.196
+-- 测试LIKE语句
+### 2025-10-14 08:57:48.637
+-- 全面测试LIKE功能
+### 2025-10-14 08:57:48.643
+-- 查看数据
+### 2025-10-14 08:57:48.644
+select * from like_table;
+### 2025-10-14 08:57:48.644
+-- 测试各种LIKE模式
+### 2025-10-14 08:57:48.645
+SELECT * FROM like_table WHERE name LIKE 'a%';     -- 前缀匹配：apple
+### 2025-10-14 08:57:48.646
+SELECT * FROM like_table WHERE name LIKE '%a%';    -- 包含匹配：apple, banana
+### 2025-10-14 08:57:48.646
+SELECT * FROM like_table WHERE name LIKE '%t';     -- 后缀匹配：coconut
+### 2025-10-14 08:57:48.647
+SELECT * FROM like_table WHERE name LIKE 'f__';    -- 单字符通配符：fig
+### 2025-10-14 08:57:48.648
+SELECT * FROM like_table WHERE name LIKE 'b_n%';   -- 混合通配符：banana
+### 2025-10-14 08:57:48.648
+-- 测试精确匹配
+### 2025-10-14 08:57:48.648
+SELECT * FROM like_table WHERE name LIKE 'fig';    -- 精确匹配：fig
+### 2025-10-14 08:57:48.649
+-- 测试空模式和特殊情况
+### 2025-10-14 08:57:48.649
+SELECT * FROM like_table WHERE name LIKE '%';      -- 匹配所有
+### 2025-10-14 08:57:48.651
+SELECT * FROM like_table WHERE name LIKE '';       -- 匹配空字符串
+### 2025-10-14 08:58:14.341
+-- 最终功能验证测试
+### 2025-10-14 08:58:14.346
+-- 1. DELETE功能验证
+### 2025-10-14 08:58:14.347
+delete from t_basic where id=3;
+### 2025-10-14 08:58:14.347
+select * from t_basic;
+### 2025-10-14 08:58:14.348
+-- 2. 复杂表达式验证
+### 2025-10-14 08:58:14.348
+select count(id) from exp_table where 8/9*4 < 8+col3*col3/4;
+### 2025-10-14 08:58:14.349
+-- 3. 聚合函数表达式验证
+### 2025-10-14 08:58:14.349
+select min(col1)+avg(col2)*max(col3)/(max(col4) - 5) from exp_table where id<>4;
+### 2025-10-14 08:58:14.350
+-- 4. LIKE功能验证
+### 2025-10-14 08:58:14.350
+SELECT * FROM like_table WHERE name LIKE 'c%';
+### 2025-10-14 08:58:14.351
+-- 5. 日期比较验证
+### 2025-10-14 08:58:14.351
+SELECT * FROM date_table WHERE u_date>'2020-1-20';
+### 2025-10-14 08:58:14.352
+-- 6. 多表查询验证
+### 2025-10-14 08:58:14.352
+select * from join_table_1, join_table_2;
+### 2025-10-14 08:58:14.354
 exit;

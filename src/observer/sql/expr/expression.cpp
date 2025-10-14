@@ -218,6 +218,32 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case IS_NOT_NULL: {
       result = !left.is_null();
     } break;
+    case LIKE_OP: {
+      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
+        LOG_WARN("LIKE operation requires string types, got left: %d, right: %d", 
+                 left.attr_type(), right.attr_type());
+        rc = RC::INVALID_ARGUMENT;
+        break;
+      }
+      
+      std::string text = left.get_string();
+      std::string pattern = right.get_string();
+      result = match_like_pattern(text.c_str(), pattern.c_str());
+      LOG_INFO("LIKE result: '%s' LIKE '%s' = %s", text.c_str(), pattern.c_str(), result ? "true" : "false");
+    } break;
+    case NOT_LIKE_OP: {
+      if (left.attr_type() != AttrType::CHARS || right.attr_type() != AttrType::CHARS) {
+        LOG_WARN("NOT LIKE operation requires string types, got left: %d, right: %d", 
+                 left.attr_type(), right.attr_type());
+        rc = RC::INVALID_ARGUMENT;
+        break;
+      }
+      
+      std::string text = left.get_string();
+      std::string pattern = right.get_string();
+      result = !match_like_pattern(text.c_str(), pattern.c_str());
+      LOG_INFO("NOT LIKE result: '%s' NOT LIKE '%s' = %s", text.c_str(), pattern.c_str(), result ? "true" : "false");
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
