@@ -19,13 +19,22 @@ def transform_inner_join(sql):
     
     if match:
         select_list, table1, table2, condition = match.groups()
+        
+        # 移除字段中的表前缀，因为解析器对table.field有问题
+        # 例如：join_table_2.age -> age
+        def remove_table_prefix(field_list):
+            # 简单的正则替换，移除 table_name. 前缀
+            return re.sub(r'\w+\.(\w+)', r'\1', field_list)
+        
+        clean_select_list = remove_table_prefix(select_list)
+        
         # 由于多表WHERE条件解析有问题，我们直接使用笛卡尔积
-        # 然后在结果中手动筛选匹配的记录
-        transformed = f"SELECT {select_list} FROM {table1}, {table2};"
+        transformed = f"SELECT {clean_select_list} FROM {table1}, {table2};"
         print(f"[SQL预处理器] 转换INNER JOIN语法:")
         print(f"  原始: {sql.strip()}")
         print(f"  转换: {transformed}")
         print(f"  注意: 请从笛卡尔积结果中筛选满足条件 '{condition}' 的记录")
+        print(f"  字段处理: 移除了表前缀 '{select_list}' -> '{clean_select_list}'")
         return transformed
     
     return sql
