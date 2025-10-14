@@ -1044,8 +1044,6 @@ INSERT INTO ssq_2 VALUES (1, 1, 5.5);
 INSERT INTO ssq_2 VALUES (2, 2, 10.2);
 ### 2025-10-14 10:36:13.491
 -- 查看创建的数据
-### 2025-10-14 10:36:13.491
-SELECT * FROM ssq_2;
 ### 2025-10-14 11:02:33.020
 -- 测试CALC表达式功能
 ### 2025-10-14 11:02:33.031
@@ -1088,8 +1086,6 @@ SELECT * FROM ssq_1 WHERE id = 78;
 -- 调试IN操作的语法解析
 ### 2025-10-14 12:09:17.272
 -- 调试IN表达式的执行
-### 2025-10-14 12:09:17.284
-SELECT * FROM ssq_1;
 ### 2025-10-14 12:09:17.285
 -- 测试一个肯定存在的值
 ### 2025-10-14 12:09:17.285
@@ -1396,3 +1392,29 @@ SELECT * FROM subq_main WHERE score = '85.5';  -- FLOAT vs STRING
 SELECT * FROM subq_main WHERE id = (SELECT COUNT(*) FROM subq_ref);  -- INT vs INT
 ### 2025-10-14 17:15:59.930
 SELECT * FROM subq_main WHERE score = (SELECT COUNT(*) FROM subq_ref);  -- FLOAT vs INT
+### 2025-10-14 18:55:24.016
+-- 测试问题查询
+### 2025-10-14 18:55:24.044
+-- 问题查询
+### 2025-10-14 18:55:24.044
+SELECT * FROM ssq_1 WHERE (SELECT ssq_2.id FROM ssq_2 WHERE col2 = 86) = id;
+### 2025-10-14 18:55:54.682
+-- 检查数据
+### 2025-10-14 18:55:54.705
+SELECT * FROM ssq_2 WHERE col2 = 86;
+### 2025-10-14 18:55:54.706
+SELECT * FROM ssq_2 WHERE col2 = 1;
+### 2025-10-14 18:55:54.707
+-- 测试有数据的子查询
+### 2025-10-14 18:55:54.707
+SELECT * FROM ssq_1 WHERE (SELECT ssq_2.id FROM ssq_2 WHERE col2 = 1) = id;
+### 2025-10-14 18:56:23.099
+-- 测试成功的子查询匹配
+### 2025-10-14 18:56:23.124
+SELECT * FROM ssq_1;
+### 2025-10-14 18:56:23.125
+SELECT * FROM ssq_2;
+### 2025-10-14 18:56:23.126
+-- 测试子查询返回2，应该匹配ssq_1中id=2的记录
+### 2025-10-14 18:56:23.126
+SELECT * FROM ssq_1 WHERE (SELECT ssq_2.id FROM ssq_2 WHERE col2 = 2) = id;

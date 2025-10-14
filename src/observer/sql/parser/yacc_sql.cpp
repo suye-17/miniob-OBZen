@@ -713,8 +713,8 @@ static const yytype_int16 yyrline[] =
      751,   754,   757,   760,   763,   766,   775,   779,   787,   792,
      796,   809,   812,   818,   821,   827,   830,   835,   846,   866,
      879,   892,   905,   918,   935,   952,   964,   976,   989,  1002,
-    1013,  1024,  1037,  1060,  1061,  1062,  1063,  1064,  1065,  1066,
-    1067,  1074,  1077,  1083,  1095,  1103,  1112,  1113
+    1013,  1024,  1044,  1067,  1068,  1069,  1070,  1071,  1072,  1073,
+    1074,  1081,  1084,  1090,  1102,  1110,  1119,  1120
 };
 #endif
 
@@ -836,8 +836,8 @@ static const yytype_uint8 yydefact[] =
        0,    45,     0,    43,    67,    37,     0,     0,     0,     0,
      105,    73,     0,     0,   119,     0,     0,   111,     0,     0,
        0,     0,    60,     0,     0,   133,    50,     0,    48,     0,
-       0,    41,    35,     0,     0,     0,   132,   104,   121,   120,
-       0,   115,     0,     0,   113,   117,   122,    62,    72,    46,
+       0,    41,    35,     0,     0,     0,   132,   104,   122,   120,
+       0,   115,     0,     0,   113,   117,   121,    62,    72,    46,
        0,     0,    38,    36,    75,   116,   114,   118,    44,    58,
        0,     0,     0,    57,    68,    59
 };
@@ -3059,25 +3059,8 @@ yyreduce:
 #line 3060 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
-  case 121: /* condition: LBRACE select_stmt RBRACE comp_op rel_attr  */
+  case 121: /* condition: rel_attr comp_op LBRACE select_stmt RBRACE  */
 #line 1025 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
-    {
-      (yyval.condition) = new ConditionSqlNode;
-      (yyval.condition)->left_is_attr = 0;
-      (yyval.condition)->right_is_attr = 1;
-      (yyval.condition)->right_attr = *(yyvsp[0].rel_attr);
-      (yyval.condition)->comp = (yyvsp[-1].comp);
-      (yyval.condition)->has_subquery = true;
-      (yyval.condition)->subquery = SelectSqlNode::create_copy(&((yyvsp[-3].sql_node)->selection)).release();
-
-      delete (yyvsp[-3].sql_node);
-      delete (yyvsp[0].rel_attr);
-    }
-#line 3077 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
-    break;
-
-  case 122: /* condition: rel_attr comp_op LBRACE select_stmt RBRACE  */
-#line 1038 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       printf("DEBUG: scalar subquery condition rel_attr comp_op (SELECT ...)\n");
       (yyval.condition) = new ConditionSqlNode;
@@ -3097,75 +3080,99 @@ yyreduce:
       delete (yyvsp[-4].rel_attr);
       delete (yyvsp[-1].sql_node);
     }
-#line 3101 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3084 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+    break;
+
+  case 122: /* condition: LBRACE select_stmt RBRACE comp_op rel_attr  */
+#line 1045 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+    {
+      printf("DEBUG: scalar subquery condition (SELECT ...) comp_op rel_attr\n");
+      (yyval.condition) = new ConditionSqlNode;
+      (yyval.condition)->comp = (yyvsp[-1].comp);
+      
+      // 转换为统一的表达式架构：子查询在左侧，字段在右侧
+      RelAttrSqlNode *node = (yyvsp[0].rel_attr);
+      (yyval.condition)->left_expression = new SubqueryExpr(SelectSqlNode::create_copy(&((yyvsp[-3].sql_node)->selection)));
+      (yyval.condition)->right_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      (yyval.condition)->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      (yyval.condition)->left_is_attr = 0;
+      (yyval.condition)->right_is_attr = 0;
+      (yyval.condition)->has_subquery = false;  // 现在使用表达式架构，不需要这个标志
+
+      delete (yyvsp[-3].sql_node);
+      delete (yyvsp[0].rel_attr);
+    }
+#line 3108 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 123: /* comp_op: EQ  */
-#line 1060 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1067 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = EQUAL_TO; }
-#line 3107 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3114 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 124: /* comp_op: LT  */
-#line 1061 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1068 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = LESS_THAN; }
-#line 3113 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3120 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 125: /* comp_op: GT  */
-#line 1062 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1069 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = GREAT_THAN; }
-#line 3119 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3126 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 126: /* comp_op: LE  */
-#line 1063 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1070 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = LESS_EQUAL; }
-#line 3125 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3132 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 127: /* comp_op: GE  */
-#line 1064 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1071 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = GREAT_EQUAL; }
-#line 3131 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3138 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 128: /* comp_op: NE  */
-#line 1065 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1072 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
          { (yyval.comp) = NOT_EQUAL; }
-#line 3137 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3144 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 129: /* comp_op: LIKE  */
-#line 1066 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1073 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
            { (yyval.comp) = LIKE_OP; }
-#line 3143 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3150 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 130: /* comp_op: NOT LIKE  */
-#line 1067 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1074 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
                { (yyval.comp) = NOT_LIKE_OP; }
-#line 3149 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3156 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 131: /* group_by: %empty  */
-#line 1074 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1081 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.expression_list) = nullptr;
     }
-#line 3157 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3164 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 132: /* group_by: GROUP BY expression_list  */
-#line 1078 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1085 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.expression_list) = (yyvsp[0].expression_list); 
     }
-#line 3165 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3172 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 133: /* load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID  */
-#line 1084 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1091 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       char *tmp_file_name = common::substr((yyvsp[-3].cstring), 1, strlen((yyvsp[-3].cstring)) - 2);
       
@@ -3174,31 +3181,31 @@ yyreduce:
       (yyval.sql_node)->load_data.file_name = tmp_file_name;
       free(tmp_file_name);
     }
-#line 3178 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3185 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 134: /* explain_stmt: EXPLAIN command_wrapper  */
-#line 1096 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1103 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_EXPLAIN);
       (yyval.sql_node)->explain.sql_node = unique_ptr<ParsedSqlNode>((yyvsp[0].sql_node));
     }
-#line 3187 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3194 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
   case 135: /* set_variable_stmt: SET ID EQ value  */
-#line 1104 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1111 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SET_VARIABLE);
       (yyval.sql_node)->set_variable.name  = (yyvsp[-2].cstring);
       (yyval.sql_node)->set_variable.value = *(yyvsp[0].value);
       delete (yyvsp[0].value);
     }
-#line 3198 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3205 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
     break;
 
 
-#line 3202 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
+#line 3209 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.cpp"
 
       default: break;
     }
@@ -3427,7 +3434,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1115 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 1122 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
 
 //_____________________________________________________________________
 extern void scan_string(const char *str, yyscan_t scanner);

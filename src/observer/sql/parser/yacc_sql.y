@@ -1021,19 +1021,6 @@ condition:
 
       delete $4;
     }
-    | LBRACE select_stmt RBRACE comp_op rel_attr
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 1;
-      $$->right_attr = *$5;
-      $$->comp = $4;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($2->selection)).release();
-
-      delete $2;
-      delete $5;
-    }
     | rel_attr comp_op LBRACE select_stmt RBRACE
     {
       printf("DEBUG: scalar subquery condition rel_attr comp_op (SELECT ...)\n");
@@ -1053,6 +1040,26 @@ condition:
 
       delete $1;
       delete $4;
+    }
+    | LBRACE select_stmt RBRACE comp_op rel_attr
+    {
+      printf("DEBUG: scalar subquery condition (SELECT ...) comp_op rel_attr\n");
+      $$ = new ConditionSqlNode;
+      $$->comp = $4;
+      
+      // 转换为统一的表达式架构：子查询在左侧，字段在右侧
+      RelAttrSqlNode *node = $5;
+      $$->left_expression = new SubqueryExpr(SelectSqlNode::create_copy(&($2->selection)));
+      $$->right_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      $$->is_expression_condition = true;
+      
+      // 清零旧字段以确保一致性
+      $$->left_is_attr = 0;
+      $$->right_is_attr = 0;
+      $$->has_subquery = false;  // 现在使用表达式架构，不需要这个标志
+
+      delete $2;
+      delete $5;
     }
     ;
 
