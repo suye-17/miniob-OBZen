@@ -224,6 +224,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <update_list>         update_list
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
+%type <sql_node>            join_stmt
 %type <sql_node>            insert_stmt
 %type <sql_node>            update_stmt
 %type <sql_node>            delete_stmt
@@ -253,8 +254,8 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %right UMINUS
 %left EQ NE LT LE GT GE LIKE
 %left AND
-%left INNER JOIN ON
 %left FROM
+%left INNER JOIN ON
 %%
 
 commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
@@ -267,6 +268,7 @@ commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
 command_wrapper:
     calc_stmt
   | select_stmt
+  | join_stmt
   | insert_stmt
   | update_stmt
   | delete_stmt
@@ -610,7 +612,7 @@ update_list:
       // 不需要 free($3)，sql_parse 会统一清理 allocated_strings
     }
     ;
-select_stmt:        /*  select 语句的语法解析树*/
+join_stmt:        /*  独立的JOIN语句解析规则 */
     SELECT expression_list FROM relation INNER JOIN relation ON condition_list
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
@@ -632,7 +634,10 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
       $$->selection.joins.push_back(join_node);
     }
-    | SELECT expression_list FROM rel_list where group_by having
+    ;
+
+select_stmt:        /*  select 语句的语法解析树*/
+    SELECT expression_list FROM rel_list where group_by having
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -794,14 +799,6 @@ rel_list:
       }
 
       $$->insert($$->begin(), $1);
-    }
-    | relation INNER JOIN relation ON condition_list {
-      $$ = new vector<string>();
-      $$->push_back($1);
-      $$->push_back($4);
-      // 注意：这里我们简化处理，将INNER JOIN转换为多表查询
-      // ON条件会被转换为WHERE条件
-      delete $6; // 暂时删除条件，后续可以改进
     }
     ;
 

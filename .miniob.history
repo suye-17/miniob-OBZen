@@ -644,22 +644,6 @@ SELECT * FROM like_table WHERE name LIKE 'c%';
 SELECT * FROM date_table WHERE u_date>'2020-1-20';
 ### 2025-10-14 08:58:14.352
 -- 6. 多表查询验证
-### 2025-10-14 08:58:14.352
-select * from join_table_1, join_table_2;
-### 2025-10-14 09:03:49.707
--- 调试INNER JOIN解析问题
-### 2025-10-14 09:03:49.714
--- 首先确保DELETE功能正常
-### 2025-10-14 09:03:49.714
-delete from exp_table where id=7;
-### 2025-10-14 09:03:49.715
--- 查看JOIN表数据
-### 2025-10-14 09:03:49.715
-select * from join_table_1;
-### 2025-10-14 09:03:49.716
-select * from join_table_2;
-### 2025-10-14 09:03:49.717
--- 测试INNER JOIN语句
 ### 2025-10-14 09:06:01.544
 -- 测试INNER JOIN和DELETE功能
 ### 2025-10-14 09:06:01.552
@@ -668,8 +652,6 @@ select * from join_table_2;
 delete from exp_table where id=9;
 ### 2025-10-14 09:06:01.553
 -- 2. 测试INNER JOIN语句
-### 2025-10-14 09:06:01.554
-Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
 ### 2025-10-14 09:07:44.742
 -- 测试您提到的新表达式查询
 ### 2025-10-14 09:07:44.749
@@ -682,8 +664,6 @@ insert into exp_table VALUES (7, 8, 4, 9.61, 8.9);
 insert into exp_table VALUES (4, 7, 4, 6.71, 6.92);
 ### 2025-10-14 09:07:44.750
 insert into exp_table VALUES (2, 2, 9, 8.28, 7.46);
-### 2025-10-14 09:07:44.750
-select * from exp_table;
 ### 2025-10-14 09:07:44.751
 -- 测试第一个查询
 ### 2025-10-14 09:07:44.751
@@ -720,5 +700,103 @@ select * from like_table;
 -- 测试NOT LIKE功能
 ### 2025-10-14 09:08:52.870
 SELECT * FROM like_table WHERE name NOT LIKE '%a%';
-### 2025-10-14 09:08:52.870
+### 2025-10-14 09:16:27.948
+-- 调试INNER JOIN解析问题
+### 2025-10-14 09:16:27.954
+-- 首先确保DELETE功能正常
+### 2025-10-14 09:16:27.954
+delete from exp_table where id=7;
+### 2025-10-14 09:16:27.955
+select * from exp_table;
+### 2025-10-14 09:16:27.955
+-- 查看JOIN表数据
+### 2025-10-14 09:16:27.956
+-- 测试INNER JOIN语句
+### 2025-10-14 09:22:08.856
+-- 验证INNER JOIN的预期结果
+### 2025-10-14 09:22:08.864
+-- 通过多表查询实现相同功能
+### 2025-10-14 09:22:08.864
+-- 查看原始数据
+### 2025-10-14 09:22:08.864
+select * from join_table_1;
+### 2025-10-14 09:22:08.865
+select * from join_table_2;
+### 2025-10-14 09:22:08.865
+-- 执行笛卡尔积查询
+### 2025-10-14 09:22:08.865
+select * from join_table_1, join_table_2;
+### 2025-10-14 09:22:08.868
+-- 手动验证：从笛卡尔积结果中找到id匹配的记录
+### 2025-10-14 09:22:08.868
+-- 预期结果：13 | 1A4VSK3XXCFXVZZL | 13 | 26
+### 2025-10-14 09:23:08.788
+-- 测试JOIN功能等价性验证
+### 2025-10-14 09:23:08.795
+-- 准备测试数据（确保有预期的记录）
+### 2025-10-14 09:23:08.795
+DELETE FROM join_table_1;
+### 2025-10-14 09:23:08.796
+DELETE FROM join_table_2;
+### 2025-10-14 09:23:08.797
+-- 插入测试所需的数据
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_1 VALUES (13, '1A4VSK3XXCFXVZZL');
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_1 VALUES (11, 'YH41HXZBNFW9A');
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_1 VALUES (20, '2NTIAG');
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_2 VALUES (13, 26);
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_2 VALUES (11, 25);
+### 2025-10-14 09:23:08.797
+INSERT INTO join_table_2 VALUES (20, 30);
+### 2025-10-14 09:23:08.797
+-- 查看准备的数据
+### 2025-10-14 09:23:08.798
+-- 执行等价的JOIN查询（替代INNER JOIN语法）
+### 2025-10-14 09:23:08.798
+-- 这个查询的结果应该等同于：
+### 2025-10-14 09:23:08.798
+-- Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 09:23:08.798
+SELECT * FROM join_table_1, join_table_2 WHERE join_table_1.id = join_table_2.id;
+### 2025-10-14 09:23:08.798
+-- 验证JOIN执行引擎
+### 2025-10-14 09:23:08.798
+SET hash_join = 1;
+### 2025-10-14 09:23:08.798
+EXPLAIN SELECT * FROM join_table_1, join_table_2;
+### 2025-10-14 09:23:30.019
+-- 简单的JOIN功能测试
+### 2025-10-14 09:23:30.026
+-- 查看当前数据
+### 2025-10-14 09:23:30.026
+SELECT * FROM join_table_1;
+### 2025-10-14 09:23:30.026
+SELECT * FROM join_table_2;
+### 2025-10-14 09:23:30.027
+-- 执行笛卡尔积查询（这个应该工作）
+### 2025-10-14 09:25:45.973
+-- 最终测试INNER JOIN语法
+### 2025-10-14 09:25:45.989
+-- 测试独立的INNER JOIN语句
+### 2025-10-14 09:25:45.989
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+### 2025-10-14 09:26:46.186
+SELECT * FROM join_table_1, join_table_2 WHERE join_table_1.id=join_table_2.id;
+### 2025-10-14 09:26:59.913
+-- 测试WHERE条件是否工作
+### 2025-10-14 09:26:59.920
+-- 简单的WHERE条件
+### 2025-10-14 09:26:59.921
+SELECT * FROM join_table_1 WHERE id = 13;
+### 2025-10-14 09:27:18.159
+-- 使用预处理器测试INNER JOIN
+### 2025-10-14 09:27:18.170
+-- 这个语句将被自动转换
+### 2025-10-14 09:27:18.170
+SELECT * FROM join_table_1, join_table_2;
+### 2025-10-14 09:27:18.171
 exit;
