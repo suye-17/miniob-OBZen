@@ -846,10 +846,6 @@ CREATE TABLE join_result_table(
 );
 ### 2025-10-14 09:39:15.033
 -- 查看原始数据
-### 2025-10-14 09:39:15.033
-SELECT * FROM join_table_1;
-### 2025-10-14 09:39:15.034
-SELECT * FROM join_table_2;
 ### 2025-10-14 09:39:15.034
 -- 手动插入JOIN结果（模拟INNER JOIN的效果）
 ### 2025-10-14 09:39:15.034
@@ -1232,8 +1228,6 @@ SELECT * FROM subq_main WHERE NOT EXISTS (SELECT 1 FROM subq_ref WHERE ref_id = 
 SELECT * FROM subq_main WHERE id IN (1, 2);
 ### 2025-10-14 16:57:19.746
 SELECT * FROM subq_main WHERE EXISTS (SELECT 1 FROM subq_ref WHERE ref_id = 1);
-### 2025-10-14 17:01:22.274
--- 测试简单的标量子查询
 ### 2025-10-14 17:02:32.479
 -- 测试解析调试
 ### 2025-10-14 17:02:32.500
@@ -1410,11 +1404,41 @@ SELECT * FROM ssq_2 WHERE col2 = 1;
 SELECT * FROM ssq_1 WHERE (SELECT ssq_2.id FROM ssq_2 WHERE col2 = 1) = id;
 ### 2025-10-14 18:56:23.099
 -- 测试成功的子查询匹配
-### 2025-10-14 18:56:23.124
-SELECT * FROM ssq_1;
-### 2025-10-14 18:56:23.125
-SELECT * FROM ssq_2;
 ### 2025-10-14 18:56:23.126
 -- 测试子查询返回2，应该匹配ssq_1中id=2的记录
 ### 2025-10-14 18:56:23.126
 SELECT * FROM ssq_1 WHERE (SELECT ssq_2.id FROM ssq_2 WHERE col2 = 2) = id;
+### 2025-10-14 19:09:44.025
+-- 测试JOIN语法
+### 2025-10-14 19:09:44.100
+SELECT * FROM join_table_1;
+### 2025-10-14 19:09:44.106
+SELECT * FROM join_table_2;
+### 2025-10-14 19:09:44.110
+-- 测试简单的JOIN语法
+### 2025-10-14 19:09:44.110
+SELECT join_table_1.age FROM join_table_1 INNER JOIN join_table_2 ON join_table_1.id=join_table_2.id;
+### 2025-10-14 19:10:39.488
+-- 测试可能导致崩溃的查询
+### 2025-10-14 19:10:39.571
+-- 先测试子查询本身
+### 2025-10-14 19:10:39.571
+SELECT ssq_2.col2 FROM ssq_2;
+### 2025-10-14 19:10:39.575
+-- 测试简单的标量子查询
+### 2025-10-14 19:11:52.407
+-- 测试多行子查询导致的问题
+### 2025-10-14 19:12:27.274
+-- 测试正确的子查询（应该只返回一行）
+### 2025-10-14 19:12:27.317
+SELECT * FROM ssq_1;
+### 2025-10-14 19:12:27.319
+SELECT * FROM ssq_2;
+### 2025-10-14 19:12:27.322
+-- 正确的标量子查询 - 只返回一行
+### 2025-10-14 19:12:27.322
+SELECT * FROM ssq_1 WHERE col1 = (SELECT col2 FROM ssq_2 WHERE id = 1);
+### 2025-10-14 19:12:27.330
+-- 另一个正确的标量子查询
+### 2025-10-14 19:12:27.330
+SELECT * FROM ssq_1 WHERE col1 = (SELECT col2 FROM ssq_2 WHERE id = 2);
