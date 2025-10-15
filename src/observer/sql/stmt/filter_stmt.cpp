@@ -224,18 +224,28 @@ RC FilterStmt::convert_expression_to_filter_obj(Expression *expr, Table *default
     }
   } else {
     // 复杂表达式，尝试静态求值，失败则存储表达式副本
+    LOG_INFO("FilterStmt: %s expression type=%d, trying static evaluation", 
+              side_name, static_cast<int>(expr->type()));
     Value result;
     RC    rc = expr->try_get_value(result);
+    LOG_INFO("FilterStmt: %s expression try_get_value rc=%s, value=%s(type=%d)", 
+              side_name, strrc(rc), 
+              (rc == RC::SUCCESS) ? result.to_string().c_str() : "N/A",
+              (rc == RC::SUCCESS) ? static_cast<int>(result.attr_type()) : -1);
+    
     if (rc == RC::SUCCESS) {
       // 能静态求值的常量表达式
       // 检查NULL值：如果表达式结果是NULL，设置特殊标记
       if (result.is_null()) {
         LOG_INFO("WHERE condition contains NULL value, will return empty result");
       }
+      LOG_INFO("FilterStmt: %s expression successfully evaluated to constant value: %s", 
+               side_name, result.to_string().c_str());
       filter_obj.init_value(result);
       return RC::SUCCESS;
     } else {
       // 包含字段引用的复杂表达式，创建副本
+      LOG_INFO("FilterStmt: %s expression cannot be statically evaluated, storing expression copy", side_name);
       try {
         auto copied_expr = expr->copy();
         if (copied_expr == nullptr) {

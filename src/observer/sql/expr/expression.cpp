@@ -955,11 +955,19 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
   Value left_value;
   Value right_value;
 
+  LOG_INFO("ArithmeticExpr::get_value - op=%d, left_type=%d, right_type=%d", 
+           static_cast<int>(arithmetic_type_),
+           left_ ? static_cast<int>(left_->type()) : -1,
+           right_ ? static_cast<int>(right_->type()) : -1);
+
   rc = left_->get_value(tuple, left_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+  
+  LOG_INFO("ArithmeticExpr: left_value=%s(type=%d)", 
+           left_value.to_string().c_str(), static_cast<int>(left_value.attr_type()));
 
   // 处理一元运算符（如负号）
   if (arithmetic_type_ == Type::NEGATIVE) {
@@ -978,7 +986,16 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
     return rc;
   }
-  return calc_value(left_value, right_value, value);
+  
+  LOG_INFO("ArithmeticExpr: right_value=%s(type=%d), will calc", 
+           right_value.to_string().c_str(), static_cast<int>(right_value.attr_type()));
+  
+  rc = calc_value(left_value, right_value, value);
+  
+  LOG_INFO("ArithmeticExpr: result=%s(type=%d)", 
+           value.to_string().c_str(), static_cast<int>(value.attr_type()));
+  
+  return rc;
 }
 
 RC ArithmeticExpr::get_column(Chunk &chunk, Column &column)
