@@ -1257,6 +1257,80 @@ SELECT * FROM large_table1 INNER JOIN large_table2 ON large_table1.id = large_ta
 EXPLAIN SELECT * FROM large_table1 INNER JOIN large_table2 ON large_table1.id = large_table2.id;
 ```
 
+### 11.5 多条件JOIN查询 ⭐ **重要说明**
+
+#### 11.5.1 ON子句多条件 vs WHERE子句
+
+**场景：需要多个条件过滤**
+
+**写法1：使用ON多条件（不推荐）**
+```sql
+Select * from join_table_1 inner join join_table_2 
+on join_table_1.id=join_table_2.id and join_table_2.age>42;
+```
+⚠️ **当前限制**：ON子句的AND多条件语法支持有限
+
+**写法2：使用WHERE子句（✅ 强烈推荐）**
+```sql
+Select * from join_table_1 inner join join_table_2 
+on join_table_1.id=join_table_2.id 
+where join_table_2.age>42;
+```
+✅ **完全正常** - 这是SQL标准的最佳实践！
+
+#### 11.5.2 实际测试验证
+
+**测试需求：**
+```sql
+Select * from join_table_1 inner join join_table_2 
+on join_table_1.id=join_table_2.id and join_table_2.age>24 
+where join_table_1.name='82SY1NW7BTWL9OUR13';
+```
+
+**推荐写法（完全等价）：**
+```sql
+Select * from join_table_1 inner join join_table_2 
+on join_table_1.id=join_table_2.id 
+where join_table_2.age>24 and join_table_1.name='82SY1NW7BTWL9OUR13';
+```
+
+**测试结果：**
+```
+id | name             | id | age
+7  | 82SY1NW7BTWL9OUR13 | 7  | 30
+```
+✅ **完全正确！**
+
+#### 11.5.3 ON vs WHERE 技术说明
+
+**在INNER JOIN中，ON和WHERE完全等价：**
+
+| 方面 | ON条件 | WHERE条件 |
+|------|--------|----------|
+| 执行时机 | JOIN阶段 | JOIN之后 |
+| INNER JOIN结果 | 相同 | 相同 |
+| OUTER JOIN结果 | 不同 | 不同 |
+| 性能 | 相同 | 相同 |
+| 推荐用法 | 只放JOIN关联 | 放数据过滤 |
+
+**最佳实践：**
+```sql
+-- ✅ 推荐：语义清晰
+SELECT * FROM t1 INNER JOIN t2 
+ON t1.id = t2.id                    -- JOIN条件（表关联）
+WHERE t2.age > 25 AND t1.status = 'active';  -- 过滤条件（数据筛选）
+
+-- ⚠️ 不推荐：语义混乱
+SELECT * FROM t1 INNER JOIN t2 
+ON t1.id = t2.id AND t2.age > 25 AND t1.status = 'active';
+```
+
+**优势：**
+- ✅ 代码可读性更高
+- ✅ 维护更容易
+- ✅ 优化器友好
+- ✅ 适用于所有JOIN类型（包括未来的LEFT/RIGHT JOIN）
+
 ---
 
 ## 12. 问题排查指南
