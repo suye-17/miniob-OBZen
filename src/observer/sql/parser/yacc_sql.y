@@ -1073,7 +1073,7 @@ join_list:
       join_node.type = JoinType::INNER_JOIN;
       join_node.relation = $3;
       
-      // 创建JOIN条件：将expression comp_op expression转换为ConditionSqlNode
+      // 创建JOIN条件
       ConditionSqlNode condition;
       condition.comp = $6;
       condition.left_expression = $5;

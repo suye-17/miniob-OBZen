@@ -160,12 +160,16 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
 
     // 创建JOIN条件表达式
     Expression *join_condition = nullptr;
+    LOG_INFO("Creating JOIN condition for table %s with %zu conditions", 
+             table_name, join_sql.conditions.size());
     RC rc = create_join_conditions_expression(join_sql.conditions, join_condition, table_map);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to create join condition expression");
       delete select_stmt;
       return rc;
     }
+    LOG_INFO("JOIN condition created successfully, type=%d", 
+             join_condition ? static_cast<int>(join_condition->type()) : -1);
 
     JoinTable join_table;
     join_table.table = table;
