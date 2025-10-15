@@ -21,6 +21,9 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "common/sys/rc.h"
+#include "common/value.h"
+#include "storage/common/column.h"
 
 using namespace std;
 
