@@ -213,6 +213,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %type <condition_list>      where
 %type <condition_list>      having
 %type <condition_list>      condition_list
+%type <condition_list>      on_conditions
 %type <cstring>             storage_format
 %type <key_list>            primary_key
 %type <key_list>            attr_list
@@ -1060,32 +1061,59 @@ comp_op:
     | NOT LIKE { $$ = NOT_LIKE_OP; }  // 新增NOT LIKE操作符
     ;
 
+// ON条件列表（用于JOIN ON子句，支持AND连接多个条件）
+on_conditions:
+    expression comp_op expression {
+      $$ = new vector<ConditionSqlNode>;
+      ConditionSqlNode *cond = new ConditionSqlNode;
+      cond->comp = $2;
+      cond->left_expression = $1;
+      cond->right_expression = $3;
+      cond->is_expression_condition = true;
+      cond->left_is_attr = 0;
+      cond->right_is_attr = 0;
+      $$->push_back(*cond);
+      delete cond;
+    }
+    | expression comp_op expression AND on_conditions {
+      if ($5 == nullptr) {
+        $$ = new vector<ConditionSqlNode>;
+      } else {
+        $$ = $5;
+      }
+      ConditionSqlNode cond;
+      cond.comp = $2;
+      cond.left_expression = $1;
+      cond.right_expression = $3;
+      cond.is_expression_condition = true;
+      cond.left_is_attr = 0;
+      cond.right_is_attr = 0;
+      $$->insert($$->begin(), cond);
+    }
+    ;
+
 // JOIN functionality - unified join_list approach
 join_list:
     /* empty */
     {
       $$ = nullptr;
     }
-    | INNER JOIN relation ON expression comp_op expression
+    | INNER JOIN relation ON on_conditions
     {
       $$ = new vector<JoinSqlNode>;
       JoinSqlNode join_node;
       join_node.type = JoinType::INNER_JOIN;
       join_node.relation = $3;
       
-      // 创建JOIN条件
-      ConditionSqlNode condition;
-      condition.comp = $6;
-      condition.left_expression = $5;
-      condition.right_expression = $7;
-      condition.is_expression_condition = true;
-      condition.left_is_attr = 0;
-      condition.right_is_attr = 0;
+      // 复制所有ON条件
+      if ($5 != nullptr) {
+        join_node.conditions = *$5;
+        delete $5;
+      }
       
-      join_node.conditions.push_back(condition);
       $$->push_back(join_node);
     }
-    | join_list INNER JOIN relation ON expression comp_op expression
+    | join_list INNER JOIN relation ON on_conditions
     {
       if ($1 != nullptr) {
         $$ = $1;
@@ -1097,16 +1125,12 @@ join_list:
       join_node.type = JoinType::INNER_JOIN;
       join_node.relation = $4;
       
-      // 创建JOIN条件
-      ConditionSqlNode condition;
-      condition.comp = $7;
-      condition.left_expression = $6;
-      condition.right_expression = $8;
-      condition.is_expression_condition = true;
-      condition.left_is_attr = 0;
-      condition.right_is_attr = 0;
+      // 复制所有ON条件
+      if ($6 != nullptr) {
+        join_node.conditions = *$6;
+        delete $6;
+      }
       
-      join_node.conditions.push_back(condition);
       $$->push_back(join_node);
     }
     ;

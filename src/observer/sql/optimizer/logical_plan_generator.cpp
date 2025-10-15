@@ -181,6 +181,21 @@ RC bind_expression_fields(unique_ptr<Expression> &expr, const vector<Table *> &t
       return bind_comparison_expression(expr, tables);
     }
 
+    case ExprType::CONJUNCTION: {
+      // ✅ 处理ConjunctionExpr（AND/OR连接的多个条件）
+      auto conjunction_expr = static_cast<ConjunctionExpr *>(expr.get());
+      // 递归绑定所有子表达式
+      for (size_t i = 0; i < conjunction_expr->children().size(); i++) {
+        unique_ptr<Expression> &child = const_cast<unique_ptr<Expression>&>(conjunction_expr->children()[i]);
+        RC rc = bind_expression_fields(child, tables);
+        if (rc != RC::SUCCESS) {
+          LOG_WARN("failed to bind child expression %zu in conjunction", i);
+          return rc;
+        }
+      }
+      return RC::SUCCESS;
+    }
+
     case ExprType::FIELD:
     case ExprType::VALUE:
     case ExprType::STAR:
