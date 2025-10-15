@@ -127,7 +127,8 @@ extern int yydebug;
     LT = 328,                      /* LT  */
     LE = 329,                      /* LE  */
     GT = 330,                      /* GT  */
-    GE = 331                       /* GE  */
+    GE = 331,                      /* GE  */
+    OR = 332                       /* OR  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -158,7 +159,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 162 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
+#line 163 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

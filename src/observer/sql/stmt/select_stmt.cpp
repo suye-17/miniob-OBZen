@@ -141,13 +141,54 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     table_map.insert({table_name, table});
   }
 
+  // 第二步：处理JOIN表
+  vector<JoinTable> join_tables;
+  for (const JoinSqlNode &join_sql : select_sql.joins) {
+    const char *table_name = join_sql.relation.c_str();
+    if (nullptr == table_name) {
+      LOG_WARN("invalid argument. join table name is null");
+      delete select_stmt;
+      return RC::INVALID_ARGUMENT;
+    }
+
+    Table *table = db->find_table(table_name);
+    if (nullptr == table) {
+      LOG_WARN("no such table in join. db=%s, table_name=%s", db->name(), table_name);
+      delete select_stmt;
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+
+    // 创建JOIN条件表达式
+    Expression *join_condition = nullptr;
+    RC rc = create_join_conditions_expression(join_sql.conditions, join_condition, table_map);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to create join condition expression");
+      delete select_stmt;
+      return rc;
+    }
+
+    JoinTable join_table;
+    join_table.table = table;
+    join_table.join_type = join_sql.type;
+    join_table.condition = join_condition;
+    join_tables.push_back(join_table);
+
+    // 将JOIN表也加入table_map，供后续表达式绑定使用
+    table_map.insert({table_name, table});
+  }
+
   // collect query fields in `select` statement
   vector<unique_ptr<Expression>> bound_expressions;
   BinderContext binder_context;
   
-  // 添加查询表到绑定上下文中
+  // 添加主表到绑定上下文中
   for (Table *table : tables) {
     binder_context.add_table(table);
+  }
+  
+  // 添加JOIN表到绑定上下文中（用于SELECT * 投影和字段绑定）
+  for (const JoinTable &join_table : join_tables) {
+    binder_context.add_table(join_table.table);
   }
   
   ExpressionBinder               expression_binder(binder_context);
@@ -174,7 +215,6 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
 
   // 第七步：处理WHERE条件
   Table *default_table = nullptr;
-  vector<JoinTable> join_tables;
   if (tables.size() == 1 && join_tables.empty()) {
     default_table = tables[0];
   }

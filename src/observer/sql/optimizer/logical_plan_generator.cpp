@@ -251,23 +251,58 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   unique_ptr<LogicalOperator> predicate_oper;
 
   const vector<Table *> &tables = select_stmt->tables();
+  const vector<JoinTable> &join_tables = select_stmt->join_tables();
 
-  RC rc = create_plan(select_stmt->filter_stmt(), tables, predicate_oper);
+  // 构建所有表的列表用于WHERE条件处理
+  vector<Table *> all_tables = tables;
+  for (const JoinTable &join_table : join_tables) {
+    all_tables.push_back(join_table.table);
+  }
+
+  RC rc = create_plan(select_stmt->filter_stmt(), all_tables, predicate_oper);
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to create predicate logical plan. rc=%s", strrc(rc));
     return rc;
   }
+  
+  // 处理主表
   for (Table *table : tables) {
-
     unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_ONLY));
     if (table_oper == nullptr) {
       table_oper = std::move(table_get_oper);
     } else {
+      // 多个主表使用笛卡尔积（逗号连接语法）
       JoinLogicalOperator *join_oper = new JoinLogicalOperator(JoinType::INNER_JOIN, nullptr);
       join_oper->add_child(std::move(table_oper));
       join_oper->add_child(std::move(table_get_oper));
       table_oper = unique_ptr<LogicalOperator>(join_oper);
     }
+  }
+  
+  // 处理INNER JOIN表
+  for (const JoinTable &join_table : join_tables) {
+    unique_ptr<LogicalOperator> join_table_get_oper(
+        new TableGetLogicalOperator(join_table.table, ReadWriteMode::READ_ONLY));
+    
+    // 复制JOIN条件表达式并绑定字段
+    Expression *join_condition = nullptr;
+    if (join_table.condition != nullptr) {
+      unique_ptr<Expression> condition_copy = join_table.condition->copy();
+      
+      // 绑定JOIN条件中的字段到实际表
+      rc = bind_expression_fields(condition_copy, all_tables);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to bind fields in join condition. rc=%s", strrc(rc));
+        return rc;
+      }
+      
+      join_condition = condition_copy.release();
+    }
+    
+    JoinLogicalOperator *join_oper = new JoinLogicalOperator(join_table.join_type, join_condition);
+    join_oper->add_child(std::move(table_oper));
+    join_oper->add_child(std::move(join_table_get_oper));
+    table_oper = unique_ptr<LogicalOperator>(join_oper);
   }
 
   // 如果没有FROM子句，创建一个CALC操作符来生成单行数据
