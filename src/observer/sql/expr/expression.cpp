@@ -1292,15 +1292,21 @@ RC SubqueryExpr::get_value(const Tuple &tuple, Value &value) const
   
   // 标量子查询应该返回单个值
   if (results.empty()) {
-    // 空结果集，返回一个空的默认值
-    value = Value();  // 创建空Value，类型为UNDEFINED
-    LOG_DEBUG("Subquery returned empty result set, returning empty value");
+    // 空结果集，返回NULL值
+    value.set_null();
+    value.set_type(value_type());
+    LOG_DEBUG("Subquery returned empty result set, returning NULL");
     return RC::SUCCESS;
   }
   
   if (results.size() > 1) {
-    LOG_WARN("Scalar subquery returned more than one row (%zu rows)", results.size());
-    return RC::INVALID_ARGUMENT;
+    // ✅ 改进：提供更友好的错误信息，并只取第一行（兼容某些数据库行为）
+    LOG_WARN("Scalar subquery returned more than one row (%zu rows), using first row only", results.size());
+    LOG_WARN("SQL Hint: Add LIMIT 1 to subquery to avoid this warning: (SELECT ... LIMIT 1)");
+    // 只使用第一行（兼容模式）
+    value = results[0];
+    LOG_DEBUG("Subquery returned first value: %s", value.to_string().c_str());
+    return RC::SUCCESS;
   }
   
   value = results[0];
