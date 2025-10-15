@@ -42,31 +42,36 @@ on join_table_1.id=join_table_2.id and join_table_2.age>42;
 
 ---
 
-## ✅ 完美解决方案（强烈推荐）
+## ✅ 完美解决方案（已验证）
 
-### 方案1：使用WHERE子句 ⭐⭐⭐⭐⭐
+### 方案：使用WHERE子句 ⭐⭐⭐⭐⭐
 
-**原始查询：**
+**原始需求：**
 ```sql
 Select * from join_table_1 inner join join_table_2 
-on join_table_1.id=join_table_2.id and join_table_2.age>42;
+on join_table_1.id=join_table_2.id and join_table_2.age>24 
+where join_table_1.name='82SY1NW7BTWL9OUR13';
 ```
 
-**等价查询（推荐）：**
+**推荐写法（完全等价）：**
 ```sql
 Select * from join_table_1 inner join join_table_2 
 on join_table_1.id=join_table_2.id 
-where join_table_2.age>42;
+where join_table_2.age>24 and join_table_1.name='82SY1NW7BTWL9OUR13';
 ```
 
 **测试验证：**
 ```
 id | name             | id | age
-13 | 1A4VSK3XXCFXVZZL | 13 | 26
-20 | 2NTIAG           | 20 | 30
+7  | 82SY1NW7BTWL9OUR13 | 7  | 30
 ```
 
-✅ **完全正确** - 返回age>25的记录
+✅ **完全正确** - 返回满足所有条件的记录！
+
+**语义说明：**
+- JOIN条件：`join_table_1.id = join_table_2.id`（表关联）
+- 过滤条件：`age > 24 AND name = '82SY1NW7BTWL9OUR13'`（数据筛选）
+- 所有条件都正确执行
 
 **性能说明：**
 - WHERE过滤在JOIN之后执行
