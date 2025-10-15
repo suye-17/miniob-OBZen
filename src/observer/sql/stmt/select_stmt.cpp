@@ -38,6 +38,22 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
     left_expr.reset(condition.left_expression->copy().release());
   } else if (condition.left_is_attr) {
     const RelAttrSqlNode &attr = condition.left_attr;
+    
+    // ✅ 验证字段存在性
+    if (!attr.relation_name.empty()) {
+      auto it = table_map.find(attr.relation_name);
+      if (it == table_map.end()) {
+        LOG_WARN("table not found in JOIN condition: %s", attr.relation_name.c_str());
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+      Table *table = it->second;
+      const FieldMeta *field_meta = table->table_meta().field(attr.attribute_name.c_str());
+      if (!field_meta) {
+        LOG_WARN("field not found in table: %s.%s", attr.relation_name.c_str(), attr.attribute_name.c_str());
+        return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+    }
+    
     left_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
   } else {
     left_expr = make_unique<ValueExpr>(condition.left_value);
@@ -59,6 +75,22 @@ RC create_condition_expression(const ConditionSqlNode &condition, Expression *&e
     right_expr.reset(condition.right_expression->copy().release());
   } else if (condition.right_is_attr) {
     const RelAttrSqlNode &attr = condition.right_attr;
+    
+    // ✅ 验证字段存在性
+    if (!attr.relation_name.empty()) {
+      auto it = table_map.find(attr.relation_name);
+      if (it == table_map.end()) {
+        LOG_WARN("table not found in JOIN condition: %s", attr.relation_name.c_str());
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+      }
+      Table *table = it->second;
+      const FieldMeta *field_meta = table->table_meta().field(attr.attribute_name.c_str());
+      if (!field_meta) {
+        LOG_WARN("field not found in table: %s.%s", attr.relation_name.c_str(), attr.attribute_name.c_str());
+        return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
+    }
+    
     right_expr = make_unique<UnboundFieldExpr>(attr.relation_name, attr.attribute_name);
   } else {
     right_expr = make_unique<ValueExpr>(condition.right_value);

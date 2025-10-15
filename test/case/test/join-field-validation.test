@@ -1,0 +1,28 @@
+-- Test JOIN with non-existent field
+-- This test verifies that JOIN conditions properly validate field existence
+
+-- echo init
+CREATE TABLE join_table_1(id int, name char(20));
+CREATE TABLE join_table_2(id int, age int);
+
+INSERT INTO join_table_1 VALUES (1, 'test1');
+INSERT INTO join_table_1 VALUES (2, 'test2');
+INSERT INTO join_table_2 VALUES (1, 25);
+INSERT INTO join_table_2 VALUES (2, 30);
+
+-- echo Test 1: Single condition with non-existent field (should FAIL)
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.level;
+
+-- echo Test 2: AND condition with non-existent field in second condition (should FAIL) 
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id and join_table_2.level>36;
+
+-- echo Test 3: Valid query (should SUCCESS)
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id;
+
+-- echo Test 4: WHERE clause with non-existent field (should FAIL)
+Select * from join_table_1 inner join join_table_2 on join_table_1.id=join_table_2.id where join_table_2.level>36;
+
+-- echo cleanup
+DROP TABLE join_table_1;
+DROP TABLE join_table_2;
+

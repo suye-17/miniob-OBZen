@@ -1,0 +1,21 @@
+init
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+Test 1: Single condition with non-existent field (should FAIL)
+FAILURE
+Test 2: AND condition with non-existent field in second condition (should FAIL)
+FAILURE
+Test 3: Valid query (should SUCCESS)
+id | name | id | age
+1 | test1 | 1 | 25
+2 | test2 | 2 | 30
+Test 4: WHERE clause with non-existent field (should FAIL)
+FAILURE
+cleanup
+SUCCESS
+SUCCESS
+
