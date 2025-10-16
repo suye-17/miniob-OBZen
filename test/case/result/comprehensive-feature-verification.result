@@ -1,0 +1,114 @@
+===========================================
+综合功能验证测试
+===========================================
+===== 初始化测试数据 =====
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+SUCCESS
+===== 测试1: INNER JOIN 两表 =====
+1 | Alice | 20 | 1 | 85
+2 | Bob | 22 | 2 | 90
+3 | Charlie | 21 | 3 | 78
+===== 测试2: INNER JOIN 三表 =====
+Alice | 85 | A
+Bob | 90 | B
+Charlie | 78 | C
+===== 测试3: INNER JOIN 多条ON条件 =====
+1 | Alice | 20 | 1 | 85
+2 | Bob | 22 | 2 | 90
+===== 测试4: INNER JOIN 复杂条件 =====
+2 | Bob | 22 | 2 | 90
+===== 测试5: IN (value_list) =====
+1 | Alice | 20
+3 | Charlie | 21
+5 | Eve | 20
+===== 测试6: NOT IN (value_list) =====
+1 | Alice | 20
+3 | Charlie | 21
+5 | Eve | 20
+===== 测试7: IN (SELECT...) 子查询 =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+===== 测试8: NOT IN (SELECT...) 子查询 =====
+1 | Alice | 20
+4 | David | 23
+5 | Eve | 20
+===== 测试9: EXISTS 存在性检查 =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+===== 测试10: NOT EXISTS 不存在性检查 =====
+1 | Alice | 20
+3 | Charlie | 21
+4 | David | 23
+5 | Eve | 20
+===== 测试11: 标量子查询 AVG =====
+2 | Bob | 22
+4 | David | 23
+===== 测试12: 子查询 AVG 比较 =====
+2 | 90
+6 | 95
+===== 测试13: 子查询返回多行 IN =====
+1 | Alice | 20
+2 | Bob | 22
+===== 测试14: 子查询 MAX =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+5 | Eve | 20
+===== 测试15: 子查询 MIN =====
+1 | 85
+2 | 90
+6 | 95
+===== 测试16: 子查询 SUM =====
+===== 测试17: 非关联子查询 =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+===== 测试18: 表达式 + 子查询 =====
+2 | Bob | 22
+4 | David | 23
+===== 测试19: JOIN + 子查询组合 =====
+1 | Alice | 20 | 1 | 85
+2 | Bob | 22 | 2 | 90
+===== 测试20: 复杂组合测试 =====
+Alice | 85
+Bob | 90
+===== 测试21: IN 值列表表达式 =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+5 | Eve | 20
+===== 测试22: 表达式计算 =====
+2 | Bob | 22
+3 | Charlie | 21
+4 | David | 23
+===== 测试23: COUNT 聚合 =====
+5
+===== 测试24: 多聚合函数 =====
+4 | 348 | 87 | 95 | 78
+===== 测试25: IN 空结果 =====
+===== 测试26: NOT IN 空结果 =====
+1 | Alice | 20
+2 | Bob | 22
+3 | Charlie | 21
+4 | David | 23
+5 | Eve | 20
+===== 清理 =====
+SUCCESS
+SUCCESS
+SUCCESS
+

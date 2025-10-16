@@ -1,3 +1,0 @@
-[33mc61fe8a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mchris[m[33m)[m Fix: 修复代码格式以通过clang-format检查
-[33mfa6eb47[m[33m ([m[1;31mminiob-OBZen/chris[m[33m)[m Merge main into chris: 解决冲突并保留chris分支的UNIQUE INDEX和NULL功能实现
-[33mcf9f7ca[m chore: 清理项目垃圾文件
