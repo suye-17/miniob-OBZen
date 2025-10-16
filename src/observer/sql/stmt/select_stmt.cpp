@@ -190,6 +190,9 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
 
+    // ✅ 关键修复：先将JOIN表加入table_map，再创建和验证JOIN条件
+    table_map.insert({table_name, table});
+
     // 创建JOIN条件表达式
     Expression *join_condition = nullptr;
     LOG_INFO("Creating JOIN condition for table %s with %zu conditions", 
@@ -208,9 +211,6 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     join_table.join_type = join_sql.type;
     join_table.condition = join_condition;
     join_tables.push_back(join_table);
-
-    // 将JOIN表也加入table_map，供后续表达式绑定使用
-    table_map.insert({table_name, table});
   }
 
   // collect query fields in `select` statement
