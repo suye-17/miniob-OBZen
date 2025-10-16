@@ -1400,13 +1400,30 @@ void SubqueryExpr::set_session_context_recursive(class Session *session)
 ////////////////////////////////////////////////////////////////////////////////
 // InExpr
 
+// IN (subquery) 构造函数 - 保留原有功能
 InExpr::InExpr(bool is_not, std::unique_ptr<Expression> left, std::unique_ptr<Expression> subquery)
-  : is_not_(is_not), left_(std::move(left)), subquery_(std::move(subquery))
+  : is_not_(is_not), left_(std::move(left)), subquery_(std::move(subquery)), is_subquery_(true)
+{}
+
+// IN (value_list) 构造函数 - 新增功能
+InExpr::InExpr(bool is_not, std::unique_ptr<Expression> left, std::vector<std::unique_ptr<Expression>> &&value_list)
+  : is_not_(is_not), left_(std::move(left)), value_list_(std::move(value_list)), is_subquery_(false)
 {}
 
 std::unique_ptr<Expression> InExpr::copy() const
 {
-  return std::make_unique<InExpr>(is_not_, left_->copy(), subquery_->copy());
+  if (is_subquery_) {
+    // 子查询形式
+    return std::make_unique<InExpr>(is_not_, left_->copy(), subquery_->copy());
+  } else {
+    // 值列表形式
+    std::vector<std::unique_ptr<Expression>> copied_list;
+    copied_list.reserve(value_list_.size());
+    for (const auto &expr : value_list_) {
+      copied_list.push_back(expr->copy());
+    }
+    return std::make_unique<InExpr>(is_not_, left_->copy(), std::move(copied_list));
+  }
 }
 
 RC InExpr::get_value(const Tuple &tuple, Value &value) const
@@ -1418,44 +1435,72 @@ RC InExpr::get_value(const Tuple &tuple, Value &value) const
     return rc;
   }
 
-  if (!session_) {
-    LOG_WARN("Session not set for IN subquery");
-    return RC::INTERNAL;
-  }
-
-  // 执行子查询获取所有结果
-  std::vector<Value> results;
-  SubqueryExpr *subquery_expr = dynamic_cast<SubqueryExpr*>(subquery_.get());
-  if (!subquery_expr || !subquery_expr->subquery()) {
-    LOG_WARN("Invalid subquery in IN expression");
-    return RC::INTERNAL;
-  }
-  static SubqueryExecutor executor;
-  rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("Failed to execute subquery in IN expression");
-    return rc;
-  }
-
   bool found = false;
   bool has_null = false;
 
-  // 检查左值是否在结果集中
-  for (const Value &result : results) {
-    if (result.is_null()) {
-      has_null = true;
-      continue;
-    }
-    
-    if (left_value.is_null()) {
-      has_null = true;
-      break;
+  if (is_subquery_) {
+    // 子查询形式 - 保留原有逻辑
+    if (!session_) {
+      LOG_WARN("Session not set for IN subquery");
+      return RC::INTERNAL;
     }
 
-    int cmp = left_value.compare(result);
-    if (cmp == 0) {
-      found = true;
-      break;
+    // 执行子查询获取所有结果
+    std::vector<Value> results;
+    SubqueryExpr *subquery_expr = dynamic_cast<SubqueryExpr*>(subquery_.get());
+    if (!subquery_expr || !subquery_expr->subquery()) {
+      LOG_WARN("Invalid subquery in IN expression");
+      return RC::INTERNAL;
+    }
+    static SubqueryExecutor executor;
+    rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("Failed to execute subquery in IN expression");
+      return rc;
+    }
+
+    // 检查左值是否在结果集中
+    for (const Value &result : results) {
+      if (result.is_null()) {
+        has_null = true;
+        continue;
+      }
+      
+      if (left_value.is_null()) {
+        has_null = true;
+        break;
+      }
+
+      int cmp = left_value.compare(result);
+      if (cmp == 0) {
+        found = true;
+        break;
+      }
+    }
+  } else {
+    // 值列表形式 - 新增逻辑
+    for (const auto &expr : value_list_) {
+      Value list_value;
+      rc = expr->get_value(tuple, list_value);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+
+      if (list_value.is_null()) {
+        has_null = true;
+        continue;
+      }
+      
+      if (left_value.is_null()) {
+        has_null = true;
+        break;
+      }
+
+      int cmp = left_value.compare(list_value);
+      if (cmp == 0) {
+        found = true;
+        break;
+      }
     }
   }
 
@@ -1491,8 +1536,15 @@ void InExpr::set_session_context_recursive(Session *session)
   if (left_) {
     left_->set_session_context_recursive(session);
   }
-  if (subquery_) {
+  if (is_subquery_ && subquery_) {
     subquery_->set_session_context_recursive(session);
+  }
+  if (!is_subquery_) {
+    for (auto &expr : value_list_) {
+      if (expr) {
+        expr->set_session_context_recursive(session);
+      }
+    }
   }
 }
 
@@ -1503,9 +1555,17 @@ std::unordered_set<std::string> InExpr::get_involved_tables() const
     auto left_tables = left_->get_involved_tables();
     tables.insert(left_tables.begin(), left_tables.end());
   }
-  if (subquery_) {
+  if (is_subquery_ && subquery_) {
     auto subquery_tables = subquery_->get_involved_tables();
     tables.insert(subquery_tables.begin(), subquery_tables.end());
+  }
+  if (!is_subquery_) {
+    for (const auto &expr : value_list_) {
+      if (expr) {
+        auto expr_tables = expr->get_involved_tables();
+        tables.insert(expr_tables.begin(), expr_tables.end());
+      }
+    }
   }
   return tables;
 }
@@ -1521,6 +1581,18 @@ RC InExpr::bind_fields(const std::vector<Table *> &tables)
   }
   
   // subquery不需要在这里绑定，它会在执行时处理
+  
+  // 值列表需要绑定其中的字段
+  if (!is_subquery_) {
+    for (auto &expr : value_list_) {
+      if (expr) {
+        RC rc = bind_unbound_field_expr(expr, tables);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+      }
+    }
+  }
   
   return RC::SUCCESS;
 }

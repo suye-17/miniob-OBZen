@@ -752,6 +752,26 @@ expression:
       $$->set_name(token_name(sql_string, &@$));
       delete $2;
     }
+    | expression IN LBRACE expression_list RBRACE {
+      // IN (value_list) 表达式
+      vector<unique_ptr<Expression>> value_list;
+      if ($4 != nullptr) {
+        value_list = std::move(*$4);
+        delete $4;
+      }
+      $$ = new InExpr(false, unique_ptr<Expression>($1), std::move(value_list));
+      $$->set_name(token_name(sql_string, &@$));
+    }
+    | expression NOT IN LBRACE expression_list RBRACE {
+      // NOT IN (value_list) 表达式
+      vector<unique_ptr<Expression>> value_list;
+      if ($5 != nullptr) {
+        value_list = std::move(*$5);
+        delete $5;
+      }
+      $$ = new InExpr(true, unique_ptr<Expression>($1), std::move(value_list));
+      $$->set_name(token_name(sql_string, &@$));
+    }
     | expression IN LBRACE select_stmt RBRACE {
       // IN (SELECT ...) 表达式
       auto subquery = new SubqueryExpr(SelectSqlNode::create_copy(&($4->selection)));

@@ -712,12 +712,19 @@ private:
 
 /**
  * @brief IN/NOT IN表达式
- * 仅支持: expr IN (SELECT ...) 或 expr NOT IN (SELECT ...)
+ * 支持两种形式:
+ * 1. expr IN (SELECT ...) 或 expr NOT IN (SELECT ...)
+ * 2. expr IN (value1, value2, ...) 或 expr NOT IN (value1, value2, ...)
  */
 class InExpr : public Expression
 {
 public:
+  // IN (subquery) 构造函数 - 保留原有功能
   InExpr(bool is_not, std::unique_ptr<Expression> left, std::unique_ptr<Expression> subquery);
+  
+  // IN (value_list) 构造函数 - 新增功能
+  InExpr(bool is_not, std::unique_ptr<Expression> left, std::vector<std::unique_ptr<Expression>> &&value_list);
+  
   virtual ~InExpr() = default;
 
   std::unique_ptr<Expression> copy() const override;
@@ -739,10 +746,12 @@ public:
   RC bind_fields(const std::vector<Table *> &tables);
 
 private:
-  bool                        is_not_;    // true表示NOT IN
-  std::unique_ptr<Expression> left_;     // 左侧表达式
-  std::unique_ptr<Expression> subquery_; // 子查询
-  mutable Session            *session_ = nullptr;
+  bool                                     is_not_;      // true表示NOT IN
+  std::unique_ptr<Expression>              left_;        // 左侧表达式
+  std::unique_ptr<Expression>              subquery_;    // 子查询（子查询形式）
+  std::vector<std::unique_ptr<Expression>> value_list_;  // 值列表（值列表形式）
+  bool                                     is_subquery_; // 是否为子查询形式
+  mutable Session                         *session_ = nullptr;
 };
 
 /**
