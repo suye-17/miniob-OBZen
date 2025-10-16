@@ -121,6 +121,7 @@ RC create_join_conditions_expression(const vector<ConditionSqlNode> &conditions,
     Expression *condition_expr = nullptr;
     RC rc = create_condition_expression(condition, condition_expr, table_map);
     if (rc != RC::SUCCESS) {
+      // ✅ 失败时清理已创建的表达式（unique_ptr会自动清理）
       return rc;
     }
     condition_exprs.emplace_back(condition_expr);
@@ -139,6 +140,12 @@ SelectStmt::~SelectStmt()
   if (nullptr != having_filter_stmt_) {
     delete having_filter_stmt_;
     having_filter_stmt_ = nullptr;
+  }
+  // ✅ 清理JOIN条件表达式
+  for (const JoinTable &join_table : join_tables_) {
+    if (join_table.condition != nullptr) {
+      delete join_table.condition;
+    }
   }
 }
 
@@ -200,6 +207,16 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     RC rc = create_join_conditions_expression(join_sql.conditions, join_condition, table_map);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to create join condition expression");
+      // ✅ 清理已创建的JOIN条件表达式
+      if (join_condition != nullptr) {
+        delete join_condition;
+      }
+      // ✅ 清理已创建的其他JOIN表的条件
+      for (const JoinTable &jt : join_tables) {
+        if (jt.condition != nullptr) {
+          delete jt.condition;
+        }
+      }
       delete select_stmt;
       return rc;
     }
@@ -233,6 +250,12 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     RC rc = expression_binder.bind_expression(expression, bound_expressions);
     if (OB_FAIL(rc)) {
       LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      // ✅ 清理JOIN条件表达式
+      for (const JoinTable &jt : join_tables) {
+        if (jt.condition != nullptr) {
+          delete jt.condition;
+        }
+      }
       delete select_stmt;
       return rc;
     }
@@ -244,6 +267,12 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     RC rc = expression_binder.bind_expression(expression, group_by_expressions);
     if (OB_FAIL(rc)) {
       LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      // ✅ 清理JOIN条件表达式
+      for (const JoinTable &jt : join_tables) {
+        if (jt.condition != nullptr) {
+          delete jt.condition;
+        }
+      }
       delete select_stmt;
       return rc;
     }
@@ -266,6 +295,13 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
         having_filter_stmt);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot construct having filter stmt");
+      // ✅ 清理JOIN条件表达式
+      for (const JoinTable &jt : join_tables) {
+        if (jt.condition != nullptr) {
+          delete jt.condition;
+        }
+      }
+      delete select_stmt;
       return rc;
     }
   }
@@ -280,6 +316,16 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
                             filter_stmt);
   if (rc != RC::SUCCESS) {
     LOG_WARN("cannot construct filter stmt");
+    // ✅ 清理JOIN条件表达式
+    for (const JoinTable &jt : join_tables) {
+      if (jt.condition != nullptr) {
+        delete jt.condition;
+      }
+    }
+    // ✅ 清理having filter stmt
+    if (having_filter_stmt != nullptr) {
+      delete having_filter_stmt;
+    }
     delete select_stmt;
     return rc;
   }
