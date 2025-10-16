@@ -28,6 +28,18 @@ public:
   JoinType     join_type() const { return join_type_; }
   Expression  *condition() const { return condition_; }
 
+  /**
+   * @brief 设置JOIN条件（替换现有条件）
+   * @param condition 新的JOIN条件表达式（调用者转移所有权）
+   */
+  void set_condition(Expression *condition);
+
+  /**
+   * @brief 添加额外的JOIN条件（使用AND连接）
+   * @param additional_cond 额外的条件表达式（调用者转移所有权）
+   */
+  void add_condition(Expression *additional_cond);
+
 private:
   JoinType     join_type_;  ///< JOIN类型
   Expression  *condition_;  ///< JOIN条件

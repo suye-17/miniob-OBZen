@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/string.h"
 #include "common/lang/memory.h"
+#include "common/lang/unordered_set.h"
 #include "common/value.h"
 #include "storage/field/field.h"
 #include "sql/expr/aggregator.h"
@@ -149,6 +150,14 @@ public:
     /* 默认实现为空 - 只有包含子查询的表达式需要实现 */ 
   }
 
+  /**
+   * @brief 获取表达式涉及的所有表名
+   * @details 用于谓词下推优化，递归收集所有FieldExpr中的表名
+   */
+  virtual std::unordered_set<std::string> get_involved_tables() const { 
+    return {}; 
+  }
+
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -237,6 +246,16 @@ public:
   RC get_column(Chunk &chunk, Column &column) override;
 
   RC get_value(const Tuple &tuple, Value &value) const override;
+
+  // 重写：返回字段所属的表名
+  std::unordered_set<std::string> get_involved_tables() const override
+  {
+    std::unordered_set<std::string> tables;
+    if (field_.table_name() && field_.table_name()[0] != '\0') {
+      tables.insert(field_.table_name());
+    }
+    return tables;
+  }
 
 private:
   Field field_;
@@ -388,6 +407,21 @@ public:
   void set_session_context_recursive(class Session *session) override;
   void clear_subquery_cache_recursive() override;
 
+  // 重写：收集左右表达式涉及的表
+  std::unordered_set<std::string> get_involved_tables() const override
+  {
+    std::unordered_set<std::string> tables;
+    if (left_) {
+      auto left_tables = left_->get_involved_tables();
+      tables.insert(left_tables.begin(), left_tables.end());
+    }
+    if (right_) {
+      auto right_tables = right_->get_involved_tables();
+      tables.insert(right_tables.begin(), right_tables.end());
+    }
+    return tables;
+  }
+
   template <typename T>
   RC compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const;
 
@@ -448,6 +482,19 @@ public:
 
   // 遍历表达式树设置session上下文
   void set_session_context_recursive(class Session *session) override;
+
+  // 重写：收集所有子表达式涉及的表
+  std::unordered_set<std::string> get_involved_tables() const override
+  {
+    std::unordered_set<std::string> tables;
+    for (const auto &child : children_) {
+      if (child) {
+        auto child_tables = child->get_involved_tables();
+        tables.insert(child_tables.begin(), child_tables.end());
+      }
+    }
+    return tables;
+  }
 
 private:
   Type                           conjunction_type_;

@@ -21,4 +21,7 @@ RuleSet::RuleSet()
   add_rule(RuleSetName::PHYSICAL_IMPLEMENTATION, new LogicalCalcToCalc());
   add_rule(RuleSetName::PHYSICAL_IMPLEMENTATION, new LogicalDeleteToDelete());
   add_rule(RuleSetName::PHYSICAL_IMPLEMENTATION, new LogicalPredicateToPredicate());
+  // Join physical operator selection rules (cost-based)
+  add_rule(RuleSetName::PHYSICAL_IMPLEMENTATION, new LogicalJoinToNestedLoopJoin());
+  add_rule(RuleSetName::PHYSICAL_IMPLEMENTATION, new LogicalJoinToHashJoin());
 }

@@ -24,9 +24,10 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/delete_physical_operator.h"
 #include "sql/operator/predicate_logical_operator.h"
 #include "sql/operator/predicate_physical_operator.h"
-#include "sql/operator/group_by_logical_operator.h"
-#include "sql/operator/scalar_group_by_physical_operator.h"
-#include "sql/operator/hash_group_by_physical_operator.h"
+#include "sql/operator/join_logical_operator.h"
+#include "sql/operator/nested_loop_join_physical_operator.h"
+#include "sql/operator/hash_join_physical_operator.h"
+#include "sql/optimizer/cascade/join_cost_calculator.h"
 
 // -------------------------------------------------------------------------------------------------
 // PhysicalSeqScan
@@ -258,3 +259,99 @@ void LogicalPredicateToPredicate::transform(
 
 //   transformed->emplace_back(std::move(groupby_phys_oper));
 // }
+// -------------------------------------------------------------------------------------------------
+// LogicalJoinToNestedLoopJoin
+// -------------------------------------------------------------------------------------------------
+LogicalJoinToNestedLoopJoin::LogicalJoinToNestedLoopJoin()
+{
+  type_          = RuleType::INNER_JOIN_TO_NL_JOIN;
+  match_pattern_ = unique_ptr<Pattern>(new Pattern(OpType::LOGICALINNERJOIN));
+  
+  // Join算子有两个子节点
+  auto left_child  = new Pattern(OpType::LEAF);
+  auto right_child = new Pattern(OpType::LEAF);
+  match_pattern_->add_child(left_child);
+  match_pattern_->add_child(right_child);
+}
+
+void LogicalJoinToNestedLoopJoin::transform(
+    OperatorNode *input, std::vector<std::unique_ptr<OperatorNode>> *transformed, OptimizerContext *context) const
+{
+  JoinLogicalOperator *join_oper = dynamic_cast<JoinLogicalOperator *>(input);
+  ASSERT(join_oper != nullptr, "input operator is not a JoinLogicalOperator");
+  
+  // 获取JOIN条件并复制
+  Expression *condition = join_oper->condition();
+  Expression *phys_condition = nullptr;
+  if (condition) {
+    auto condition_copy = condition->copy();
+    phys_condition = condition_copy.release();
+  }
+  
+  // 创建NestedLoopJoin物理算子
+  auto nlj_oper = make_unique<NestedLoopJoinPhysicalOperator>(phys_condition);
+  
+  // 添加左右子节点
+  vector<unique_ptr<LogicalOperator>> &children = join_oper->children();
+  ASSERT(children.size() == 2, "Join operator must have exactly 2 children");
+  
+  nlj_oper->add_general_child(children[0].get());
+  nlj_oper->add_general_child(children[1].get());
+  
+  LOG_INFO("Created NestedLoopJoin physical operator");
+  
+  transformed->emplace_back(std::move(nlj_oper));
+}
+
+// -------------------------------------------------------------------------------------------------
+// LogicalJoinToHashJoin
+// -------------------------------------------------------------------------------------------------
+LogicalJoinToHashJoin::LogicalJoinToHashJoin()
+{
+  type_          = RuleType::INNER_JOIN_TO_HASH_JOIN;
+  match_pattern_ = unique_ptr<Pattern>(new Pattern(OpType::LOGICALINNERJOIN));
+  
+  // Join算子有两个子节点
+  auto left_child  = new Pattern(OpType::LEAF);
+  auto right_child = new Pattern(OpType::LEAF);
+  match_pattern_->add_child(left_child);
+  match_pattern_->add_child(right_child);
+}
+
+void LogicalJoinToHashJoin::transform(
+    OperatorNode *input, std::vector<std::unique_ptr<OperatorNode>> *transformed, OptimizerContext *context) const
+{
+  JoinLogicalOperator *join_oper = dynamic_cast<JoinLogicalOperator *>(input);
+  ASSERT(join_oper != nullptr, "input operator is not a JoinLogicalOperator");
+  
+  // 获取JOIN条件
+  Expression *condition = join_oper->condition();
+  
+  // 检查是否为等值JOIN（只有等值JOIN才能使用HashJoin）
+  if (!JoinCostCalculator::is_equi_join(condition)) {
+    LOG_INFO("Join condition is not equi-join, cannot use HashJoin");
+    // 不生成HashJoin算子
+    return;
+  }
+  
+  // 复制条件表达式
+  Expression *phys_condition = nullptr;
+  if (condition) {
+    auto condition_copy = condition->copy();
+    phys_condition = condition_copy.release();
+  }
+  
+  // 创建HashJoin物理算子
+  auto hash_join_oper = make_unique<HashJoinPhysicalOperator>(phys_condition);
+  
+  // 添加左右子节点
+  vector<unique_ptr<LogicalOperator>> &children = join_oper->children();
+  ASSERT(children.size() == 2, "Join operator must have exactly 2 children");
+  
+  hash_join_oper->add_general_child(children[0].get());
+  hash_join_oper->add_general_child(children[1].get());
+  
+  LOG_INFO("Created HashJoin physical operator");
+  
+  transformed->emplace_back(std::move(hash_join_oper));
+}

@@ -38,3 +38,16 @@ void LogicalOperator::generate_general_child()
     child->generate_general_child();
   }
 }
+
+std::unordered_set<std::string> LogicalOperator::get_involved_tables() const
+{
+  // 默认实现：递归收集所有子算子涉及的表
+  std::unordered_set<std::string> tables;
+  for (const auto &child : children_) {
+    if (child) {
+      auto child_tables = child->get_involved_tables();
+      tables.insert(child_tables.begin(), child_tables.end());
+    }
+  }
+  return tables;
+}

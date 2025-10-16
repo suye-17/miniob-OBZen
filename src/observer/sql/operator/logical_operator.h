@@ -58,6 +58,13 @@ public:
   bool is_physical() const override { return false; }
   bool is_logical() const override { return true; }
 
+  /**
+   * @brief 获取该算子涉及的所有表名
+   * @details 用于谓词下推优化，判断条件能否下推到该算子
+   */
+  virtual std::unordered_set<std::string> get_involved_tables() const;
+
+
   void        add_child(unique_ptr<LogicalOperator> oper);
   void        add_expressions(unique_ptr<Expression> expr);
   auto        children() -> vector<unique_ptr<LogicalOperator>>        &{ return children_; }

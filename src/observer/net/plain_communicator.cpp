@@ -198,6 +198,30 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   const TupleSchema &schema   = sql_result->tuple_schema();
   const int          cell_num = schema.cell_num();
+  
+  // ✅ 关键修复：在输出表头前，先验证查询是否能正常执行
+  // 通过尝试获取第一行数据来触发WHERE条件的求值（包括子查询）
+  // 如果出错（如标量子查询返回多行），在输出任何内容前就返回FAILURE
+  Tuple *first_tuple_holder = nullptr;
+  bool has_first_tuple = false;
+  if (cell_num > 0) {  // 只对有列的查询做验证
+    LOG_INFO("Pre-fetching first tuple to validate query (cell_num=%d)", cell_num);
+    RC verify_rc = sql_result->next_tuple(first_tuple_holder);
+    LOG_INFO("Pre-fetch result: rc=%s (%d)", strrc(verify_rc), static_cast<int>(verify_rc));
+    if (verify_rc == RC::SUCCESS) {
+      has_first_tuple = true;  // 成功获取第一行，需要记住
+      LOG_INFO("Successfully pre-fetched first tuple, will output it later");
+    } else if (verify_rc != RC::RECORD_EOF) {
+      // 查询执行出错（不是正常的EOF）
+      LOG_WARN("Query validation failed before output: %s", strrc(verify_rc));
+      sql_result->close();
+      sql_result->set_return_code(verify_rc);
+      return write_state(event, need_disconnect);
+    } else {
+      LOG_INFO("Query returned EOF (empty result), will output header only");
+    }
+    // verify_rc == RC::RECORD_EOF: 查询结果为空，这是正常的，继续输出表头
+  }
 
   for (int i = 0; i < cell_num; i++) {
     const TupleCellSpec &spec  = schema.cell_at(i);
@@ -239,10 +263,20 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   if (event->session()->get_execution_mode() == ExecutionMode::CHUNK_ITERATOR && event->session()->used_chunk_mode()) {
     rc = write_chunk_result(sql_result);
   } else {
+    // 如果已经预取了第一行，先输出它
+    if (has_first_tuple && first_tuple_holder != nullptr) {
+      rc = write_single_tuple(first_tuple_holder);
+      if (OB_FAIL(rc)) {
+        sql_result->close();
+        return rc;
+      }
+    }
+    // 然后继续获取剩余的行
     rc = write_tuple_result(sql_result);
   }
 
   if (OB_FAIL(rc)) {
+    sql_result->close();
     return rc;
   }
 
@@ -266,6 +300,46 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   }
 
   return rc;
+}
+
+RC PlainCommunicator::write_single_tuple(Tuple *tuple)
+{
+  RC rc = RC::SUCCESS;
+  int cell_num = tuple->cell_num();
+  
+  for (int i = 0; i < cell_num; i++) {
+    if (i != 0) {
+      const char *delim = " | ";
+      rc = writer_->writen(delim, strlen(delim));
+      if (OB_FAIL(rc)) {
+        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+        return rc;
+      }
+    }
+
+    Value value;
+    rc = tuple->cell_at(i, value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get tuple cell value. rc=%s", strrc(rc));
+      return rc;
+    }
+
+    string cell_str = value.to_string();
+    rc = writer_->writen(cell_str.data(), cell_str.size());
+    if (OB_FAIL(rc)) {
+      LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+      return rc;
+    }
+  }
+
+  char newline = '\n';
+  rc = writer_->writen(&newline, 1);
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to send new line to client. err=%s", strerror(errno));
+    return rc;
+  }
+
+  return RC::SUCCESS;
 }
 
 RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)

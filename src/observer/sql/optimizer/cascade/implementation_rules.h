@@ -126,3 +126,28 @@ public:
 //                          std::vector<std::unique_ptr<OperatorNode>> *transformed,
 //                          OptimizerContext *context) const override;
 // };
+
+/**
+ * Rule transforms Logical Join -> Physical Nested Loop Join
+ */
+class LogicalJoinToNestedLoopJoin : public Rule
+{
+public:
+  LogicalJoinToNestedLoopJoin();
+
+  void transform(OperatorNode *input, std::vector<std::unique_ptr<OperatorNode>> *transformed,
+      OptimizerContext *context) const override;
+};
+
+/**
+ * Rule transforms Logical Join -> Physical Hash Join
+ * Note: Only applicable for equi-joins
+ */
+class LogicalJoinToHashJoin : public Rule
+{
+public:
+  LogicalJoinToHashJoin();
+
+  void transform(OperatorNode *input, std::vector<std::unique_ptr<OperatorNode>> *transformed,
+      OptimizerContext *context) const override;
+};

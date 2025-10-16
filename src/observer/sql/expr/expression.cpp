@@ -397,7 +397,9 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     vector<Value> subquery_results;
     
     // 实际执行子查询
+    fprintf(stderr, "[DEBUG] About to execute subquery in ComparisonExpr\n");
     RC subquery_rc = execute_subquery(subquery_results);
+    fprintf(stderr, "[DEBUG] Subquery executed, rc=%d, result_count=%zu\n", static_cast<int>(subquery_rc), subquery_results.size());
     if (subquery_rc != RC::SUCCESS) {
       LOG_ERROR("子查询执行失败! rc=%s", strrc(subquery_rc));
       return subquery_rc;
@@ -429,8 +431,12 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
         bool_value = false;
         rc = RC::SUCCESS;
       } else {
+        // ✅ SQL标准：标量子查询只能返回一个值
         if (subquery_results.size() > 1) {
-          LOG_WARN("标量子查询返回多个值 (%zu 个)，只使用第一个值", subquery_results.size());
+          fprintf(stderr, "[ERROR] Scalar subquery returned %zu rows - INVALID!\n", subquery_results.size());
+          LOG_WARN("标量子查询返回多个值 (%zu 个)，这是错误的", subquery_results.size());
+          LOG_WARN("SQL Hint: 添加 WHERE 条件或 LIMIT 1 来确保返回单行");
+          return RC::INVALID_ARGUMENT;  // 返回错误
         }
         
         // 获取子查询值（第一个）
@@ -1317,13 +1323,10 @@ RC SubqueryExpr::get_value(const Tuple &tuple, Value &value) const
   }
   
   if (results.size() > 1) {
-    // ✅ 改进：提供更友好的错误信息，并只取第一行（兼容某些数据库行为）
-    LOG_WARN("Scalar subquery returned more than one row (%zu rows), using first row only", results.size());
-    LOG_WARN("SQL Hint: Add LIMIT 1 to subquery to avoid this warning: (SELECT ... LIMIT 1)");
-    // 只使用第一行（兼容模式）
-    value = results[0];
-    LOG_DEBUG("Subquery returned first value: %s", value.to_string().c_str());
-    return RC::SUCCESS;
+    // ✅ SQL标准：标量子查询返回多行是错误
+    LOG_WARN("Scalar subquery returned more than one row (%zu rows)", results.size());
+    LOG_WARN("SQL Hint: Add LIMIT 1 or use IN/EXISTS instead");
+    return RC::INVALID_ARGUMENT;  // 返回错误而不是继续执行
   }
   
   value = results[0];

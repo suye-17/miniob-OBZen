@@ -57,6 +57,16 @@ public:
   void set_predicates(vector<unique_ptr<Expression>> &&exprs);
   auto predicates() -> vector<unique_ptr<Expression>> & { return predicates_; }
 
+  // 重写：返回该算子涉及的表
+  std::unordered_set<std::string> get_involved_tables() const override
+  {
+    std::unordered_set<std::string> tables;
+    if (table_) {
+      tables.insert(table_->name());
+    }
+    return tables;
+  }
+
 private:
   Table        *table_ = nullptr;
   ReadWriteMode mode_  = ReadWriteMode::READ_WRITE;
