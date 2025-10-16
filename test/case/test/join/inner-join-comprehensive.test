@@ -1,0 +1,231 @@
+-- ========================================
+-- INNER JOIN 全面测试
+-- 测试范围：2-6表JOIN、多条ON条件、不同数据量、边界情况、组合功能
+-- ========================================
+
+-- ========================================
+-- 初始化：创建测试表
+-- ========================================
+CREATE TABLE t_join_1(id int, name char, age int);
+CREATE TABLE t_join_2(id int, score int, grade char);
+CREATE TABLE t_join_3(id int, salary int, dept char);
+CREATE TABLE t_join_4(id int, level int, status char);
+CREATE TABLE t_join_5(id int, value int, type char);
+CREATE TABLE t_join_6(id int, amount int, category char);
+
+-- 边界测试表
+CREATE TABLE t_empty(id int, data int);
+CREATE TABLE t_single(id int, data int);
+CREATE TABLE t_small_a(id int, val_a int);
+CREATE TABLE t_small_b(id int, val_b int);
+
+-- ========================================
+-- 插入测试数据 - 小数据量（便于验证）
+-- ========================================
+
+-- t_join_1: 10条记录
+INSERT INTO t_join_1 VALUES (1, 'Alice', 25);
+INSERT INTO t_join_1 VALUES (2, 'Bob', 30);
+INSERT INTO t_join_1 VALUES (3, 'Charlie', 28);
+INSERT INTO t_join_1 VALUES (4, 'David', 35);
+INSERT INTO t_join_1 VALUES (5, 'Eve', 22);
+INSERT INTO t_join_1 VALUES (6, 'Frank', 40);
+INSERT INTO t_join_1 VALUES (7, 'Grace', 27);
+INSERT INTO t_join_1 VALUES (8, 'Henry', 33);
+INSERT INTO t_join_1 VALUES (9, 'Ivy', 29);
+INSERT INTO t_join_1 VALUES (10, 'Jack', 31);
+
+-- t_join_2: 10条记录
+INSERT INTO t_join_2 VALUES (1, 85, 'A');
+INSERT INTO t_join_2 VALUES (2, 90, 'A');
+INSERT INTO t_join_2 VALUES (3, 78, 'B');
+INSERT INTO t_join_2 VALUES (4, 88, 'A');
+INSERT INTO t_join_2 VALUES (5, 92, 'A');
+INSERT INTO t_join_2 VALUES (6, 75, 'C');
+INSERT INTO t_join_2 VALUES (7, 82, 'B');
+INSERT INTO t_join_2 VALUES (8, 95, 'A');
+INSERT INTO t_join_2 VALUES (11, 70, 'C');
+INSERT INTO t_join_2 VALUES (12, 88, 'B');
+
+-- t_join_3: 10条记录
+INSERT INTO t_join_3 VALUES (1, 5000, 'IT');
+INSERT INTO t_join_3 VALUES (2, 6000, 'HR');
+INSERT INTO t_join_3 VALUES (3, 5500, 'IT');
+INSERT INTO t_join_3 VALUES (4, 7000, 'Sales');
+INSERT INTO t_join_3 VALUES (5, 4500, 'HR');
+INSERT INTO t_join_3 VALUES (6, 8000, 'IT');
+INSERT INTO t_join_3 VALUES (7, 5200, 'Sales');
+INSERT INTO t_join_3 VALUES (13, 6500, 'IT');
+INSERT INTO t_join_3 VALUES (14, 7500, 'HR');
+INSERT INTO t_join_3 VALUES (15, 5800, 'Sales');
+
+-- t_join_4: 10条记录
+INSERT INTO t_join_4 VALUES (1, 3, 'Active');
+INSERT INTO t_join_4 VALUES (2, 5, 'Active');
+INSERT INTO t_join_4 VALUES (3, 2, 'Active');
+INSERT INTO t_join_4 VALUES (4, 4, 'Active');
+INSERT INTO t_join_4 VALUES (5, 3, 'Inactive');
+INSERT INTO t_join_4 VALUES (6, 6, 'Active');
+INSERT INTO t_join_4 VALUES (16, 1, 'Active');
+INSERT INTO t_join_4 VALUES (17, 4, 'Inactive');
+INSERT INTO t_join_4 VALUES (18, 5, 'Active');
+INSERT INTO t_join_4 VALUES (19, 2, 'Active');
+
+-- t_join_5: 10条记录
+INSERT INTO t_join_5 VALUES (1, 100, 'TypeA');
+INSERT INTO t_join_5 VALUES (2, 200, 'TypeB');
+INSERT INTO t_join_5 VALUES (3, 150, 'TypeA');
+INSERT INTO t_join_5 VALUES (4, 250, 'TypeC');
+INSERT INTO t_join_5 VALUES (20, 180, 'TypeB');
+INSERT INTO t_join_5 VALUES (21, 220, 'TypeA');
+INSERT INTO t_join_5 VALUES (22, 190, 'TypeC');
+INSERT INTO t_join_5 VALUES (23, 210, 'TypeB');
+INSERT INTO t_join_5 VALUES (24, 160, 'TypeA');
+INSERT INTO t_join_5 VALUES (25, 240, 'TypeC');
+
+-- t_join_6: 10条记录
+INSERT INTO t_join_6 VALUES (1, 1000, 'CatX');
+INSERT INTO t_join_6 VALUES (2, 2000, 'CatY');
+INSERT INTO t_join_6 VALUES (3, 1500, 'CatX');
+INSERT INTO t_join_6 VALUES (26, 1800, 'CatZ');
+INSERT INTO t_join_6 VALUES (27, 2200, 'CatY');
+INSERT INTO t_join_6 VALUES (28, 1900, 'CatX');
+INSERT INTO t_join_6 VALUES (29, 2100, 'CatZ');
+INSERT INTO t_join_6 VALUES (30, 1600, 'CatY');
+INSERT INTO t_join_6 VALUES (31, 2400, 'CatX');
+INSERT INTO t_join_6 VALUES (32, 1700, 'CatZ');
+
+-- 边界测试数据
+INSERT INTO t_single VALUES (1, 999);
+INSERT INTO t_small_a VALUES (1, 10);
+INSERT INTO t_small_a VALUES (2, 20);
+INSERT INTO t_small_a VALUES (3, 30);
+INSERT INTO t_small_b VALUES (2, 200);
+INSERT INTO t_small_b VALUES (3, 300);
+INSERT INTO t_small_b VALUES (4, 400);
+
+-- ========================================
+-- 测试1: 两表JOIN - 基本功能
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id;
+
+-- ========================================
+-- 测试2: 两表JOIN - 选择特定列
+-- ========================================
+select t_join_1.name, t_join_1.age, t_join_2.score, t_join_2.grade from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id;
+
+-- ========================================
+-- 测试3: 两表JOIN - 多条ON条件（AND）
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id and t_join_2.score > 85;
+
+-- ========================================
+-- 测试4: 两表JOIN - 复杂ON条件
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id and t_join_1.age > 25 and t_join_2.score > 80;
+
+-- ========================================
+-- 测试5: 三表JOIN - 基本功能
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id;
+
+-- ========================================
+-- 测试6: 三表JOIN - 选择特定列
+-- ========================================
+select t_join_1.name, t_join_2.score, t_join_3.dept from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id;
+
+-- ========================================
+-- 测试7: 三表JOIN - 多条ON条件
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id and t_join_2.score > 80 inner join t_join_3 on t_join_2.id = t_join_3.id and t_join_3.salary > 5000;
+
+-- ========================================
+-- 测试8: 四表JOIN
+-- ========================================
+select t_join_1.name, t_join_2.score, t_join_3.dept, t_join_4.level from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id inner join t_join_4 on t_join_3.id = t_join_4.id;
+
+-- ========================================
+-- 测试9: 四表JOIN - 带多条ON条件
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id and t_join_1.age > 25 inner join t_join_3 on t_join_2.id = t_join_3.id and t_join_3.salary > 5000 inner join t_join_4 on t_join_3.id = t_join_4.id and t_join_4.level > 2;
+
+-- ========================================
+-- 测试10: 五表JOIN
+-- ========================================
+select t_join_1.id, t_join_1.name, t_join_2.score from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id inner join t_join_4 on t_join_3.id = t_join_4.id inner join t_join_5 on t_join_4.id = t_join_5.id;
+
+-- ========================================
+-- 测试11: 六表JOIN
+-- ========================================
+select t_join_1.name, t_join_2.score, t_join_3.dept from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id inner join t_join_4 on t_join_3.id = t_join_4.id inner join t_join_5 on t_join_4.id = t_join_5.id inner join t_join_6 on t_join_5.id = t_join_6.id;
+
+-- ========================================
+-- 测试12: 边界情况 - 空表JOIN
+-- ========================================
+select * from t_join_1 inner join t_empty on t_join_1.id = t_empty.id;
+
+-- ========================================
+-- 测试13: 边界情况 - 单行表JOIN
+-- ========================================
+select * from t_join_1 inner join t_single on t_join_1.id = t_single.id;
+
+-- ========================================
+-- 测试14: 边界情况 - 无匹配结果
+-- ========================================
+select * from t_small_a inner join t_small_b on t_small_a.id = t_small_b.id and t_small_a.val_a > 100;
+
+-- ========================================
+-- 测试15: 边界情况 - 部分匹配
+-- ========================================
+select * from t_small_a inner join t_small_b on t_small_a.id = t_small_b.id;
+
+-- ========================================
+-- 测试16: JOIN + WHERE条件
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id where t_join_1.age > 30;
+
+-- ========================================
+-- 测试17: JOIN + WHERE + 多条件
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id where t_join_1.age > 25 and t_join_2.score > 85;
+
+-- ========================================
+-- 测试18: 三表JOIN + WHERE
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id where t_join_3.salary > 6000;
+
+-- ========================================
+-- 测试19: JOIN + IN子查询
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id where t_join_2.score in (85, 90, 95);
+
+-- ========================================
+-- 测试20: JOIN + 标量子查询
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id where t_join_2.score > (select avg(score) from t_join_2);
+
+-- ========================================
+-- 测试21: 多表JOIN + 复杂WHERE
+-- ========================================
+select t_join_1.name, t_join_2.score, t_join_3.salary from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_2.id = t_join_3.id where t_join_1.age > 25 and t_join_2.score > 80 and t_join_3.salary > 5000;
+
+-- ========================================
+-- 测试22: JOIN不同字段
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.age = t_join_2.score;
+
+-- ========================================
+-- 测试23: 多个JOIN条件（不同字段组合）
+-- ========================================
+select t_join_1.id, t_join_1.name, t_join_2.score from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id and t_join_1.age > t_join_2.score;
+
+-- ========================================
+-- 测试24: 链式JOIN（每个JOIN基于前一个结果）
+-- ========================================
+select * from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id inner join t_join_3 on t_join_1.id = t_join_3.id;
+
+-- ========================================
+-- 测试25: 验证结果数量（所有匹配的组合）
+-- ========================================
+select t_join_1.id, t_join_2.id from t_join_1 inner join t_join_2 on t_join_1.id = t_join_2.id;
+
