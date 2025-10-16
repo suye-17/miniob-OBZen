@@ -252,12 +252,8 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 
 %left '+' '-'
 %left '*' '/'
+%left EQ NE LT LE GT GE
 %right UMINUS
-%left EQ NE LT LE GT GE LIKE
-%left AND
-%left OR
-%right NOT
-%left COMMA
 %%
 
 commands: command_wrapper opt_semicolon  //commands or sqls. parser starts here.
@@ -830,27 +826,7 @@ condition_list:
     }
     ;
 condition:
-    rel_attr comp_op value
-    {
-      printf("DEBUG: simple condition rel_attr comp_op value -> converting to expression\n");
-      $$ = new ConditionSqlNode;
-      $$->comp = $2;
-      
-      // 将rel_attr转换为UnboundFieldExpr
-      RelAttrSqlNode *node = $1;
-      $$->left_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
-      
-      // 将value转换为ValueExpr
-      $$->right_expression = new ValueExpr(*$3);
-      
-      $$->is_expression_condition = true;
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 0;
-      
-      delete $1;
-      delete $3;
-    }
-    | expression comp_op expression 
+    expression comp_op expression 
     {
       printf("DEBUG: unified condition expression comp_op expression\n");
       $$ = new ConditionSqlNode;
@@ -901,152 +877,6 @@ condition:
       // 清零旧字段以确保一致性
       $$->left_is_attr = 0;
       $$->right_is_attr = 0;
-    }
-    | rel_attr IN LBRACE value_list RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = IN_OP;
-      
-      // 复制值列表
-      if ($4 != nullptr) {
-        $$->right_values = *$4;
-        printf("DEBUG: IN operation parsed with %zu values\n", $$->right_values.size());
-      }
-
-      delete $1;
-      delete $4;
-    }
-    | rel_attr NOT IN LBRACE value_list RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = NOT_IN_OP;
-      
-      // 复制值列表
-      if ($5 != nullptr) {
-        $$->right_values = *$5;
-        printf("DEBUG: NOT IN operation parsed with %zu values\n", $$->right_values.size());
-      }
-
-      delete $1;
-      delete $5;
-    }
-    | value IN LBRACE value_list RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->left_value = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = IN_OP;
-      $$->right_values = *$4;
-
-      delete $1;
-      delete $4;
-    }
-    | value NOT IN LBRACE value_list RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->left_value = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = NOT_IN_OP;
-      $$->right_values = *$5;
-
-      delete $1;
-      delete $5;
-    }
-    | rel_attr IN LBRACE select_stmt RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = IN_OP;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
-
-      delete $1;
-      delete $4;
-    }
-    | rel_attr NOT IN LBRACE select_stmt RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
-      $$->comp = NOT_IN_OP;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($5->selection)).release();
-
-      delete $1;
-      delete $5;
-    }
-    | EXISTS LBRACE select_stmt RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 0;
-      $$->comp = EXISTS_OP;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($3->selection)).release();
-
-      delete $3;
-    }
-    | NOT EXISTS LBRACE select_stmt RBRACE
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 0;
-      $$->comp = NOT_EXISTS_OP;
-      $$->has_subquery = true;
-      $$->subquery = SelectSqlNode::create_copy(&($4->selection)).release();
-
-      delete $4;
-    }
-    | rel_attr comp_op LBRACE select_stmt RBRACE
-    {
-      printf("DEBUG: scalar subquery condition rel_attr comp_op (SELECT ...)\n");
-      $$ = new ConditionSqlNode;
-      $$->comp = $2;
-      
-      // 转换为统一的表达式架构
-      RelAttrSqlNode *node = $1;
-      $$->left_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
-      $$->right_expression = new SubqueryExpr(SelectSqlNode::create_copy(&($4->selection)));
-      $$->is_expression_condition = true;
-      
-      // 清零旧字段以确保一致性
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 0;
-      $$->has_subquery = false;  // 现在使用表达式架构，不需要这个标志
-
-      delete $1;
-      delete $4;
-    }
-    | LBRACE select_stmt RBRACE comp_op rel_attr
-    {
-      printf("DEBUG: scalar subquery condition (SELECT ...) comp_op rel_attr\n");
-      $$ = new ConditionSqlNode;
-      $$->comp = $4;
-      
-      // 转换为统一的表达式架构：子查询在左侧，字段在右侧
-      RelAttrSqlNode *node = $5;
-      $$->left_expression = new SubqueryExpr(SelectSqlNode::create_copy(&($2->selection)));
-      $$->right_expression = new UnboundFieldExpr(node->relation_name, node->attribute_name);
-      $$->is_expression_condition = true;
-      
-      // 清零旧字段以确保一致性
-      $$->left_is_attr = 0;
-      $$->right_is_attr = 0;
-      $$->has_subquery = false;  // 现在使用表达式架构，不需要这个标志
-
-      delete $2;
-      delete $5;
     }
     ;
 
