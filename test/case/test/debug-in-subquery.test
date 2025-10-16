@@ -1,0 +1,24 @@
+-- echo === 调试IN子查询问题 ===
+CREATE TABLE test_a(id int, val int);
+CREATE TABLE test_b(id int, num int);
+
+INSERT INTO test_a VALUES (1, 10);
+INSERT INTO test_a VALUES (2, 20);
+INSERT INTO test_a VALUES (3, 30);
+
+INSERT INTO test_b VALUES (1, 10);
+INSERT INTO test_b VALUES (2, 30);
+
+-- echo === 测试1: 查看test_b的num列 ===
+select num from test_b;
+
+-- echo === 测试2: IN值列表 ===
+-- sort select * from test_a where val in (10, 30);
+
+-- echo === 测试3: IN子查询 ===
+-- sort select * from test_a where val in (select num from test_b);
+
+-- echo === 清理 ===
+DROP TABLE test_a;
+DROP TABLE test_b;
+
