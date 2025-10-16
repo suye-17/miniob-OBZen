@@ -27,6 +27,61 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
+// 辅助函数：绑定UnboundFieldExpr到FieldExpr
+static RC bind_unbound_field_expr(unique_ptr<Expression> &expr, const vector<Table *> &tables)
+{
+  if (!expr || expr->type() != ExprType::UNBOUND_FIELD) {
+    return RC::SUCCESS;
+  }
+
+  auto unbound = static_cast<UnboundFieldExpr *>(expr.get());
+  const char *table_name = unbound->table_name();
+  const char *field_name = unbound->field_name();
+
+  if (strlen(table_name) > 0) {
+    // 有表名前缀，直接查找
+    Table *table = nullptr;
+    for (Table *t : tables) {
+      if (strcasecmp(t->name(), table_name) == 0) {
+        table = t;
+        break;
+      }
+    }
+    if (!table) {
+      LOG_WARN("Table not found: %s", table_name);
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+    const FieldMeta *field_meta = table->table_meta().field(field_name);
+    if (!field_meta) {
+      LOG_WARN("Field not found: %s.%s", table_name, field_name);
+      return RC::SCHEMA_FIELD_NOT_EXIST;
+    }
+    expr = make_unique<FieldExpr>(table, field_meta);
+  } else {
+    // 没有表名前缀，在所有表中查找
+    Table *found_table = nullptr;
+    const FieldMeta *found_field = nullptr;
+    for (Table *t : tables) {
+      const FieldMeta *field_meta = t->table_meta().field(field_name);
+      if (field_meta) {
+        if (found_table) {
+          LOG_WARN("Ambiguous field: %s", field_name);
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+        }
+        found_table = t;
+        found_field = field_meta;
+      }
+    }
+    if (!found_table) {
+      LOG_WARN("Field not found in any table: %s", field_name);
+      return RC::SCHEMA_FIELD_NOT_EXIST;
+    }
+    expr = make_unique<FieldExpr>(found_table, found_field);
+  }
+
+  return RC::SUCCESS;
+}
+
 // LIKE模式匹配实现：%匹配零个或多个字符，_匹配单个字符
 static bool match_like_pattern(const char *text, const char *pattern)
 {
@@ -1340,4 +1395,193 @@ void SubqueryExpr::set_session_context_recursive(class Session *session)
   session_ = session;
   // 清除缓存的类型信息，以便重新计算
   type_cached_ = false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// InExpr
+
+InExpr::InExpr(bool is_not, std::unique_ptr<Expression> left, std::unique_ptr<Expression> subquery)
+  : is_not_(is_not), left_(std::move(left)), subquery_(std::move(subquery))
+{}
+
+std::unique_ptr<Expression> InExpr::copy() const
+{
+  return std::make_unique<InExpr>(is_not_, left_->copy(), subquery_->copy());
+}
+
+RC InExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  // 计算左侧表达式的值
+  Value left_value;
+  RC rc = left_->get_value(tuple, left_value);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  if (!session_) {
+    LOG_WARN("Session not set for IN subquery");
+    return RC::INTERNAL;
+  }
+
+  // 执行子查询获取所有结果
+  std::vector<Value> results;
+  SubqueryExpr *subquery_expr = dynamic_cast<SubqueryExpr*>(subquery_.get());
+  if (!subquery_expr || !subquery_expr->subquery()) {
+    LOG_WARN("Invalid subquery in IN expression");
+    return RC::INTERNAL;
+  }
+  static SubqueryExecutor executor;
+  rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to execute subquery in IN expression");
+    return rc;
+  }
+
+  bool found = false;
+  bool has_null = false;
+
+  // 检查左值是否在结果集中
+  for (const Value &result : results) {
+    if (result.is_null()) {
+      has_null = true;
+      continue;
+    }
+    
+    if (left_value.is_null()) {
+      has_null = true;
+      break;
+    }
+
+    int cmp = left_value.compare(result);
+    if (cmp == 0) {
+      found = true;
+      break;
+    }
+  }
+
+  // 处理NOT IN遇到NULL的特殊情况
+  // NOT IN: 如果找到了值，返回false；如果没找到但有NULL，返回NULL；否则返回true
+  // IN: 如果找到了值，返回true；如果没找到但有NULL，返回NULL；否则返回false
+  if (is_not_) {
+    if (found) {
+      value.set_boolean(false);
+    } else if (has_null) {
+      value.set_null();
+      value.set_type(AttrType::BOOLEANS);
+    } else {
+      value.set_boolean(true);
+    }
+  } else {
+    if (found) {
+      value.set_boolean(true);
+    } else if (has_null) {
+      value.set_null();
+      value.set_type(AttrType::BOOLEANS);
+    } else {
+      value.set_boolean(false);
+    }
+  }
+
+  return RC::SUCCESS;
+}
+
+void InExpr::set_session_context_recursive(Session *session)
+{
+  session_ = session;
+  if (left_) {
+    left_->set_session_context_recursive(session);
+  }
+  if (subquery_) {
+    subquery_->set_session_context_recursive(session);
+  }
+}
+
+std::unordered_set<std::string> InExpr::get_involved_tables() const
+{
+  std::unordered_set<std::string> tables;
+  if (left_) {
+    auto left_tables = left_->get_involved_tables();
+    tables.insert(left_tables.begin(), left_tables.end());
+  }
+  if (subquery_) {
+    auto subquery_tables = subquery_->get_involved_tables();
+    tables.insert(subquery_tables.begin(), subquery_tables.end());
+  }
+  return tables;
+}
+
+RC InExpr::bind_fields(const std::vector<Table *> &tables)
+{
+  // 绑定left_表达式中的UnboundFieldExpr
+  if (left_) {
+    RC rc = bind_unbound_field_expr(left_, tables);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+  
+  // subquery不需要在这里绑定，它会在执行时处理
+  
+  return RC::SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// ExistsExpr
+
+ExistsExpr::ExistsExpr(bool is_not, std::unique_ptr<Expression> subquery)
+  : is_not_(is_not), subquery_(std::move(subquery))
+{}
+
+std::unique_ptr<Expression> ExistsExpr::copy() const
+{
+  return std::make_unique<ExistsExpr>(is_not_, subquery_->copy());
+}
+
+RC ExistsExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  if (!session_) {
+    LOG_WARN("Session not set for EXISTS expression");
+    return RC::INTERNAL;
+  }
+
+  // 执行子查询，检查是否有结果
+  std::vector<Value> results;
+  SubqueryExpr *subquery_expr = dynamic_cast<SubqueryExpr*>(subquery_.get());
+  if (!subquery_expr || !subquery_expr->subquery()) {
+    LOG_WARN("Invalid subquery in EXISTS expression");
+    return RC::INTERNAL;
+  }
+  static SubqueryExecutor executor;
+  RC rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to execute subquery in EXISTS expression");
+    return rc;
+  }
+
+  // EXISTS: 如果有结果返回true，否则返回false
+  // NOT EXISTS: 如果有结果返回false，否则返回true
+  bool exists = !results.empty();
+  if (is_not_) {
+    value.set_boolean(!exists);
+  } else {
+    value.set_boolean(exists);
+  }
+
+  return RC::SUCCESS;
+}
+
+void ExistsExpr::set_session_context_recursive(Session *session)
+{
+  session_ = session;
+  if (subquery_) {
+    subquery_->set_session_context_recursive(session);
+  }
+}
+
+std::unordered_set<std::string> ExistsExpr::get_involved_tables() const
+{
+  if (subquery_) {
+    return subquery_->get_involved_tables();
+  }
+  return {};
 }

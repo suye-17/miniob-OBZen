@@ -116,6 +116,20 @@ RC bind_arithmetic_expression(unique_ptr<Expression> &expr, const vector<Table *
 // 辅助函数：绑定比较表达式
 RC bind_comparison_expression(unique_ptr<Expression> &expr, const vector<Table *> &tables)
 {
+  // ✅ 先检查是否为InExpr（新的IN/NOT IN表达式类型）
+  if (dynamic_cast<InExpr *>(expr.get())) {
+    // InExpr内部的left_需要绑定，但value_list_和subquery_在执行时处理
+    // 由于UnboundFieldExpr现在已经实现了get_involved_tables()
+    // InExpr可以正确返回涉及的表，优化器会正确处理
+    return RC::SUCCESS;
+  }
+  
+  // ✅ 检查是否为ExistsExpr（新的EXISTS/NOT EXISTS表达式类型）
+  if (dynamic_cast<ExistsExpr *>(expr.get())) {
+    // ExistsExpr内部的subquery_会在执行时处理
+    return RC::SUCCESS;
+  }
+
   auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
 
   // 特殊处理：IN/NOT IN操作可能没有right表达式（使用值列表）
@@ -373,6 +387,33 @@ RC LogicalPlanGenerator::create_plan(
   for (const FilterUnit *filter_unit : filter_units) {
     const FilterObj &filter_obj_left  = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
+
+    // ✅ 检查filter_obj_left是否已经是完整的comparison expression（如InExpr、ExistsExpr）
+    if (filter_obj_left.is_expression()) {
+      Expression *expr_ptr = filter_obj_left.expression;
+      // 如果是InExpr，需要特殊处理以绑定其内部的字段
+      if (auto in_expr_ptr = dynamic_cast<InExpr*>(expr_ptr)) {
+        unique_ptr<Expression> complete_expr = unique_ptr<Expression>(in_expr_ptr->copy().release());
+        InExpr *in_expr = static_cast<InExpr*>(complete_expr.get());
+        
+        // 调用InExpr的bind_fields方法绑定内部的UnboundFieldExpr
+        rc = in_expr->bind_fields(tables);
+        if (rc != RC::SUCCESS) {
+          LOG_WARN("failed to bind fields in InExpr. rc=%s", strrc(rc));
+          return rc;
+        }
+        
+        cmp_exprs.emplace_back(std::move(complete_expr));
+        continue;  // 跳过后续的ComparisonExpr构造逻辑
+      }
+      
+      // ExistsExpr不需要绑定外部表的字段
+      if (dynamic_cast<ExistsExpr*>(expr_ptr)) {
+        unique_ptr<Expression> complete_expr = unique_ptr<Expression>(expr_ptr->copy().release());
+        cmp_exprs.emplace_back(std::move(complete_expr));
+        continue;  // 跳过后续的ComparisonExpr构造逻辑
+      }
+    }
 
     unique_ptr<Expression> left;
     if (filter_obj_left.is_expression()) {

@@ -752,6 +752,34 @@ expression:
       $$->set_name(token_name(sql_string, &@$));
       delete $2;
     }
+    | expression IN LBRACE select_stmt RBRACE {
+      // IN (SELECT ...) 表达式
+      auto subquery = new SubqueryExpr(SelectSqlNode::create_copy(&($4->selection)));
+      $$ = new InExpr(false, unique_ptr<Expression>($1), unique_ptr<Expression>(subquery));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $4;
+    }
+    | expression NOT IN LBRACE select_stmt RBRACE {
+      // NOT IN (SELECT ...) 表达式
+      auto subquery = new SubqueryExpr(SelectSqlNode::create_copy(&($5->selection)));
+      $$ = new InExpr(true, unique_ptr<Expression>($1), unique_ptr<Expression>(subquery));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $5;
+    }
+    | EXISTS LBRACE select_stmt RBRACE {
+      // EXISTS (SELECT ...) 表达式
+      auto subquery = new SubqueryExpr(SelectSqlNode::create_copy(&($3->selection)));
+      $$ = new ExistsExpr(false, unique_ptr<Expression>(subquery));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $3;
+    }
+    | NOT EXISTS LBRACE select_stmt RBRACE {
+      // NOT EXISTS (SELECT ...) 表达式
+      auto subquery = new SubqueryExpr(SelectSqlNode::create_copy(&($4->selection)));
+      $$ = new ExistsExpr(true, unique_ptr<Expression>(subquery));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $4;
+    }
     ;
 
 rel_attr:

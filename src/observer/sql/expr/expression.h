@@ -210,6 +210,15 @@ public:
   const char *table_name() const { return table_name_.c_str(); }
   const char *field_name() const { return field_name_.c_str(); }
 
+  std::unordered_set<std::string> get_involved_tables() const override
+  {
+    std::unordered_set<std::string> tables;
+    if (!table_name_.empty()) {
+      tables.insert(table_name_);
+    }
+    return tables;
+  }
+
 private:
   string table_name_;
   string field_name_;
@@ -699,4 +708,67 @@ private:
   // 用于缓存子查询的结果类型
   mutable AttrType cached_value_type_ = AttrType::UNDEFINED;
   mutable bool     type_cached_ = false;
+};
+
+/**
+ * @brief IN/NOT IN表达式
+ * 仅支持: expr IN (SELECT ...) 或 expr NOT IN (SELECT ...)
+ */
+class InExpr : public Expression
+{
+public:
+  InExpr(bool is_not, std::unique_ptr<Expression> left, std::unique_ptr<Expression> subquery);
+  virtual ~InExpr() = default;
+
+  std::unique_ptr<Expression> copy() const override;
+
+  ExprType type() const override { return ExprType::COMPARISON; }
+  AttrType value_type() const override { return AttrType::BOOLEANS; }
+  int      value_length() const override { return 4; }
+
+  RC get_value(const Tuple &tuple, Value &value) const override;
+  
+  void set_session_context_recursive(Session *session) override;
+
+  std::unordered_set<std::string> get_involved_tables() const override;
+
+  /**
+   * @brief 绑定内部的UnboundFieldExpr到具体的FieldExpr
+   * @param tables 可用的表列表
+   */
+  RC bind_fields(const std::vector<Table *> &tables);
+
+private:
+  bool                        is_not_;    // true表示NOT IN
+  std::unique_ptr<Expression> left_;     // 左侧表达式
+  std::unique_ptr<Expression> subquery_; // 子查询
+  mutable Session            *session_ = nullptr;
+};
+
+/**
+ * @brief EXISTS/NOT EXISTS表达式
+ * 支持: EXISTS (SELECT ...) 或 NOT EXISTS (SELECT ...)
+ */
+class ExistsExpr : public Expression
+{
+public:
+  ExistsExpr(bool is_not, std::unique_ptr<Expression> subquery);
+  virtual ~ExistsExpr() = default;
+
+  std::unique_ptr<Expression> copy() const override;
+
+  ExprType type() const override { return ExprType::COMPARISON; }
+  AttrType value_type() const override { return AttrType::BOOLEANS; }
+  int      value_length() const override { return 4; }
+
+  RC get_value(const Tuple &tuple, Value &value) const override;
+  
+  void set_session_context_recursive(Session *session) override;
+
+  std::unordered_set<std::string> get_involved_tables() const override;
+
+private:
+  bool                        is_not_;    // true表示NOT EXISTS
+  std::unique_ptr<Expression> subquery_;  // 子查询
+  mutable Session            *session_ = nullptr;
 };
