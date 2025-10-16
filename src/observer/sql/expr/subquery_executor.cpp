@@ -406,10 +406,14 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
     }
     
     // 只有IN和标量子查询需要检查列数，EXISTS不需要
-    if (check_single_column && cells_to_collect != 1) {
-      LOG_WARN("Subquery returns %d columns, but must return exactly 1", cells_to_collect);
-      physical_oper->close();
-      return RC::SQL_SYNTAX;
+    if (check_single_column) {
+      // 检查实际返回的列数，而不是预期收集的列数
+      // 因为SELECT * 在解析时是1个表达式，但执行时会展开成多列
+      if (tuple_cell_num != 1) {
+        LOG_WARN("Subquery returns %d columns, but must return exactly 1", tuple_cell_num);
+        physical_oper->close();
+        return RC::SQL_SYNTAX;
+      }
     }
     
     for (int i = 0; i < cells_to_collect; i++) {

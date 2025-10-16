@@ -39,7 +39,7 @@ ID | VAL
 
 === 测试5: 错误 - 比较运算符与多列 ===
 SELECT * FROM TEST_A WHERE VAL = (SELECT * FROM TEST_B WHERE ID = 1);
-ID | VAL
+FAILURE
 
 === 清理 ===
 DROP TABLE TEST_A;
