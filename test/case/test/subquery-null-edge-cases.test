@@ -1,0 +1,72 @@
+-- echo === 子查询NULL值和边界情况测试 ===
+
+-- echo === 初始化测试数据 ===
+CREATE TABLE test_null(id int, val int, name char(10));
+
+INSERT INTO test_null VALUES (1, 10, 'Alice');
+INSERT INTO test_null VALUES (2, 20, 'Bob');
+INSERT INTO test_null VALUES (3, 30, 'Charlie');
+
+-- echo === 测试1: IN值列表 - 包含NULL ===
+-- sort select * from test_null where val in (10, 20);
+
+-- echo === 测试2: NOT IN值列表 - 不包含NULL ===
+-- sort select * from test_null where val not in (10);
+
+-- echo === 测试3: 标量子查询 - COUNT空表 ===
+select count(*) from test_null where id > 100;
+
+-- echo === 测试4: 标量子查询 - AVG单行 ===
+select avg(val) from test_null where id = 1;
+
+-- echo === 测试5: IN - 单个值 ===
+-- sort select * from test_null where id in (2);
+
+-- echo === 测试6: NOT IN - 单个值 ===
+-- sort select * from test_null where id not in (2);
+
+-- echo === 测试7: EXISTS - 子查询有结果 ===
+-- sort select * from test_null where exists (select * from test_null where id = 1);
+
+-- echo === 测试8: NOT EXISTS - 子查询无结果 ===
+-- sort select * from test_null where not exists (select * from test_null where id > 100);
+
+-- echo === 测试9: IN子查询 - 单行结果 ===
+-- sort select * from test_null where id in (select id from test_null where id = 1);
+
+-- echo === 测试10: 标量子查询 - 等于NULL情况处理 ===
+-- sort select * from test_null where val = (select val from test_null where id > 100);
+
+-- echo === 测试11: 比较子查询 - 大于等于 ===
+-- sort select * from test_null where val >= (select min(val) from test_null);
+
+-- echo === 测试12: 比较子查询 - 小于等于 ===
+-- sort select * from test_null where val <= (select max(val) from test_null);
+
+-- echo === 测试13: IN空值列表 ===
+-- sort select * from test_null where id in ();
+
+-- echo === 测试14: 嵌套子查询 - IN中包含子查询 ===
+-- sort select * from test_null where id in (select id from test_null where val in (select val from test_null where id <= 2));
+
+-- echo === 测试15: 聚合函数SUM ===
+select sum(val) from test_null;
+
+-- echo === 测试16: 聚合函数COUNT ===
+select count(*) from test_null;
+
+-- echo === 测试17: 聚合函数MAX ===
+select max(val) from test_null;
+
+-- echo === 测试18: 聚合函数MIN ===
+select min(val) from test_null;
+
+-- echo === 测试19: 聚合函数AVG ===
+select avg(val) from test_null;
+
+-- echo === 测试20: 多个聚合函数组合 ===
+select count(*), sum(val), avg(val), max(val), min(val) from test_null;
+
+-- echo === 清理 ===
+DROP TABLE test_null;
+

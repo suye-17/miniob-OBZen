@@ -1,0 +1,92 @@
+-- echo === 高级子查询功能测试 ===
+
+-- echo === 初始化测试数据 ===
+CREATE TABLE students(id int, name char(20), age int, class_id int);
+CREATE TABLE classes(id int, class_name char(20), teacher char(20));
+CREATE TABLE scores(student_id int, subject char(20), score int);
+CREATE TABLE empty_table(id int, val int);
+
+INSERT INTO students VALUES (1, 'Alice', 20, 1);
+INSERT INTO students VALUES (2, 'Bob', 22, 1);
+INSERT INTO students VALUES (3, 'Charlie', 21, 2);
+INSERT INTO students VALUES (4, 'David', 23, 2);
+INSERT INTO students VALUES (5, 'Eve', 20, 3);
+
+INSERT INTO classes VALUES (1, 'Math', 'Prof. Smith');
+INSERT INTO classes VALUES (2, 'Physics', 'Prof. Jones');
+INSERT INTO classes VALUES (3, 'Chemistry', 'Prof. Brown');
+
+INSERT INTO scores VALUES (1, 'Math', 85);
+INSERT INTO scores VALUES (1, 'Physics', 90);
+INSERT INTO scores VALUES (2, 'Math', 78);
+INSERT INTO scores VALUES (2, 'Physics', 88);
+INSERT INTO scores VALUES (3, 'Math', 92);
+INSERT INTO scores VALUES (3, 'Physics', 85);
+INSERT INTO scores VALUES (4, 'Math', 70);
+
+-- echo === 测试1: IN子查询 - 查找有成绩的学生 ===
+-- sort select * from students where id in (select student_id from scores);
+
+-- echo === 测试2: NOT IN子查询 - 查找没有成绩的学生 ===
+-- sort select * from students where id not in (select student_id from scores);
+
+-- echo === 测试3: EXISTS - 查找有学生的班级 ===
+-- sort select * from classes where exists (select * from students where students.class_id = classes.id);
+
+-- echo === 测试4: NOT EXISTS - 查找没有学生的班级 ===
+-- sort select * from classes where not exists (select * from students where students.class_id = classes.id);
+
+-- echo === 测试5: 标量子查询 - 查找年龄大于平均年龄的学生 ===
+-- sort select * from students where age > (select avg(age) from students);
+
+-- echo === 测试6: 标量子查询 - 查找分数高于平均分的记录 ===
+-- sort select * from scores where score > (select avg(score) from scores);
+
+-- echo === 测试7: IN + 聚合 - 查找数学成绩大于80的学生 ===
+-- sort select * from students where id in (select student_id from scores where subject = 'Math' and score > 80);
+
+-- echo === 测试8: IN子查询 - 子查询返回空结果 ===
+-- sort select * from students where id in (select id from empty_table);
+
+-- echo === 测试9: NOT IN子查询 - 子查询返回空结果 ===
+-- sort select * from students where id not in (select id from empty_table);
+
+-- echo === 测试10: 标量子查询 MAX - 查找最高分 ===
+-- sort select * from scores where score = (select max(score) from scores);
+
+-- echo === 测试11: 标量子查询 MIN - 查找最低分 ===
+-- sort select * from scores where score = (select min(score) from scores);
+
+-- echo === 测试12: IN值列表 - 多个ID ===
+-- sort select * from students where id in (1, 3, 5);
+
+-- echo === 测试13: NOT IN值列表 ===
+-- sort select * from students where id not in (2, 4);
+
+-- echo === 测试14: 子查询与比较运算 - 大于最小分数 ===
+-- sort select * from scores where score > (select min(score) from scores);
+
+-- echo === 测试15: 子查询与比较运算 - 小于最大分数 ===
+-- sort select * from scores where score < (select max(score) from scores);
+
+-- echo === 测试16: EXISTS检查空表 ===
+-- sort select * from students where exists (select * from empty_table);
+
+-- echo === 测试17: NOT EXISTS检查空表 ===
+-- sort select * from students where not exists (select * from empty_table);
+
+-- echo === 测试18: IN子查询 - 特定班级的学生 ===
+-- sort select * from students where class_id in (select id from classes where id <= 2);
+
+-- echo === 测试19: 子查询COUNT - 查找大于学生总数一半的ID ===
+-- sort select * from students where id > (select count(*) from students) / 2;
+
+-- echo === 测试20: IN + 多条件子查询 ===
+-- sort select * from students where id in (select student_id from scores where score >= 85 and subject = 'Math');
+
+-- echo === 清理 ===
+DROP TABLE students;
+DROP TABLE classes;
+DROP TABLE scores;
+DROP TABLE empty_table;
+

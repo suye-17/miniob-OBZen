@@ -43,11 +43,18 @@ SubqueryExecutor::~SubqueryExecutor()
            cache_hits_, cache_misses_, total_executions_);
 }
 
-RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results)
+RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column)
 {
   if (select_node == nullptr || session == nullptr) {
     LOG_WARN("Invalid arguments: select_node=%p, session=%p", select_node, session);
     return RC::INVALID_ARGUMENT;
+  }
+
+  // 对于IN和标量子查询，检查是否只返回一列
+  // EXISTS不需要检查列数
+  if (check_single_column && select_node->expressions.size() != 1) {
+    LOG_WARN("Subquery must return exactly one column, but got %zu columns", select_node->expressions.size());
+    return RC::SQL_SYNTAX;
   }
 
   total_executions_++;
@@ -84,17 +91,17 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
       select_node->relations.size() == 1 && 
       select_node->conditions.empty() && 
       select_node->joins.empty()) {
-    rc = execute_simple_subquery(select_node, session, results);
+    rc = execute_simple_subquery(select_node, session, results, check_single_column);
   } else {
     // 对于复杂子查询或包含聚合函数的查询，使用完整的查询执行引擎
     LOG_DEBUG("Executing complex subquery with full query engine (aggregates: %d, relations: %zu, conditions: %zu, joins: %zu)",
               has_aggregate, select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
-    rc = execute_complex_subquery(select_node, session, results);
+    rc = execute_complex_subquery(select_node, session, results, check_single_column);
     
     // 如果复杂子查询失败，并且没有聚合函数，回退到简单实现
     if (rc != RC::SUCCESS && !has_aggregate) {
       LOG_WARN("Complex subquery execution failed, falling back to simple implementation");
-      rc = execute_simple_subquery(select_node, session, results);
+      rc = execute_simple_subquery(select_node, session, results, check_single_column);
     }
   }
 
@@ -107,9 +114,9 @@ RC SubqueryExecutor::execute_subquery(const SelectSqlNode *select_node, Session 
   return rc;
 }
 
-RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results)
+RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column)
 {
-  LOG_DEBUG("Executing simple subquery for table: %s", select_node->relations[0].c_str());
+  LOG_DEBUG("Executing simple subquery for table: %s (check_single_column=%d)", select_node->relations[0].c_str(), check_single_column);
 
   // 获取数据库
   Db *db = session->get_current_db();
@@ -161,15 +168,23 @@ RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, S
       Value value;
       RC expr_rc = RC::SUCCESS;
       
-      // 特殊处理：如果是 SELECT *，直接收集 tuple 的所有 cell
+      // 特殊处理：如果是 SELECT *，需要检查列数
       if (expr->type() == ExprType::STAR) {
-        LOG_DEBUG("SELECT * detected, collecting all tuple cells");
-        for (int cell_idx = 0; cell_idx < tuple->cell_num(); cell_idx++) {
+        LOG_DEBUG("SELECT * detected in subquery");
+        // 只有IN和标量子查询需要检查列数，EXISTS不需要
+        if (check_single_column && tuple->cell_num() != 1) {
+          LOG_WARN("Subquery with SELECT * returns %d columns, but must return exactly 1", tuple->cell_num());
+          scan_op.close();
+          return RC::SQL_SYNTAX;
+        }
+        // 收集所有列（EXISTS需要）或只收集第一列（IN/标量子查询）
+        int cells_to_collect = check_single_column ? 1 : tuple->cell_num();
+        for (int cell_idx = 0; cell_idx < cells_to_collect; cell_idx++) {
           Value cell_value;
           RC cell_rc = tuple->cell_at(cell_idx, cell_value);
           if (cell_rc == RC::SUCCESS) {
             results.push_back(cell_value);
-            LOG_DEBUG("Added cell[%d]: %s (type: %d)", cell_idx, 
+            LOG_DEBUG("Added cell[%d]: %s (type: %d)", cell_idx,
                      cell_value.to_string().c_str(), static_cast<int>(cell_value.attr_type()));
           } else {
             LOG_WARN("Failed to get cell %d from tuple, rc=%d", cell_idx, cell_rc);
@@ -292,10 +307,10 @@ RC SubqueryExecutor::execute_simple_subquery(const SelectSqlNode *select_node, S
   return rc;
 }
 
-RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results)
+RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column)
 {
-  LOG_DEBUG("Executing complex subquery with %zu relations, %zu conditions, %zu joins", 
-            select_node->relations.size(), select_node->conditions.size(), select_node->joins.size());
+  LOG_DEBUG("Executing complex subquery with %zu relations, %zu conditions, %zu joins (check_single_column=%d)", 
+            select_node->relations.size(), select_node->conditions.size(), select_node->joins.size(), check_single_column);
 
   // 获取数据库
   Db *db = session->get_current_db();
@@ -388,6 +403,13 @@ RC SubqueryExecutor::execute_complex_subquery(const SelectSqlNode *select_node, 
       // 明确指定列的情况，只收集指定数量
       cells_to_collect = expected_cell_num;
       LOG_DEBUG("Collecting %d cells as specified", cells_to_collect);
+    }
+    
+    // 只有IN和标量子查询需要检查列数，EXISTS不需要
+    if (check_single_column && cells_to_collect != 1) {
+      LOG_WARN("Subquery returns %d columns, but must return exactly 1", cells_to_collect);
+      physical_oper->close();
+      return RC::SQL_SYNTAX;
     }
     
     for (int i = 0; i < cells_to_collect; i++) {

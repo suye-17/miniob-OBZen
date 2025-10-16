@@ -1,0 +1,32 @@
+-- echo === IN子查询错误场景测试 ===
+
+-- echo === 初始化测试数据 ===
+CREATE TABLE test_a(id int, val int);
+CREATE TABLE test_b(id int, col1 int, col2 int);
+
+INSERT INTO test_a VALUES (1, 10);
+INSERT INTO test_a VALUES (2, 20);
+INSERT INTO test_a VALUES (3, 30);
+
+INSERT INTO test_b VALUES (1, 10, 100);
+INSERT INTO test_b VALUES (2, 20, 200);
+
+-- echo === 测试1: 正确的IN子查询 - 单列 ===
+-- sort select * from test_a where val in (select col1 from test_b);
+
+-- echo === 测试2: 错误 - IN子查询返回多列(SELECT *) ===
+select * from test_a where val in (select * from test_b);
+
+-- echo === 测试3: 错误 - IN子查询返回多列(显式) ===
+select * from test_a where val in (select id, col1 from test_b);
+
+-- echo === 测试4: 正确的比较 - 标量子查询单列 ===
+select * from test_a where val = (select col1 from test_b where id = 1);
+
+-- echo === 测试5: 错误 - 比较运算符与多列 ===
+select * from test_a where val = (select * from test_b where id = 1);
+
+-- echo === 清理 ===
+DROP TABLE test_a;
+DROP TABLE test_b;
+

@@ -39,8 +39,9 @@ public:
    * @param select_node 子查询节点
    * @param session 会话上下文
    * @param results 输出结果
+   * @param check_single_column 是否检查只返回单列（IN和标量子查询需要，EXISTS不需要）
    */
-  RC execute_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results);
+  RC execute_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column = true);
 
   /**
    * @brief 清除缓存
@@ -56,12 +57,12 @@ private:
   /**
    * @brief 执行简单单表子查询
    */
-  RC execute_simple_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results);
+  RC execute_simple_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column = true);
 
   /**
    * @brief 执行复杂子查询（使用完整的查询执行引擎）
    */
-  RC execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results);
+  RC execute_complex_subquery(const SelectSqlNode *select_node, Session *session, std::vector<Value> &results, bool check_single_column = true);
 
   /**
    * @brief 生成缓存键

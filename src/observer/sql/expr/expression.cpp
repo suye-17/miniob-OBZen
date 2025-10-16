@@ -1624,7 +1624,8 @@ RC ExistsExpr::get_value(const Tuple &tuple, Value &value) const
     return RC::INTERNAL;
   }
   static SubqueryExecutor executor;
-  RC rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
+  // EXISTS不需要检查列数，传false
+  RC rc = executor.execute_subquery(subquery_expr->subquery(), session_, results, false);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to execute subquery in EXISTS expression");
     return rc;
