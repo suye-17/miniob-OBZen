@@ -1,0 +1,33 @@
+-- echo === 标量子查询多列检查专项测试 ===
+
+-- echo === 初始化数据 ===
+CREATE TABLE s1(id int, val int);
+CREATE TABLE s2(id int, col1 int, col2 int, col3 char(10));
+
+INSERT INTO s1 VALUES (1, 100);
+INSERT INTO s1 VALUES (2, 200);
+
+INSERT INTO s2 VALUES (1, 10, 20, 'A');
+INSERT INTO s2 VALUES (2, 30, 40, 'B');
+
+-- echo === 测试1: 正确的标量子查询 - 单列 ===
+select * from s1 where val > (select col1 from s2 where id = 1);
+
+-- echo === 测试2: 错误 - 标量子查询SELECT * (多列) ===
+select * from s1 where val = (select * from s2 where id = 1);
+
+-- echo === 测试3: 错误 - 标量子查询显式多列 ===
+select * from s1 where val = (select col1, col2 from s2 where id = 1);
+
+-- echo === 测试4: 错误 - 比较运算符 > 与多列 ===
+select * from s1 where val > (select col1, col2, col3 from s2 where id = 1);
+
+-- echo === 测试5: 错误 - 比较运算符 < 与多列 ===
+select * from s1 where val < (select * from s2 where id = 2);
+
+-- echo === 测试6: 正确 - 聚合函数单列 ===
+select * from s1 where val > (select avg(col1) from s2);
+
+-- echo === 清理 ===
+DROP TABLE s1;
+DROP TABLE s2;
