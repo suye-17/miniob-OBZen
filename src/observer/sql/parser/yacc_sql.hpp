@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
-# define YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
+#ifndef YY_YY_HOME_SUYE_MINIOB_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
+# define YY_YY_HOME_SUYE_MINIOB_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -76,58 +76,65 @@ extern int yydebug;
     UPDATE = 277,                  /* UPDATE  */
     LBRACE = 278,                  /* LBRACE  */
     RBRACE = 279,                  /* RBRACE  */
-    COMMA = 280,                   /* COMMA  */
-    TRX_BEGIN = 281,               /* TRX_BEGIN  */
-    TRX_COMMIT = 282,              /* TRX_COMMIT  */
-    TRX_ROLLBACK = 283,            /* TRX_ROLLBACK  */
-    INT_T = 284,                   /* INT_T  */
-    STRING_T = 285,                /* STRING_T  */
-    FLOAT_T = 286,                 /* FLOAT_T  */
-    DATE_T = 287,                  /* DATE_T  */
-    NULL_T = 288,                  /* NULL_T  */
-    NOT = 289,                     /* NOT  */
-    IS = 290,                      /* IS  */
-    VECTOR_T = 291,                /* VECTOR_T  */
-    HELP = 292,                    /* HELP  */
-    EXIT = 293,                    /* EXIT  */
-    DOT = 294,                     /* DOT  */
-    INTO = 295,                    /* INTO  */
-    VALUES = 296,                  /* VALUES  */
-    FROM = 297,                    /* FROM  */
-    WHERE = 298,                   /* WHERE  */
-    AND = 299,                     /* AND  */
-    SET = 300,                     /* SET  */
-    ON = 301,                      /* ON  */
-    LOAD = 302,                    /* LOAD  */
-    DATA = 303,                    /* DATA  */
-    INFILE = 304,                  /* INFILE  */
-    EXPLAIN = 305,                 /* EXPLAIN  */
-    STORAGE = 306,                 /* STORAGE  */
-    FORMAT = 307,                  /* FORMAT  */
-    PRIMARY = 308,                 /* PRIMARY  */
-    KEY = 309,                     /* KEY  */
-    ANALYZE = 310,                 /* ANALYZE  */
-    COUNT = 311,                   /* COUNT  */
-    SUM = 312,                     /* SUM  */
-    AVG = 313,                     /* AVG  */
-    MAX = 314,                     /* MAX  */
-    MIN = 315,                     /* MIN  */
-    IN = 316,                      /* IN  */
-    LIKE = 317,                    /* LIKE  */
-    EXISTS = 318,                  /* EXISTS  */
-    INNER = 319,                   /* INNER  */
-    JOIN = 320,                    /* JOIN  */
-    NUMBER = 321,                  /* NUMBER  */
-    FLOAT = 322,                   /* FLOAT  */
-    ID = 323,                      /* ID  */
-    SSS = 324,                     /* SSS  */
-    EQ = 325,                      /* EQ  */
-    NE = 326,                      /* NE  */
-    LT = 327,                      /* LT  */
-    LE = 328,                      /* LE  */
-    GT = 329,                      /* GT  */
-    GE = 330,                      /* GE  */
-    UMINUS = 331                   /* UMINUS  */
+    LSBRACE = 280,                 /* LSBRACE  */
+    RSBRACE = 281,                 /* RSBRACE  */
+    COMMA = 282,                   /* COMMA  */
+    TRX_BEGIN = 283,               /* TRX_BEGIN  */
+    TRX_COMMIT = 284,              /* TRX_COMMIT  */
+    TRX_ROLLBACK = 285,            /* TRX_ROLLBACK  */
+    INT_T = 286,                   /* INT_T  */
+    STRING_T = 287,                /* STRING_T  */
+    FLOAT_T = 288,                 /* FLOAT_T  */
+    DATE_T = 289,                  /* DATE_T  */
+    NULL_T = 290,                  /* NULL_T  */
+    NOT = 291,                     /* NOT  */
+    IS = 292,                      /* IS  */
+    VECTOR_T = 293,                /* VECTOR_T  */
+    TEXT_T = 294,                  /* TEXT_T  */
+    HELP = 295,                    /* HELP  */
+    EXIT = 296,                    /* EXIT  */
+    DOT = 297,                     /* DOT  */
+    INTO = 298,                    /* INTO  */
+    VALUES = 299,                  /* VALUES  */
+    FROM = 300,                    /* FROM  */
+    WHERE = 301,                   /* WHERE  */
+    AND = 302,                     /* AND  */
+    SET = 303,                     /* SET  */
+    ON = 304,                      /* ON  */
+    LOAD = 305,                    /* LOAD  */
+    DATA = 306,                    /* DATA  */
+    INFILE = 307,                  /* INFILE  */
+    EXPLAIN = 308,                 /* EXPLAIN  */
+    STORAGE = 309,                 /* STORAGE  */
+    FORMAT = 310,                  /* FORMAT  */
+    PRIMARY = 311,                 /* PRIMARY  */
+    KEY = 312,                     /* KEY  */
+    ANALYZE = 313,                 /* ANALYZE  */
+    EQ = 314,                      /* EQ  */
+    LT = 315,                      /* LT  */
+    GT = 316,                      /* GT  */
+    LE = 317,                      /* LE  */
+    GE = 318,                      /* GE  */
+    NE = 319,                      /* NE  */
+    L2_DISTANCE = 320,             /* L2_DISTANCE  */
+    COSINE_DISTANCE = 321,         /* COSINE_DISTANCE  */
+    INNER_PRODUCT = 322,           /* INNER_PRODUCT  */
+    COUNT = 323,                   /* COUNT  */
+    SUM = 324,                     /* SUM  */
+    AVG = 325,                     /* AVG  */
+    MAX = 326,                     /* MAX  */
+    MIN = 327,                     /* MIN  */
+    IN = 328,                      /* IN  */
+    LIKE = 329,                    /* LIKE  */
+    EXISTS = 330,                  /* EXISTS  */
+    INNER = 331,                   /* INNER  */
+    JOIN = 332,                    /* JOIN  */
+    NUMBER = 333,                  /* NUMBER  */
+    FLOAT = 334,                   /* FLOAT  */
+    ID = 335,                      /* ID  */
+    SSS = 336,                     /* SSS  */
+    VECTOR_LITERAL = 337,          /* VECTOR_LITERAL  */
+    UMINUS = 338                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -136,29 +143,29 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 159 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.y"
+#line 182 "/home/suye/MiniOB/miniob/src/observer/sql/parser/yacc_sql.y"
 
-  ParsedSqlNode *                            sql_node;
-  ConditionSqlNode *                         condition;
-  Value *                                    value;
-  enum CompOp                                comp;
-  RelAttrSqlNode *                           rel_attr;
-  vector<AttrInfoSqlNode> *                  attr_infos;
-  AttrInfoSqlNode *                          attr_info;
-  Expression *                               expression;
-  vector<unique_ptr<Expression>> *           expression_list;
-  vector<Value> *                            value_list;
-  vector<ConditionSqlNode> *                 condition_list;
-  vector<RelAttrSqlNode> *                   rel_attr_list;
-  vector<string> *                           relation_list;
-  vector<JoinSqlNode> *                      join_list;
-  vector<string> *                           key_list;
-  UpdateList *                               update_list;
-  char *                                     cstring;
-  int                                        number;
-  float                                      floats;
+  ParsedSqlNode *                            sql_node;                // SQL节点指针
+  ConditionSqlNode *                         condition;               // 条件节点指针 
+  Value *                                    value;                   // 值指针
+  enum CompOp                                comp;                    // 比较操作符
+  RelAttrSqlNode *                           rel_attr;                // 关系属性节点
+  vector<AttrInfoSqlNode> *                  attr_infos;              // 属性信息列表
+  AttrInfoSqlNode *                          attr_info;               // 单个属性信息
+  Expression *                               expression;              // 表达式指针
+  vector<unique_ptr<Expression>> *           expression_list;         // 表达式列表
+  vector<Value> *                            value_list;              // 值列表
+  vector<ConditionSqlNode> *                 condition_list;          // 条件列表
+  vector<RelAttrSqlNode> *                   rel_attr_list;           // 关系属性列表
+  vector<string> *                           relation_list;           // 关系(表)名列表
+  vector<JoinSqlNode> *                      join_list;               // JOIN列表
+  vector<string> *                           key_list;                // 键列表
+  UpdateList *                               update_list;             // 更新列表
+  char *                                     cstring;                 // 字符串指针
+  int                                        number;                  // 整数
+  float                                      floats;                  // 浮点数
 
-#line 162 "/home/simpur/miniob-OBZen/src/observer/sql/parser/yacc_sql.hpp"
+#line 169 "/home/suye/MiniOB/miniob/src/observer/sql/parser/yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -186,4 +193,4 @@ struct YYLTYPE
 int yyparse (const char * sql_string, ParsedSqlResult * sql_result, void * scanner);
 
 
-#endif /* !YY_YY_HOME_SIMPUR_MINIOB_OBZEN_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED  */
+#endif /* !YY_YY_HOME_SUYE_MINIOB_MINIOB_SRC_OBSERVER_SQL_PARSER_YACC_SQL_HPP_INCLUDED  */
