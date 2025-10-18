@@ -14,13 +14,23 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "common/lang/string.h"
-#include "common/lang/memory.h"
-#include "common/lang/unordered_set.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include <cstdint>
+#include <unordered_set>
+#include "common/sys/rc.h"
 #include "common/value.h"
+#include "common/type/attr_type.h"
 #include "storage/field/field.h"
-#include "sql/expr/aggregator.h"
+#include "storage/common/column.h"
 #include "storage/common/chunk.h"
+#include "sql/expr/aggregator.h"
+
+using std::string;
+using std::vector;
+using std::unique_ptr;
+using std::unordered_set;
 
 class Tuple;
 struct SelectSqlNode;
@@ -406,15 +416,16 @@ public:
   RC execute_subquery(vector<Value> &results) const;
   RC execute_simple_subquery(const SelectSqlNode *select_node, vector<Value> &results) const;
   
-  // 缓存管理方法
-  void clear_subquery_cache() const;
+  // 🔧 修复：移除缓存管理方法声明
+  // void clear_subquery_cache() const;
   
   // 设置会话上下文（用于子查询执行）
   void set_session_context(class Session *session) override;
   
   // 遍历表达式树设置session上下文
   void set_session_context_recursive(class Session *session) override;
-  void clear_subquery_cache_recursive() override;
+  // 🔧 修复：移除缓存清理方法声明
+  // void clear_subquery_cache_recursive() override;
 
   // 重写：收集左右表达式涉及的表
   std::unordered_set<std::string> get_involved_tables() const override
@@ -445,9 +456,9 @@ private:
   unique_ptr<SelectSqlNode> subquery_ = nullptr;   ///< 子查询节点（拥有所有权）
   bool                     has_subquery_ = false; ///< 是否使用子查询
   
-  // 子查询结果缓存
-  mutable vector<Value>    subquery_cache_;       ///< 子查询结果缓存
-  mutable bool             cache_valid_ = false;  ///< 缓存是否有效
+  // 🔧 修复：移除 mutable 缓存变量，避免跨查询的状态污染
+  // mutable vector<Value>    subquery_cache_;
+  // mutable bool             cache_valid_ = false;
   
   // 会话上下文（用于子查询执行）
   mutable class Session   *session_ = nullptr;    ///< 会话上下文
@@ -705,9 +716,9 @@ private:
   unique_ptr<SelectSqlNode> subquery_;
   mutable Session *session_ = nullptr;
   
-  // 用于缓存子查询的结果类型
-  mutable AttrType cached_value_type_ = AttrType::UNDEFINED;
-  mutable bool     type_cached_ = false;
+  // 🔧 修复：移除 mutable 缓存变量，避免跨查询的状态污染
+  // mutable AttrType cached_value_type_ = AttrType::UNDEFINED;
+  // mutable bool     type_cached_ = false;
 };
 
 /**

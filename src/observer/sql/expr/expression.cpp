@@ -663,14 +663,11 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
     return RC::INVALID_ARGUMENT;
   }
   
-  // 检查缓存是否有效
-  if (cache_valid_) {
-    results = subquery_cache_;
-    LOG_DEBUG("Using cached subquery results, returned %zu values", results.size());
-    return RC::SUCCESS;
-  }
+  // 🔧 修复：移除 mutable 缓存检查，避免跨 Tuple 的状态污染
+  // 每次都重新执行子查询，确保数据正确性
+  // SubqueryExecutor 内部不再使用 static，避免了缓存污染
   
-  LOG_DEBUG("Executing subquery (no cache available)");
+  LOG_DEBUG("Executing subquery (always fresh execution)");
   
   const SelectSqlNode *select_node = subquery_.get();
   LOG_DEBUG("Executing subquery with %zu relations, %zu expressions", 
@@ -694,9 +691,6 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
     // 简单单表查询，尝试直接执行
     RC rc = execute_simple_subquery(select_node, results);
     if (rc == RC::SUCCESS) {
-      // 缓存结果
-      subquery_cache_ = results;
-      cache_valid_ = true;
       LOG_DEBUG("Simple subquery executed successfully, returned %zu values", results.size());
       return RC::SUCCESS;
     } else {
@@ -706,13 +700,11 @@ RC ComparisonExpr::execute_subquery(vector<Value> &results) const
   
   // 使用完整的SubqueryExecutor执行（支持聚合函数、JOIN、WHERE等复杂查询）
   LOG_DEBUG("Using SubqueryExecutor for complex subquery execution");
-  static SubqueryExecutor executor;
+  // 🔧 修复：移除static避免缓存污染
+  SubqueryExecutor executor;
   RC rc = executor.execute_subquery(select_node, session_, results);
   
   if (rc == RC::SUCCESS) {
-    // 缓存结果
-    subquery_cache_ = results;
-    cache_valid_ = true;
     LOG_DEBUG("Complex subquery executed successfully, returned %zu values", results.size());
     return RC::SUCCESS;
   } else {
@@ -734,7 +726,8 @@ RC ComparisonExpr::execute_simple_subquery(const SelectSqlNode *select_node, vec
   }
   
   // 使用SubqueryExecutor执行子查询
-  static SubqueryExecutor executor;
+  // 🔧 修复：移除static避免缓存污染
+  SubqueryExecutor executor;
   RC rc = executor.execute_subquery(select_node, session_, results);
   
   if (rc == RC::SUCCESS) {
@@ -746,12 +739,8 @@ RC ComparisonExpr::execute_simple_subquery(const SelectSqlNode *select_node, vec
   return rc;
 }
 
-void ComparisonExpr::clear_subquery_cache() const
-{
-  subquery_cache_.clear();
-  cache_valid_ = false;
-  LOG_DEBUG("Subquery cache cleared");
-}
+// 🔧 修复：移除缓存清理方法，已不再需要
+// void ComparisonExpr::clear_subquery_cache() const { ... }
 
 void ComparisonExpr::set_session_context(class Session *session)
 {
@@ -772,22 +761,8 @@ void ComparisonExpr::set_session_context_recursive(class Session *session)
   }
 }
 
-void ComparisonExpr::clear_subquery_cache_recursive()
-{
-  // 清理当前表达式的子查询缓存
-  if (has_subquery_) {
-    clear_subquery_cache();
-    LOG_DEBUG("Cleared subquery cache for ComparisonExpr");
-  }
-  
-  // 递归清理子表达式的缓存
-  if (left_) {
-    left_->clear_subquery_cache_recursive();
-  }
-  if (right_) {
-    right_->clear_subquery_cache_recursive();
-  }
-}
+// 🔧 修复：移除递归缓存清理方法，已不再需要
+// void ComparisonExpr::clear_subquery_cache_recursive() { ... }
 
 template <typename T>
 RC ComparisonExpr::compare_column(const Column &left, const Column &right, vector<uint8_t> &result) const
@@ -1267,10 +1242,7 @@ unique_ptr<Expression> SubqueryExpr::copy() const
 
 AttrType SubqueryExpr::value_type() const
 {
-  if (type_cached_) {
-    return cached_value_type_;
-  }
-
+  // 🔧 修复：移除缓存逻辑，每次重新计算类型
   // 需要分析子查询的SELECT列表来确定类型
   // 对于标量子查询，应该只有一个SELECT表达式
   if (subquery_ && !subquery_->expressions.empty()) {
@@ -1283,21 +1255,16 @@ AttrType SubqueryExpr::value_type() const
       // 根据聚合函数类型确定返回类型
       string agg_name = agg_expr->aggregate_name();
       if (agg_name == "count") {
-        cached_value_type_ = AttrType::INTS;
+        return AttrType::INTS;
       } else if (agg_name == "avg") {
-        cached_value_type_ = AttrType::FLOATS;
+        return AttrType::FLOATS;
       } else if (agg_name == "sum") {
-        // SUM的类型取决于输入类型，但通常是数值类型
-        cached_value_type_ = AttrType::FLOATS;  // 默认为FLOATS以支持更广泛的数值
+        return AttrType::FLOATS;  // 默认为FLOATS以支持更广泛的数值
       } else if (agg_name == "max" || agg_name == "min") {
-        // MAX/MIN的类型与输入字段类型相同，需要进一步分析
-        // 暂时返回FLOATS作为通用数值类型
-        cached_value_type_ = AttrType::FLOATS;
+        return AttrType::FLOATS;  // 暂时返回FLOATS作为通用数值类型
       } else {
-        cached_value_type_ = AttrType::FLOATS;  // 默认数值类型
+        return AttrType::FLOATS;  // 默认数值类型
       }
-      type_cached_ = true;
-      return cached_value_type_;
     }
     // 如果是UnboundFieldExpr，需要绑定后才能确定类型
     else if (first_expr->type() == ExprType::UNBOUND_FIELD) {
@@ -1312,32 +1279,24 @@ AttrType SubqueryExpr::value_type() const
             const TableMeta& table_meta = table->table_meta();
             const FieldMeta* field_meta = table_meta.field(field_expr->field_name());
             if (field_meta != nullptr) {
-              cached_value_type_ = field_meta->type();
-              type_cached_ = true;
-              return cached_value_type_;
+              return field_meta->type();
             }
           }
         }
       }
       // 如果无法确定具体类型，返回通用数值类型
-      cached_value_type_ = AttrType::FLOATS;
-      type_cached_ = true;
-      return cached_value_type_;
+      return AttrType::FLOATS;
     } else {
       // 对于其他类型的表达式，直接获取其类型
       AttrType expr_type = first_expr->value_type();
       if (expr_type != AttrType::UNDEFINED) {
-        cached_value_type_ = expr_type;
-        type_cached_ = true;
-        return cached_value_type_;
+        return expr_type;
       }
     }
   }
   
   // 如果无法确定类型，返回通用数值类型而不是UNDEFINED
-  cached_value_type_ = AttrType::FLOATS;
-  type_cached_ = true;
-  return cached_value_type_;
+  return AttrType::FLOATS;
 }
 
 int SubqueryExpr::value_length() const
@@ -1360,7 +1319,8 @@ RC SubqueryExpr::get_value(const Tuple &tuple, Value &value) const
   
   // 执行子查询
   std::vector<Value> results;
-  static SubqueryExecutor executor;
+  // 🔧 修复：移除static避免缓存污染
+  SubqueryExecutor executor;
   RC rc = executor.execute_subquery(subquery_.get(), session_, results);
   
   if (rc != RC::SUCCESS) {
@@ -1393,8 +1353,7 @@ RC SubqueryExpr::get_value(const Tuple &tuple, Value &value) const
 void SubqueryExpr::set_session_context_recursive(class Session *session)
 {
   session_ = session;
-  // 清除缓存的类型信息，以便重新计算
-  type_cached_ = false;
+  // 🔧 修复：移除缓存清理逻辑
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1452,7 +1411,8 @@ RC InExpr::get_value(const Tuple &tuple, Value &value) const
       LOG_WARN("Invalid subquery in IN expression");
       return RC::INTERNAL;
     }
-    static SubqueryExecutor executor;
+    // 🔧 修复：移除static避免缓存污染，每次创建新实例
+    SubqueryExecutor executor;
     rc = executor.execute_subquery(subquery_expr->subquery(), session_, results);
     if (rc != RC::SUCCESS) {
       LOG_WARN("Failed to execute subquery in IN expression");
@@ -1623,7 +1583,8 @@ RC ExistsExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("Invalid subquery in EXISTS expression");
     return RC::INTERNAL;
   }
-  static SubqueryExecutor executor;
+  // 🔧 修复：移除static避免缓存污染
+  SubqueryExecutor executor;
   // EXISTS不需要检查列数，传false
   RC rc = executor.execute_subquery(subquery_expr->subquery(), session_, results, false);
   if (rc != RC::SUCCESS) {
