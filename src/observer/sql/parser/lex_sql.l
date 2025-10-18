@@ -122,6 +122,7 @@ NULL                                    RETURN_TOKEN(NULL_T);
 NOT                                     RETURN_TOKEN(NOT);
 IS                                      RETURN_TOKEN(IS);
 VECTOR                                  RETURN_TOKEN(VECTOR_T);
+TEXT                                    RETURN_TOKEN(TEXT_T);
 LOAD                                    RETURN_TOKEN(LOAD);
 DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);
@@ -141,6 +142,9 @@ IN                                      RETURN_TOKEN(IN);
 EXISTS                                  RETURN_TOKEN(EXISTS);
 INNER                                   RETURN_TOKEN(INNER);
 JOIN                                    RETURN_TOKEN(JOIN);
+L2_DISTANCE                             RETURN_TOKEN(L2_DISTANCE);
+COSINE_DISTANCE                         RETURN_TOKEN(COSINE_DISTANCE);
+INNER_PRODUCT                           RETURN_TOKEN(INNER_PRODUCT);
 {ID}                                    yylval->cstring=strdup(yytext); static_cast<std::vector<char*>*>(yyextra)->push_back(yylval->cstring); RETURN_TOKEN(ID);
 "("                                     RETURN_TOKEN(LBRACE);
 ")"                                     RETURN_TOKEN(RBRACE);
@@ -160,6 +164,7 @@ JOIN                                    RETURN_TOKEN(JOIN);
 "/"                                     { return yytext[0]; }
 \"[^"]*\"                               yylval->cstring = strdup(yytext); static_cast<std::vector<char*>*>(yyextra)->push_back(yylval->cstring); RETURN_TOKEN(SSS);
 '[^']*\'                                yylval->cstring = strdup(yytext); static_cast<std::vector<char*>*>(yyextra)->push_back(yylval->cstring); RETURN_TOKEN(SSS);
+\[[^\]]*\]                              yylval->cstring = strdup(yytext); static_cast<std::vector<char*>*>(yyextra)->push_back(yylval->cstring); RETURN_TOKEN(VECTOR_LITERAL);
 
 .                                       LOG_DEBUG("Unknown character [%c]",yytext[0]); return yytext[0];
 %%

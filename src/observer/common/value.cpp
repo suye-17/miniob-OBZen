@@ -17,6 +17,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/exception.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "common/type/attr_type.h"
+#include "common/types.h"
 
 Value::Value(int val) { set_int(val); }   
 
@@ -34,6 +36,20 @@ Value::Value(const Value &other)
   this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   switch (this->attr_type_) {
     case AttrType::CHARS: {
+      set_string_from_other(other);
+    } break;
+    
+    case AttrType::VECTORS: {
+      if (other.value_.vector_value_ != nullptr) {
+        this->value_.vector_value_ = new vector<float>(*other.value_.vector_value_);
+        this->own_data_ = true;
+      } else {
+        this->value_.vector_value_ = nullptr;
+        this->own_data_ = false;
+      }
+    } break;
+
+    case AttrType::TEXTS: {
       set_string_from_other(other);
     } break;
 
@@ -66,6 +82,20 @@ Value &Value::operator=(const Value &other)
   this->is_null_   = other.is_null_;  // 修复：复制NULL标志
   switch (this->attr_type_) {
     case AttrType::CHARS: {
+      set_string_from_other(other);
+    } break;
+    
+    case AttrType::VECTORS: {
+      if (other.value_.vector_value_ != nullptr) {
+        this->value_.vector_value_ = new vector<float>(*other.value_.vector_value_);
+        this->own_data_ = true;
+      } else {
+        this->value_.vector_value_ = nullptr;
+        this->own_data_ = false;
+      }
+    } break;
+
+    case AttrType::TEXTS: {
       set_string_from_other(other);
     } break;
 
@@ -101,6 +131,19 @@ void Value::reset()
         value_.pointer_value_ = nullptr;
       }
       break;
+    case AttrType::VECTORS:
+      if (own_data_ && value_.vector_value_ != nullptr) {
+        delete value_.vector_value_;
+        value_.vector_value_ = nullptr;
+      }
+      break;
+    case AttrType::TEXTS: {
+      if (own_data_ && value_.pointer_value_ != nullptr) {
+        delete[] value_.pointer_value_;
+        value_.pointer_value_ = nullptr;
+      }
+      break;
+    }
     default: break;
   }
 
@@ -129,6 +172,12 @@ void Value::set_data(char *data, int length)
     case AttrType::CHARS: {
       set_string(data, length);
     } break;
+    case AttrType::TEXTS: {
+      RC rc = set_text(data, length);
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to set TEXT value: length=%d exceeds maximum %d", length, TEXT_MAX_LENGTH);
+      }
+    } break;
     case AttrType::INTS: {
       value_.int_value_ = *(int *)data;
       length_           = length;
@@ -144,6 +193,48 @@ void Value::set_data(char *data, int length)
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
       length_           = length;
+    } break;
+    case AttrType::VECTORS: {
+      // data 指向的是 float 数组，需要转换为 vector<float> 对象
+      // 边界检查
+      if (data == nullptr) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      if (length <= 0 || length % sizeof(float) != 0) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      int element_count = length / sizeof(float);
+      
+      // 大小检查
+      if (element_count > 16000) { // 防止过大的向量
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+        return;
+      }
+      
+      float *float_array = (float *)data;
+      
+      try {
+        // 创建新的 vector 并复制数据
+        vector<float> vec(float_array, float_array + element_count);
+        
+        value_.vector_value_ = new vector<float>(std::move(vec));
+        length_              = length;
+        own_data_            = true;
+      } catch (const std::exception &e) {
+        value_.vector_value_ = new vector<float>();
+        length_              = 0;
+        own_data_            = true;
+      }
     } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
@@ -208,6 +299,44 @@ void Value::set_date(int val)
   is_null_          = false;
 }
 
+void Value::set_vector(const vector<float> &val)
+{
+  reset();
+  attr_type_          = AttrType::VECTORS;
+  own_data_           = true; 
+  value_.vector_value_ = new vector<float>(val);
+  length_              = val.size() * sizeof(float);
+}
+
+RC Value::set_text(const char *s, int len /*= 65535*/)
+{
+  reset();
+  attr_type_ = AttrType::TEXTS;
+  if (s == nullptr) {
+    value_.pointer_value_ = nullptr;
+    length_               = 0;
+    return RC::SUCCESS;
+  }
+  
+  own_data_ = true;
+  // 对于TEXT类型，len参数是实际长度，不使用strlen/strnlen避免截断
+  if (len <= 0) {
+    len = strlen(s); // 只在len无效时才使用strlen
+  }
+  
+  // 严格检查TEXT长度限制（符合MySQL严格模式）
+  if (len > TEXT_MAX_LENGTH) {
+    LOG_ERROR("TEXT data length %d exceeds maximum allowed length %d bytes", len, TEXT_MAX_LENGTH);
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  value_.pointer_value_ = new char[len + 1];
+  length_               = len;
+  memcpy(value_.pointer_value_, s, len);
+  value_.pointer_value_[len] = '\0';
+  return RC::SUCCESS;
+}
+
 void Value::set_value(const Value &value)
 {
   if (value.is_null()) {
@@ -232,6 +361,15 @@ void Value::set_value(const Value &value)
     case AttrType::DATES: {
       set_int(value.get_int());
     } break;
+    case AttrType::VECTORS: {
+      set_vector(value.get_vector());
+    } break;
+    case AttrType::TEXTS: {
+      RC rc = set_text(value.get_string().c_str());
+      if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to set TEXT value from string");
+      }
+    } break;
     default: {
       ASSERT(false, "got an invalid value type");
     } break;
@@ -240,11 +378,9 @@ void Value::set_value(const Value &value)
 
 void Value::set_string_from_other(const Value &other)
 {
-  ASSERT(attr_type_ == AttrType::CHARS, "attr type is not CHARS");
-  // 修复：无论 own_data_ 的值如何，只要 other 有有效的字符串数据，就进行深拷贝
-  // 这样可以避免多个 Value 对象共享同一块内存导致的 use-after-free 问题
-  if (other.value_.pointer_value_ != nullptr && length_ != 0) {
-    this->own_data_ = true;  // 拷贝后的对象总是拥有自己的数据
+  ASSERT(attr_type_ == AttrType::CHARS || attr_type_ == AttrType::TEXTS, 
+    "attr type is not CHARS or TEXTS");
+  if (own_data_ && other.value_.pointer_value_ != nullptr && length_ != 0) {
     this->value_.pointer_value_ = new char[this->length_ + 1];
     memcpy(this->value_.pointer_value_, other.value_.pointer_value_, this->length_);
     this->value_.pointer_value_[this->length_] = '\0';
@@ -259,6 +395,15 @@ const char *Value::data() const
 {
   switch (attr_type_) {
     case AttrType::CHARS: {
+      return value_.pointer_value_;
+    } break;
+    case AttrType::VECTORS: {
+      if (value_.vector_value_ != nullptr && !value_.vector_value_->empty()) {
+        return (const char *)value_.vector_value_->data();
+      }
+      return nullptr;
+    } break;
+    case AttrType::TEXTS: {
       return value_.pointer_value_;
     } break;
     default: {
@@ -309,6 +454,14 @@ int Value::get_int() const
         return 0;
       }
     }
+    case AttrType::TEXTS: {
+      try {
+        return (int)(stol(value_.pointer_value_));
+      } catch (exception const &ex) {
+        LOG_TRACE("failed to convert string to number. s=%s, ex=%s", value_.pointer_value_, ex.what());
+        return 0;
+      }
+    }
     case AttrType::INTS: {
       return value_.int_value_;
     }
@@ -352,6 +505,22 @@ float Value::get_float() const
     }
   }
   return 0;
+}
+
+vector<float> Value::get_vector() const
+{
+  switch (attr_type_) {
+    case AttrType::VECTORS: {
+      if (value_.vector_value_ != nullptr) {
+        return *value_.vector_value_;
+      }
+      return vector<float>();
+    }
+    default: {
+      LOG_WARN("unknown data type. type=%d", attr_type_);
+      return vector<float>();
+    }
+  }
 }
 
 string Value::get_string() const { return this->to_string(); }

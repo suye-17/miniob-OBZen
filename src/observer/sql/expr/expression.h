@@ -50,6 +50,7 @@ enum class ExprType
   ARITHMETIC,   ///< 算术运算
   AGGREGATION,  ///< 聚合运算
   SUBQUERY,     ///< 子查询表达式
+  FUNCTION,     ///< 函数表达式（如距离函数）
 };
 
 /**
@@ -780,4 +781,46 @@ private:
   bool                        is_not_;    // true表示NOT EXISTS
   std::unique_ptr<Expression> subquery_;  // 子查询
   mutable Session            *session_ = nullptr;
+};
+
+/**
+ * @brief 距离函数表达式
+ * @ingroup Expression
+ */
+class DistanceFunctionExpr : public Expression
+{
+public:
+  enum class Type
+  {
+    L2_DISTANCE,      ///< 欧几里得距离：sqrt(sum((a_i - b_i)^2))
+    COSINE_DISTANCE,  ///< 余弦距离：1 - (a·b)/(|a||b|)
+    INNER_PRODUCT,    ///< 内积：a·b = sum(a_i * b_i)
+  };
+
+public:
+  DistanceFunctionExpr(Type type, unique_ptr<Expression> left, unique_ptr<Expression> right);
+  virtual ~DistanceFunctionExpr() = default;
+
+  ExprType type() const override { return ExprType::FUNCTION; }
+  AttrType value_type() const override { return AttrType::FLOATS; }
+
+  RC get_value(const Tuple &tuple, Value &value) const override;
+  RC get_column(Chunk &chunk, Column &column) override;
+  
+  bool equal(const Expression &other) const override;
+  unique_ptr<Expression> copy() const override;
+
+  Type distance_type() const { return distance_type_; }
+  const unique_ptr<Expression> &left() const { return left_; }
+  const unique_ptr<Expression> &right() const { return right_; }
+  unique_ptr<Expression> &left() { return left_; }
+  unique_ptr<Expression> &right() { return right_; }
+
+private:
+  RC calculate_distance(const Value &left_val, const Value &right_val, Value &result) const;
+
+private:
+  Type                   distance_type_;
+  unique_ptr<Expression> left_;
+  unique_ptr<Expression> right_;
 };

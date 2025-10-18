@@ -80,6 +80,10 @@ function do_init
   git -C "deps/3rd/jsoncpp" checkout 1.9.6 || return
   current_dir=$PWD
 
+  # 设置兼容的 C/C++ 标准，避免 glibc 符号不兼容问题
+  export CFLAGS="-O2 -std=gnu11"
+  export CXXFLAGS="-O2 -std=gnu++17"
+
   MAKE_COMMAND="make --silent"
 
   # build libevent

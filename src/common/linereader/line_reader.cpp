@@ -56,7 +56,15 @@ std::string MiniobLineReader::my_readline(const std::string &prompt)
   }
 
   if (is_valid_input) {
-    reader_.history_add(line);
+    // 限制历史记录中的命令长度，避免超长TEXT数据影响历史记录浏览
+    const size_t MAX_HISTORY_LINE_LENGTH = 1000;
+    if (line.length() <= MAX_HISTORY_LINE_LENGTH) {
+      reader_.history_add(line);
+    } else {
+      // 对于超长命令，只保存前面部分并添加省略标记
+      std::string truncated_line = line.substr(0, MAX_HISTORY_LINE_LENGTH) + "... [truncated]";
+      reader_.history_add(truncated_line);
+    }
     check_and_save_history();
   }
 

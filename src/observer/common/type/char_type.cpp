@@ -10,9 +10,11 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/comparator.h"
 #include "common/log/log.h"
+#include "common/type/attr_type.h"
 #include "common/type/char_type.h"
 #include "common/value.h"
 #include "common/utils.h"
+#include "common/types.h"
 
 int CharType::compare(const Value &left, const Value &right) const
 {
@@ -97,12 +99,25 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
         return rc;
       }
       result.set_int(date);
-      return RC::SUCCESS;
-    }
-    default: 
-      LOG_WARN("Unsupported cast from CHARS to type %d", static_cast<int>(type));
-      return RC::UNIMPLEMENTED;
+    } break;
+    case AttrType::VECTORS: {
+      std::vector<float> elements;
+      RC rc = parse_vector_literal(val.value_.pointer_value_, elements);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      result.set_vector(elements);
+    } break;
+    case AttrType::TEXTS: {
+      // set_text内部会检查TEXT长度限制（符合MySQL严格模式）
+      RC rc = result.set_text(val.value_.pointer_value_, val.length_);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+    } break;
+    default: return RC::UNIMPLEMENTED;
   }
+  return RC::SUCCESS;
 }
 
 int CharType::cast_cost(AttrType type)
@@ -118,6 +133,9 @@ int CharType::cast_cost(AttrType type)
   }
   if (type == AttrType::FLOATS) {
     return 1;
+  }
+  if (type == AttrType::VECTORS) {
+    return 1;  
   }
   return INT32_MAX;
 }

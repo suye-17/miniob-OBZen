@@ -11,9 +11,11 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/heap_table_engine.h"
 #include "storage/record/heap_record_scanner.h"
 #include "common/log/log.h"
+#include "common/types.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/common/meta_util.h"
 #include "storage/db/db.h"
+#include "storage/buffer/page_type.h"
 
 HeapTableEngine::~HeapTableEngine()
 {
@@ -38,11 +40,125 @@ HeapTableEngine::~HeapTableEngine()
 RC HeapTableEngine::insert_record(Record &record)
 {
   RC rc = RC::SUCCESS;
-  rc    = record_handler_->insert_record(record.data(), table_meta_->record_size(), &record.rid());
+  
+  // 处理TEXT字段的overflow pages
+  // 如果record中包含extended TEXT格式，需要先创建overflow pages
+  const std::vector<FieldMeta> *field_metas = table_meta_->field_metas();
+  int base_record_size = table_meta_->record_size();
+  
+  // 创建实际要插入的record（只包含base_record_size）
+  char *final_record_data = (char *)malloc(base_record_size);
+  memcpy(final_record_data, record.data(), base_record_size);
+  
+  for (const FieldMeta &field_meta : *field_metas) {
+    if (field_meta.type() != AttrType::TEXTS) {
+      continue;
+    }
+    
+    const char *field_data = record.data() + field_meta.offset();
+    uint32_t marker = 0;
+    memcpy(&marker, field_data, sizeof(uint32_t));
+    
+    
+    // 处理extended TEXT格式（来自Table::make_record）
+    if (marker == 0xFFFFFFFF) {
+      uint32_t full_length = 0;
+      uint32_t data_offset_in_record = 0;
+      memcpy(&full_length, field_data + 4, sizeof(uint32_t));
+      memcpy(&data_offset_in_record, field_data + 8, sizeof(uint32_t));
+      
+      const char *actual_text_data = record.data() + data_offset_in_record;
+      size_t inline_capacity = std::min(static_cast<size_t>(INLINE_TEXT_CAPACITY), 
+                                        static_cast<size_t>(field_meta.len() - 16));
+      
+      if (full_length <= inline_capacity) {
+        memcpy(final_record_data + field_meta.offset(), actual_text_data, full_length);
+        if (full_length < static_cast<size_t>(field_meta.len())) {
+          final_record_data[field_meta.offset() + full_length] = '\0';
+        }
+      } else {
+        // 长TEXT：写入inline + 创建overflow pages
+        // 确保不会读取超过TEXT_MAX_LENGTH的数据
+        uint32_t safe_length = std::min(full_length, static_cast<uint32_t>(TEXT_MAX_LENGTH));
+        size_t remaining = safe_length;
+        const char *src_ptr = actual_text_data;
+        
+        memcpy(final_record_data + field_meta.offset(), src_ptr, inline_capacity);
+        src_ptr += inline_capacity;
+        remaining -= inline_capacity;
+        
+        PageNum first_page_num = -1;
+        PageNum current_page_num = -1;
+        PageNum prev_page_num = -1;
+        
+        while (remaining > 0) {
+          Frame *frame = nullptr;
+          rc = record_handler_->allocate_overflow_page(&frame);
+          if (rc != RC::SUCCESS) {
+            LOG_ERROR("Failed to allocate overflow page for TEXT field");
+            free(final_record_data);
+            return rc;
+          }
+          
+          current_page_num = frame->page_num();
+          
+          if (first_page_num == -1) {
+            first_page_num = current_page_num;
+          }
+          
+          char *page_data = frame->data();
+          OverflowPageHeader *header = reinterpret_cast<OverflowPageHeader *>(page_data);
+          header->page_type = PageType::TEXT_OVERFLOW;
+          header->next_page = -1;
+          
+          size_t page_capacity = record_handler_->get_overflow_page_capacity();
+          size_t to_write = (remaining > page_capacity) ? page_capacity : remaining;
+          
+          header->data_length = static_cast<uint32_t>(to_write);
+          memcpy(page_data + sizeof(OverflowPageHeader), src_ptr, to_write);
+          
+          frame->mark_dirty();
+          data_buffer_pool_->unpin_page(frame);
+          
+          if (prev_page_num != -1) {
+            Frame *prev_frame = nullptr;
+            rc = data_buffer_pool_->get_this_page(prev_page_num, &prev_frame);
+            if (rc == RC::SUCCESS) {
+              OverflowPageHeader *prev_header = reinterpret_cast<OverflowPageHeader *>(prev_frame->data());
+              prev_header->next_page = current_page_num;
+              prev_frame->mark_dirty();
+              data_buffer_pool_->unpin_page(prev_frame);
+            }
+          }
+          
+          prev_page_num = current_page_num;
+          src_ptr += to_write;
+          remaining -= to_write;
+        }
+        
+        // 写入overflow pointer: [table_id][page_num][offset][total_length]
+        char *overflow_ptr = final_record_data + field_meta.offset() + inline_capacity;
+        uint32_t table_id = table_meta_->table_id();
+        uint32_t offset = sizeof(OverflowPageHeader);
+        
+        memcpy(overflow_ptr, &table_id, sizeof(uint32_t));
+        memcpy(overflow_ptr + 4, &first_page_num, sizeof(PageNum));
+        memcpy(overflow_ptr + 8, &offset, sizeof(uint32_t));
+        memcpy(overflow_ptr + 12, &safe_length, sizeof(uint32_t));
+      }
+    }
+  }
+  
+  // 插入最终的record
+  rc = record_handler_->insert_record(final_record_data, base_record_size, &record.rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%s", table_meta_->name(), strrc(rc));
+    free(final_record_data);
     return rc;
   }
+  
+  // 更新record的data为final_record_data（用于后续的索引操作）
+  record.set_data_owner(final_record_data, base_record_size);
 
   rc = insert_entry_of_indexes(record.data(), record.rid());
   if (rc != RC::SUCCESS) {  // 可能出现了键值重复
@@ -119,39 +235,165 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
               table_meta_->name(), old_record.rid().to_string().c_str(), strrc(rc));
     return rc;
   }
-
-  // 第一步：删除旧记录在所有索引中的条目（使用实际记录数据）
+  
+  // 删除旧记录的索引条目
   for (Index *index : indexes_) {
     rc = index->delete_entry(actual_old_record.data(), &actual_old_record.rid());
     if (rc != RC::SUCCESS) {
-      // 如果索引条目不存在，可能是之前就有不一致的情况，记录警告但继续
       if (rc == RC::RECORD_NOT_EXIST) {
         LOG_WARN("index entry not found when deleting, may be inconsistent. table=%s, index=%s, rid=%s",
                  table_meta_->name(), index->index_meta().name(), actual_old_record.rid().to_string().c_str());
       } else {
         LOG_ERROR("failed to delete entry from index when updating. table name=%s, index name=%s, rid=%s, rc=%s",
                   table_meta_->name(), index->index_meta().name(), actual_old_record.rid().to_string().c_str(), strrc(rc));
-        // 对于严重错误，需要返回失败
         return rc;
       }
     }
   }
 
-  // 第二步：使用visit_record更新实际的记录数据
-  rc = record_handler_->visit_record(old_record.rid(), [&new_record](Record &record) -> bool {
-    // 将新数据复制到记录中
-    memcpy(record.data(), new_record.data(), new_record.len());
-    return true;  // 返回true表示记录被修改了
+  // 释放TEXT overflow pages
+  rc = record_handler_->free_text_overflow_pages(actual_old_record);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to free old TEXT overflow pages. table name=%s, rid=%s, rc=%s",
+             table_meta_->name(), old_record.rid().to_string().c_str(), strrc(rc));
+  }
+  
+  // 更新record并处理TEXT字段
+  rc = record_handler_->visit_record(old_record.rid(), [this, &new_record](Record &record) -> bool {
+    
+    // 处理TEXT字段：检测格式并创建overflow pages（如需要）
+    for (int i = 0; i < table_meta_->field_num(); i++) {
+      const FieldMeta *field = table_meta_->field(i);
+      if (field->type() != AttrType::TEXTS) {
+        continue;
+      }
+      
+      char *field_ptr = record.data() + field->offset();
+      const char *new_field_ptr = new_record.data() + field->offset();
+      
+      uint32_t magic = *reinterpret_cast<const uint32_t*>(new_field_ptr);
+      bool is_overflow_ptr = (magic == static_cast<uint32_t>(table_meta_->table_id()));
+      bool is_extended_text = (magic == 0xFFFFFFFF);
+      bool is_raw_string = !is_overflow_ptr && !is_extended_text;
+      
+      if (is_raw_string || is_extended_text) {
+        const char *actual_text_data = nullptr;
+        uint32_t text_len = 0;
+        
+        if (is_extended_text) {
+          uint32_t full_length = *reinterpret_cast<const uint32_t*>(new_field_ptr + 4);
+          uint32_t data_offset_in_record = *reinterpret_cast<const uint32_t*>(new_field_ptr + 8);
+          // 确保不超过TEXT_MAX_LENGTH
+          text_len = std::min(full_length, static_cast<uint32_t>(TEXT_MAX_LENGTH));
+          actual_text_data = new_record.data() + data_offset_in_record;
+        } else {
+          uint32_t field_offset = field->offset();
+          uint32_t max_readable = new_record.len() - field_offset;
+          text_len = strnlen(new_field_ptr, std::min(max_readable, static_cast<uint32_t>(field->len())));
+          actual_text_data = new_field_ptr;
+        }
+        
+        const uint32_t inline_capacity = field->len() - 16;
+        
+        if (text_len <= inline_capacity) {
+          memset(field_ptr, 0, field->len());
+          if (text_len > 0) {
+            memcpy(field_ptr, actual_text_data, text_len);
+          }
+        } else {
+          // 长TEXT：写入inline + 创建overflow pages
+          memcpy(field_ptr, actual_text_data, inline_capacity);
+          
+          char *overflow_ptr = field_ptr + inline_capacity;
+          uint32_t *magic_ptr = reinterpret_cast<uint32_t*>(overflow_ptr);
+          PageNum *page_num_ptr = reinterpret_cast<PageNum*>(overflow_ptr + 4);
+          uint32_t *offset_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 8);
+          uint32_t *total_len_ptr = reinterpret_cast<uint32_t*>(overflow_ptr + 12);
+          
+          *magic_ptr = table_meta_->table_id();
+          *offset_ptr = sizeof(OverflowPageHeader);
+          *total_len_ptr = text_len;
+          
+          uint32_t remain = text_len - inline_capacity;
+          const char *overflow_data = actual_text_data + inline_capacity;
+          
+          const uint32_t PAGE_CAPACITY = record_handler_->get_overflow_page_capacity();
+          int num_pages = (remain + PAGE_CAPACITY - 1) / PAGE_CAPACITY;
+          PageNum first_page_num = BP_INVALID_PAGE_NUM;
+          Frame *prev_frame = nullptr;
+          uint32_t data_offset = 0;
+          
+          for (int p = 0; p < num_pages; p++) {
+            Frame *frame = nullptr;
+            RC alloc_rc = record_handler_->allocate_overflow_page(&frame);
+            if (alloc_rc != RC::SUCCESS) {
+              LOG_ERROR("Failed to allocate overflow page for TEXT field update. rc=%s", strrc(alloc_rc));
+              return false;
+            }
+            
+            frame->write_latch();
+            OverflowPageHeader *header = reinterpret_cast<OverflowPageHeader*>(frame->data());
+            header->page_type = PageType::TEXT_OVERFLOW;
+            header->next_page = BP_INVALID_PAGE_NUM;
+            
+            uint32_t write_size = std::min(PAGE_CAPACITY, remain - data_offset);
+            header->data_length = write_size;
+            if (p == 0) {
+              header->total_length = text_len;
+              first_page_num = frame->page_num();
+            } else {
+              header->total_length = 0;
+            }
+            
+            memcpy(frame->data() + sizeof(OverflowPageHeader), overflow_data + data_offset, write_size);
+            
+            if (prev_frame != nullptr) {
+              OverflowPageHeader *prev_header = reinterpret_cast<OverflowPageHeader*>(prev_frame->data());
+              prev_header->next_page = frame->page_num();
+              prev_frame->mark_dirty();
+              prev_frame->write_unlatch();
+              prev_frame->unpin();
+            }
+            
+            frame->mark_dirty();
+            prev_frame = frame;
+            data_offset += write_size;
+          }
+          
+          if (prev_frame != nullptr) {
+            prev_frame->write_unlatch();
+            prev_frame->unpin();
+          }
+          
+          *page_num_ptr = first_page_num;
+        }
+      } else {
+        memcpy(field_ptr, new_field_ptr, field->len());
+      }
+    }
+    
+    // 复制非TEXT字段
+    for (int i = 0; i < table_meta_->field_num(); i++) {
+      const FieldMeta *field = table_meta_->field(i);
+      if (field->type() == AttrType::TEXTS) {
+        continue;
+      }
+      
+      char *field_ptr = record.data() + field->offset();
+      const char *new_field_ptr = new_record.data() + field->offset();
+      memcpy(field_ptr, new_field_ptr, field->len());
+    }
+    
+    return true;
   });
-
   if (rc != RC::SUCCESS) {
     LOG_ERROR("failed to update record data. table name=%s, rid=%s, rc=%s",
               table_meta_->name(), old_record.rid().to_string().c_str(), strrc(rc));
     return rc;
   }
 
-  // 第三步：在所有索引中插入新记录的条目
-  rc = insert_entry_of_indexes(new_record.data(), new_record.rid());
+  // 插入新记录的索引条目
+  rc = insert_entry_of_indexes(new_record.data(), old_record.rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("failed to insert new entry into indexes when updating. table name=%s, rid=%s, rc=%s",
               table_meta_->name(), new_record.rid().to_string().c_str(), strrc(rc));
@@ -174,8 +416,9 @@ RC HeapTableEngine::update_record_with_trx(const Record &old_record, const Recor
 
 RC HeapTableEngine::get_record_scanner(RecordScanner *&scanner, Trx *trx, ReadWriteMode mode)
 {
-  scanner = new HeapRecordScanner(table_, *data_buffer_pool_, trx, db_->log_handler(), mode, nullptr);
-  RC rc   = scanner->open_scan();
+
+  scanner = new HeapRecordScanner(table_, *data_buffer_pool_, record_handler_, trx, db_->log_handler(), mode, nullptr);
+  RC rc = scanner->open_scan();
   if (rc != RC::SUCCESS) {
     LOG_ERROR("failed to open scanner. rc=%s", strrc(rc));
   }

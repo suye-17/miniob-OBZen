@@ -22,10 +22,11 @@ See the Mulan PSL v2 for more details. */
 class HeapRecordScanner : public RecordScanner
 {
 public:
-  HeapRecordScanner(Table *table, DiskBufferPool &buffer_pool, Trx *trx, LogHandler &log_handler, ReadWriteMode mode,
+  HeapRecordScanner(Table *table, DiskBufferPool &buffer_pool, RecordFileHandler *record_handler, Trx *trx, LogHandler &log_handler, ReadWriteMode mode,
       ConditionFilter *condition_filter)
       : table_(table),
         disk_buffer_pool_(&buffer_pool),
+        record_handler_(record_handler),
         trx_(trx),
         log_handler_(&log_handler),
         rw_mode_(mode),
@@ -65,10 +66,11 @@ private:
   // TODO 对于一个纯粹的record遍历器来说，不应该关心表和事务
   Table *table_ = nullptr;  ///< 当前遍历的是哪张表。这个字段仅供事务函数使用，如果设计合适，可以去掉
 
-  DiskBufferPool *disk_buffer_pool_ = nullptr;  ///< 当前访问的文件
-  Trx            *trx_              = nullptr;  ///< 当前是哪个事务在遍历
-  LogHandler     *log_handler_      = nullptr;
-  ReadWriteMode   rw_mode_ = ReadWriteMode::READ_WRITE;  ///< 遍历出来的数据，是否可能对它做修改
+  DiskBufferPool     *disk_buffer_pool_ = nullptr;  ///< 当前访问的文件
+  RecordFileHandler  *record_handler_   = nullptr;  ///< 用于检查溢出页
+  Trx                *trx_              = nullptr;  ///< 当前是哪个事务在遍历
+  LogHandler         *log_handler_      = nullptr;
+  ReadWriteMode       rw_mode_ = ReadWriteMode::READ_WRITE;  ///< 遍历出来的数据，是否可能对它做修改
 
   BufferPoolIterator bp_iterator_;                    ///< 遍历buffer pool的所有页面
   ConditionFilter   *condition_filter_    = nullptr;  ///< 过滤record

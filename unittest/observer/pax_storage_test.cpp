@@ -73,7 +73,7 @@ TEST_P(PaxRecordFileScannerWithParam, DISABLED_test_file_iterator)
   table.table_meta_.storage_format_ = StorageFormat::PAX_FORMAT;
   // no record
   // record iterator
-  HeapRecordScanner record_scanner(&table, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+  HeapRecordScanner record_scanner(&table, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr/*condition_filter*/);
   rc = record_scanner.open_scan();
   ASSERT_EQ(rc, RC::SUCCESS);
 
@@ -116,7 +116,7 @@ TEST_P(PaxRecordFileScannerWithParam, DISABLED_test_file_iterator)
 
   // record iterator
   {
-    HeapRecordScanner record_scanner(&table, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+    HeapRecordScanner record_scanner(&table, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
     rc = record_scanner.open_scan();
     ASSERT_EQ(rc, RC::SUCCESS);
 
@@ -150,7 +150,7 @@ TEST_P(PaxRecordFileScannerWithParam, DISABLED_test_file_iterator)
 
   // record iterator
   {
-    HeapRecordScanner record_scanner(&table, *bp, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
+    HeapRecordScanner record_scanner(&table, *bp, nullptr /*record_handler*/, &trx, log_handler, ReadWriteMode::READ_ONLY, nullptr /*condition_filter*/);
     rc = record_scanner.open_scan();
     ASSERT_EQ(rc, RC::SUCCESS);
 

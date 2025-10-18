@@ -52,7 +52,9 @@ RC ParseStage::handle_request(SQLStageEvent *sql_event)
     // set error information to event
     rc = RC::SQL_SYNTAX;
     sql_result->set_return_code(rc);
-    sql_result->set_state_string("");  // 设置为空，使输出简单的 FAILURE
+    // 使用yacc中设置的详细错误消息，而不是固定的"Failed to parse sql"
+    const string &error_msg = sql_node->error.error_msg;
+    sql_result->set_state_string(error_msg.empty() ? "Failed to parse sql" : error_msg);
     return rc;
   }
 

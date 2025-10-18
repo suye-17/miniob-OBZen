@@ -5,6 +5,7 @@
 #include "sql/expr/tuple.h"
 #include "common/type/data_type.h"
 #include "common/type/attr_type.h"
+#include "common/types.h"
 #include <limits>
 #include <climits>
 
@@ -58,11 +59,30 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
   // 批量更新所有记录
   for (Record &record : records_) {
-    Record new_record = record;
-
+    // 为当前记录创建元组，用于表达式计算
     RowTuple row_tuple;
     row_tuple.set_record(&record);
     row_tuple.set_schema(table_, table_->table_meta().field_metas());
+
+    // 计算实际需要的记录大小（考虑TEXT字段可能需要额外空间）
+    size_t actual_record_size = record.len();
+    for (size_t i = 0; i < field_names_.size(); ++i) {
+      const FieldMeta *field_meta = field_metas[i];
+      if (field_meta->type() == AttrType::TEXTS) {
+        // 对于TEXT字段，需要预留额外空间
+        actual_record_size = std::max(actual_record_size, static_cast<size_t>(record.len() + TEXT_MAX_LENGTH));
+      }
+    }
+
+    // 创建新记录的副本，确保有独立且足够的内存空间
+    Record new_record;
+    new_record.set_data_owner((char*)malloc(actual_record_size), actual_record_size);
+    memcpy(new_record.data(), record.data(), record.len());
+    // 如果分配了额外空间，初始化为0
+    if (actual_record_size > static_cast<size_t>(record.len())) {
+      memset(new_record.data() + record.len(), 0, actual_record_size - record.len());
+    }
+    new_record.set_rid(record.rid());  // 保持RID不变
 
     // 逐个字段更新
     for (size_t i = 0; i < field_names_.size(); ++i) {
@@ -132,7 +152,38 @@ RC UpdatePhysicalOperator::open(Trx *trx)
             int_val = converted_value.get_int();
             memcpy(new_record.data() + offset, &int_val, len);
           } break;
-          default: LOG_WARN("unsupported field type: %d", field_meta->type()); return RC::INTERNAL;
+          case AttrType::TEXTS: {
+            // 处理TEXT字段：
+            // 1. 如果TEXT数据小于field长度，直接复制到offset位置
+            // 2. 如果TEXT数据大于field长度，在offset位置写入特殊标记+长度+数据偏移，完整数据放在record末尾
+            string_val = converted_value.get_string();
+            
+            if (string_val.length() <= static_cast<size_t>(len)) {
+              // 短TEXT：直接复制
+              memset(new_record.data() + offset, 0, len);
+              memcpy(new_record.data() + offset, string_val.c_str(), string_val.length());
+            } else {
+              // 长TEXT：使用extended format（与Table::set_value_to_record一致）
+              // 格式: [0xFFFFFFFF (4)][text_length (4)][data_offset (4)]
+              memset(new_record.data() + offset, 0, len);
+              
+              uint32_t marker = 0xFFFFFFFF;
+              // 确保不超过TEXT_MAX_LENGTH
+              uint32_t safe_text_length = std::min(static_cast<uint32_t>(string_val.length()), 
+                                                   static_cast<uint32_t>(TEXT_MAX_LENGTH));
+              uint32_t data_offset = record.len();  // 数据在原record大小之后
+              
+              memcpy(new_record.data() + offset, &marker, sizeof(uint32_t));
+              memcpy(new_record.data() + offset + 4, &safe_text_length, sizeof(uint32_t));
+              memcpy(new_record.data() + offset + 8, &data_offset, sizeof(uint32_t));
+              
+              // 将完整TEXT数据复制到record末尾（限制到safe_text_length）
+              memcpy(new_record.data() + record.len(), string_val.c_str(), safe_text_length);
+            }
+          } break;
+          default: 
+            LOG_WARN("unsupported field type: %d", field_meta->type()); 
+            return RC::INTERNAL;
         }
       }
     }
