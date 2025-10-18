@@ -33,8 +33,11 @@ See the Mulan PSL v2 for more details. */
 using namespace common;
 
 SubqueryExecutor::SubqueryExecutor() 
-    : cache_limit_(1000), cache_enabled_(true), cache_hits_(0), cache_misses_(0), total_executions_(0)
+    : cache_limit_(1000), cache_enabled_(false), cache_hits_(0), cache_misses_(0), total_executions_(0)
 {
+  // 🔧 修复：禁用实例级缓存，避免缓存键设计缺陷
+  // 由于每次都创建新的 SubqueryExecutor 实例，实例级缓存价值有限
+  // 缓存键只基于 SQL 结构，不包含数据内容，可能导致错误结果
 }
 
 SubqueryExecutor::~SubqueryExecutor()
