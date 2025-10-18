@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/desc_table_executor.h"
 
 #include "common/log/log.h"
+#include "common/types.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"
@@ -53,7 +54,9 @@ RC DescTableExecutor::execute(SQLStageEvent *sql_event)
     const TableMeta &table_meta = table->table_meta();
     for (int i = table_meta.sys_field_num(); i < table_meta.field_num(); i++) {
       const FieldMeta *field_meta = table_meta.field(i);
-      oper->append({field_meta->name(), attr_type_to_string(field_meta->type()), to_string(field_meta->len())});
+      // TEXT字段显示逻辑最大长度(65535)，而不是物理占用空间(788)
+      int display_length = (field_meta->type() == AttrType::TEXTS) ? TEXT_MAX_LENGTH : field_meta->len();
+      oper->append({field_meta->name(), attr_type_to_string(field_meta->type()), to_string(display_length)});
     }
 
     sql_result->set_operator(unique_ptr<PhysicalOperator>(oper));

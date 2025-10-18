@@ -36,6 +36,7 @@ public:
   friend class BooleanType;
   friend class CharType;
   friend class VectorType;
+  friend class TextType;
 
   Value() = default;
 
@@ -46,6 +47,7 @@ public:
   explicit Value(int val);
   explicit Value(float val);
   explicit Value(bool val);
+  explicit Value(const vector<float> &val);
   explicit Value(const char *s, int len = 0);
 
   Value(const Value &other);
@@ -94,6 +96,7 @@ public:
   void set_null() { is_null_ = true; }
   bool is_null() const { return is_null_; }
 
+
   string to_string() const;
 
   int compare(const Value &other) const;
@@ -112,12 +115,18 @@ public:
   float  get_float() const;
   string get_string() const;
   bool   get_boolean() const;
+  vector<float> get_vector() const;
+
+  
 
 public:
   void set_int(int val);
   void set_float(float val);
   void set_date(int val);
   void set_string(const char *s, int len = 0);
+  void set_vector(const vector<float> &val);
+  RC set_text(const char *s, int len = 65535);
+
   void set_string_from_other(const Value &other);
 
 private:
@@ -130,6 +139,7 @@ private:
     float   float_value_;
     bool    bool_value_;
     char   *pointer_value_;
+    vector<float>* vector_value_;
   } value_ = {.int_value_ = 0};
 
   /// 是否申请并占有内存, 目前对于 CHARS 类型 own_data_ 为true, 其余类型 own_data_ 为false

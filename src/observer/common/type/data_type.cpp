@@ -14,8 +14,11 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/date_type.h"
 #include "common/type/data_type.h"
 #include "common/type/vector_type.h"
+#include "common/type/text_type.h"
 #include "common/type/boolean_type.h"
 #include "common/value.h"
+
+
 
 array<unique_ptr<DataType>, static_cast<int>(AttrType::MAXTYPE)> DataType::type_instances_ = {
     make_unique<DataType>(AttrType::UNDEFINED),
@@ -23,6 +26,7 @@ array<unique_ptr<DataType>, static_cast<int>(AttrType::MAXTYPE)> DataType::type_
     make_unique<IntegerType>(),
     make_unique<FloatType>(),
     make_unique<DateType>(),
+    make_unique<TextType>(),
     make_unique<VectorType>(),
     make_unique<BooleanType>(),
 };
@@ -45,3 +49,4 @@ RC DataType::cast_to(const Value &val, AttrType type, Value &result) const
   // 对于其他类型，返回不支持，让具体的子类处理
   return RC::UNSUPPORTED;
 }
+

@@ -7,10 +7,12 @@
 
 #include "common/log/log.h"
 #include "common/lang/string.h"
+#include "common/types.h"
 #include "sql/parser/parse_defs.h"
 #include "sql/parser/yacc_sql.hpp"
 #include "sql/parser/lex_sql.h"
 #include "sql/expr/expression.h"
+#include "observer/common/utils.h"
 
 using namespace std;
 
@@ -50,7 +52,6 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   return expr;
 }
 
-
 UnboundAggregateExpr *create_aggregate_expression_multi(const char *aggregate_name,
                                                        vector<unique_ptr<Expression>> *children,
                                                        const char *sql_string,
@@ -62,6 +63,17 @@ UnboundAggregateExpr *create_aggregate_expression_multi(const char *aggregate_na
     delete children;  // 释放yacc分配的向量内存
   }
   UnboundAggregateExpr *expr = new UnboundAggregateExpr(aggregate_name, std::move(child_vec));
+  expr->set_name(token_name(sql_string, llocp));
+  return expr;
+}
+
+DistanceFunctionExpr *create_distance_function_expression(DistanceFunctionExpr::Type type,
+                                                          Expression *left,
+                                                          Expression *right,
+                                                          const char *sql_string,
+                                                          YYLTYPE *llocp)
+{
+  DistanceFunctionExpr *expr = new DistanceFunctionExpr(type, unique_ptr<Expression>(left), unique_ptr<Expression>(right));
   expr->set_name(token_name(sql_string, llocp));
   return expr;
 }
@@ -112,6 +124,8 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         UPDATE
         LBRACE
         RBRACE
+        LSBRACE
+        RSBRACE
         COMMA
         TRX_BEGIN
         TRX_COMMIT
@@ -124,6 +138,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         NOT
         IS
         VECTOR_T
+        TEXT_T
         HELP
         EXIT
         DOT //QUOTE
@@ -143,6 +158,15 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         PRIMARY
         KEY
         ANALYZE
+        EQ
+        LT
+        GT
+        LE
+        GE
+        NE
+        L2_DISTANCE
+        COSINE_DISTANCE
+        INNER_PRODUCT
         COUNT
         SUM
         AVG
@@ -152,30 +176,29 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
         LIKE
         EXISTS
         INNER
-      
         JOIN
 
 /** union 中定义各种数据类型，真实生成的代码也是union类型，所以不能有非POD类型的数据 **/
 %union {
-  ParsedSqlNode *                            sql_node;
-  ConditionSqlNode *                         condition;
-  Value *                                    value;
-  enum CompOp                                comp;
-  RelAttrSqlNode *                           rel_attr;
-  vector<AttrInfoSqlNode> *                  attr_infos;
-  AttrInfoSqlNode *                          attr_info;
-  Expression *                               expression;
-  vector<unique_ptr<Expression>> *           expression_list;
-  vector<Value> *                            value_list;
-  vector<ConditionSqlNode> *                 condition_list;
-  vector<RelAttrSqlNode> *                   rel_attr_list;
-  vector<string> *                           relation_list;
-  vector<JoinSqlNode> *                      join_list;
-  vector<string> *                           key_list;
-  UpdateList *                               update_list;
-  char *                                     cstring;
-  int                                        number;
-  float                                      floats;
+  ParsedSqlNode *                            sql_node;                // SQL节点指针
+  ConditionSqlNode *                         condition;               // 条件节点指针 
+  Value *                                    value;                   // 值指针
+  enum CompOp                                comp;                    // 比较操作符
+  RelAttrSqlNode *                           rel_attr;                // 关系属性节点
+  vector<AttrInfoSqlNode> *                  attr_infos;              // 属性信息列表
+  AttrInfoSqlNode *                          attr_info;               // 单个属性信息
+  Expression *                               expression;              // 表达式指针
+  vector<unique_ptr<Expression>> *           expression_list;         // 表达式列表
+  vector<Value> *                            value_list;              // 值列表
+  vector<ConditionSqlNode> *                 condition_list;          // 条件列表
+  vector<RelAttrSqlNode> *                   rel_attr_list;           // 关系属性列表
+  vector<string> *                           relation_list;           // 关系(表)名列表
+  vector<JoinSqlNode> *                      join_list;               // JOIN列表
+  vector<string> *                           key_list;                // 键列表
+  UpdateList *                               update_list;             // 更新列表
+  char *                                     cstring;                 // 字符串指针
+  int                                        number;                  // 整数
+  float                                      floats;                  // 浮点数
 }
 
 %destructor { delete $$; } <condition>
@@ -196,6 +219,7 @@ ComparisonExpr *create_comparison_expression(CompOp comp_op,
 %token <floats> FLOAT
 %token <cstring> ID
 %token <cstring> SSS
+%token <cstring> VECTOR_LITERAL
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -440,7 +464,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = $4;
+      if ($$->type == AttrType::VECTORS) {
+        $$->length =  $4 * sizeof(float);
+      } else {
+        $$->length = $4;
+      }
       $$->nullable = ($6 == 1);
     }
     | ID type nullable_spec
@@ -448,7 +476,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = 4;
+      if ($$->type == AttrType::TEXTS) {
+        $$->length = 784;    // TEXT字段在记录中占用: 16字节指针 + 768字节内联数据
+      } else {
+        $$->length = 4;
+      }
       $$->nullable = ($3 == 1);
     }
     | ID type LBRACE number RBRACE 
@@ -456,7 +488,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = $4;
+      if ($$->type == AttrType::VECTORS) {
+        $$->length =  $4 * sizeof(float);
+      } else {
+        $$->length = $4;
+      }
       $$->nullable = true;  
     }
     | ID type
@@ -464,7 +500,11 @@ attr_def:
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
-      $$->length = 4;
+      if ($$->type == AttrType::TEXTS) {
+        $$->length = 784;    // TEXT字段在记录中占用: 16字节指针 + 768字节内联数据
+      } else {
+        $$->length = 4;
+      }
       $$->nullable = true;  
     }
     ;
@@ -481,8 +521,9 @@ type:
     INT_T      { $$ = static_cast<int>(AttrType::INTS); }
     | STRING_T { $$ = static_cast<int>(AttrType::CHARS); }
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
-    | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
     | DATE_T { $$ = static_cast<int>(AttrType::DATES); }
+    | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
+    | TEXT_T { $$ = static_cast<int>(AttrType::TEXTS); }
     ;
 primary_key:
     /* empty */
@@ -545,7 +586,12 @@ value:
     }
     |SSS {
       char *tmp = common::substr($1,1,strlen($1)-2);
-      $$ = new Value(tmp);
+      size_t str_len = strlen(tmp);
+      
+      // 注意：这里不再在解析阶段限制字符串长度
+      // 长度检查推迟到类型转换阶段（cast_to TEXTS）和插入阶段处理
+      // 这样可以支持不同字段类型的不同长度限制，并提供更准确的错误信息
+      $$ = new Value(tmp, str_len);
       free(tmp);
     }
     |NULL_T {
@@ -553,6 +599,17 @@ value:
       $$->set_null();
       $$->set_type(AttrType::UNDEFINED);  // NULL值类型标识
       @$ = @1;
+    }
+    |VECTOR_LITERAL {
+       std::vector<float> elements;
+       RC rc = parse_vector_literal($1, elements);
+       if (rc != RC::SUCCESS) {
+         LOG_WARN("Failed to parse vector literal: %s", $1);
+         YYABORT;  // 语法解析错误
+       }
+       $$ = new Value();
+       $$->set_vector(elements);
+       @$ = @1;
     }
     ;
 storage_format:
@@ -799,6 +856,15 @@ expression:
       $$ = new ExistsExpr(true, unique_ptr<Expression>(subquery));
       $$->set_name(token_name(sql_string, &@$));
       delete $4;
+    }
+    | L2_DISTANCE LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::L2_DISTANCE, $3, $5, sql_string, &@$);
+    }
+    | COSINE_DISTANCE LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::COSINE_DISTANCE, $3, $5, sql_string, &@$);
+    }
+    | INNER_PRODUCT LBRACE expression COMMA expression RBRACE {
+      $$ = create_distance_function_expression(DistanceFunctionExpr::Type::INNER_PRODUCT, $3, $5, sql_string, &@$);
     }
     ;
 

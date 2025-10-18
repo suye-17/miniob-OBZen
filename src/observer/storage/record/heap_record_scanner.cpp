@@ -9,6 +9,13 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 #include "storage/record/heap_record_scanner.h"
+#include "storage/buffer/page_type.h"
+
+// 前向声明TEXT字段处理函数
+namespace common {
+  RC process_text_fields_on_read(TableMeta *table_meta, DiskBufferPool *buffer_pool, 
+                                  const Record &raw_record, Record &output_record);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +61,13 @@ RC HeapRecordScanner::fetch_next_record()
   // 上个页面遍历完了，或者还没有开始遍历某个页面，那么就从一个新的页面开始遍历查找
   while (bp_iterator_.has_next()) {
     PageNum page_num = bp_iterator_.next();
+    
+    // 检查是否在运行时标记的溢出页集合中
+    if (record_handler_ && record_handler_->is_overflow_page(page_num)) {
+      LOG_TRACE("Skipping overflow page %d during record scanning", page_num);
+      continue;
+    }
+    
     record_page_handler_->cleanup();
     rc = record_page_handler_->init(*disk_buffer_pool_, *log_handler_, page_num, rw_mode_);
     if (OB_FAIL(rc)) {
@@ -141,6 +155,20 @@ RC HeapRecordScanner::next(Record &record)
     return rc;
   }
 
-  record = next_record_;
+  // 处理TEXT字段溢出：展开溢出数据到完整record
+  rc = common::process_text_fields_on_read(
+      const_cast<TableMeta*>(&table_->table_meta()),
+      disk_buffer_pool_,
+      next_record_,
+      record);
+  
+  if (OB_FAIL(rc)) {
+    LOG_WARN("Failed to process TEXT overflow fields during scan: %s", strrc(rc));
+    return rc;
+  }
+  
+  // 重要：设置RID，因为process_text_fields_on_read只处理数据，不处理RID
+  record.set_rid(next_record_.rid());
+  
   return RC::SUCCESS;
 }
