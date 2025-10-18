@@ -1,18 +1,20 @@
+# 全局编译选项
 CompileFlags:
   Add: [-Wno-unknown-pragmas, -ferror-limit=0]
 
+# 针对自动生成的parser文件，忽略所有诊断错误
+---
+If:
+  PathMatch: 
+    - ".*lex_sql\\.(cpp|h)"
+    - ".*yacc_sql\\.(cpp|hpp)"
+Diagnostics:
+  Suppress: "*"
+
+# 其他文件的通用配置
+---
 Diagnostics:
   ClangTidy:
     Add: []
     Remove: []
   UnusedIncludes: None
-  Suppress:
-    - unused-includes
-    - unknown-type-name
-
-# 忽略自动生成的parser文件
-If:
-  PathMatch: [.*lex_sql\.(cpp|h), .*yacc_sql\.(cpp|hpp)]
-Diagnostics:
-  Suppress: "*"
-
