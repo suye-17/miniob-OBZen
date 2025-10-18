@@ -1,0 +1,18 @@
+CompileFlags:
+  Add: [-Wno-unknown-pragmas, -ferror-limit=0]
+
+Diagnostics:
+  ClangTidy:
+    Add: []
+    Remove: []
+  UnusedIncludes: None
+  Suppress:
+    - unused-includes
+    - unknown-type-name
+
+# 忽略自动生成的parser文件
+If:
+  PathMatch: [.*lex_sql\.(cpp|h), .*yacc_sql\.(cpp|hpp)]
+Diagnostics:
+  Suppress: "*"
+
